@@ -126,6 +126,8 @@ function loadCellPond() {
 		 DRAGON_INSTRUCTION.merge = (cell) => () => ({drawn: 0});
 		 DRAGON_INSTRUCTION.merge.type = "MERGE";`,
 		readScript("source/dragon.js"),
+		// Initialize ruleRegistry — normally done inside on.load which is truncated for tests
+		`ruleRegistry = new RuleRegistry();`,
 	]
 
 	const combined = scripts.join("\n;\n")
@@ -141,15 +143,10 @@ function loadCellPond() {
 			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
 			setWorldSize,
 			fits, aligns, isFit,
-			makeNumber, makeArray, makeArrayFromSplash,
-			makeDiagram, makeDiagramCell, makeRule,
+			DragonNumber, DragonArray, DiagramCell, Diagram, Rule,
+			RuleRegistry, ruleRegistry,
 			DRAGON_TRANSFORMATIONS, CHANNEL_VARIABLES,
-			getSplashesArrayFromArray, getSplashesSetFromArray,
-			cloneDragonArray, cloneDragonNumber,
-			evaluateNumber, addChannelToResults,
-			registerRule, unregisterRegistry,
-			getOrderedCellAtoms, getOriginOfRule, getOriginOfDiagram,
-			normaliseDiagram, getDiagramDimensions,
+			sortByPosition,
 		};
 		for (var __k__ in __cellpond_exports__) {
 			this[__k__] = __cellpond_exports__[__k__];

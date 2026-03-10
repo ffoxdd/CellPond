@@ -264,9 +264,7 @@ const state = {
 		},
 	},
 
-	dragon: {
-		behaves: [],
-	}
+	dragon: {},
 }
 
 let WORLD_SIZE = undefined
@@ -282,6 +280,7 @@ const setWorldSize = (size) => {
 setWorldSize(6)
 
 const cellGrid = new CellGrid(GRID_SIZE)
+var ruleRegistry
 
 const overrideCells = (cells) => {
 	cellGrid.clear()
@@ -301,7 +300,8 @@ cellGrid.add(world)
 
 on.load(() => {
 
-	
+	ruleRegistry = new RuleRegistry()
+
 	// Setup Show
 	const show = Show.start({paused: false, scale: DPR})
 	const {context, canvas} = show
@@ -804,7 +804,7 @@ on.load(() => {
 				if (atom.isSquare || atom === squareTool) {
 					state.brush.hoverColour = atom.value
 					if (atom.joinExpanded) {
-						const clon = cloneDragonArray(atom.value)
+						const clon = DragonArray.cloneContent(atom.value)
 						clon.joins = []
 						state.brush.hoverColour = clon
 					}
@@ -1213,8 +1213,8 @@ on.load(() => {
 
 		if (BUILD_WORLD(cell, redraw) !== undefined) return 1
 
-		state.dragon.behaves.shuffle()
-		for (const behave of state.dragon.behaves) {
+		ruleRegistry.behaveFunctions.shuffle()
+		for (const behave of ruleRegistry.behaveFunctions) {
 			const result = behave(cell, redraw)
 			if (result === undefined) continue
 			//if (result === 0) continue
@@ -1225,7 +1225,7 @@ on.load(() => {
 	}
 	
 	const splitCellToDiagram = (cell, diagram) => {
-		const flatDiagram = flattenAndFillDiagramCells(diagram.left, makeArray({channels: [undefined, undefined, undefined]}))
+		const flatDiagram = flattenAndFillDiagramCells(diagram.left, new DragonArray({channels: [undefined, undefined, undefined]}))
 		
 		const widthScale = cell.width
 		const heightScale = cell.height
@@ -1233,7 +1233,7 @@ on.load(() => {
 		const children = []
 		for (const diagramCell of flatDiagram) {
 
-			const colours = getSplashesArrayFromArray(diagramCell.content, {source: cell.colour})
+			const colours = diagramCell.content.getSplashes({source: cell.colour})
 			const colour = colours[Random.Uint32 % colours.length]
 
 			const child = new Cell({
@@ -1296,10 +1296,10 @@ on.load(() => {
 
 	DRAGON_INSTRUCTION.recolour = (cell) => {
 
-		fillEmptyChannels(cell.content)
+		cell.content.fillEmptyChannels()
 
-		const splashes = getSplashesArrayFromArray(cell.content)
-		const isDynamic = isDragonArrayDynamic(cell.content)
+		const splashes = cell.content.getSplashes()
+		const isDynamic = cell.content.isDynamic()
 
 		const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
 
@@ -1330,13 +1330,13 @@ on.load(() => {
 				for (let i = 0; i < cell.content.channels.length; i++) {
 					const channel = cell.content.channels[i]
 					if (channel.variable === undefined) continue
-					let results = VARIABLE_EVALUATOR[channel.variable](channel, {source})
+					let results = DragonNumber.EVALUATORS[channel.variable](channel, {source})
 					const isHue = channel.variable === "red"
 					if (channel.add !== undefined) {
-						results = addChannelToResults(results, channel.add, {source, multiplier: 1, isHue})
+						results = DragonArray.addChannelToResults(results, channel.add, {source, multiplier: 1, isHue})
 					}
 					if (channel.subtract !== undefined) {
-						results = addChannelToResults(results, channel.subtract, {source, multiplier: -1, isHue})
+						results = DragonArray.addChannelToResults(results, channel.subtract, {source, multiplier: -1, isHue})
 					}
 					const choices = results.map((v, i) => v === true? i : false).filter(v => v !== false)
 					const newPart = choices[Random.Uint8 % choices.length]
@@ -1361,7 +1361,7 @@ on.load(() => {
 	// IF YOU DON'T, IT WILL GO WRONG
 	DRAGON_INSTRUCTION.split = (cell) => {
 
-		//const splashes = getSplashesArrayFromArray(cell.content)
+		//const splashes = cell.content.getSplashes()
 
 		const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
 			
@@ -1383,7 +1383,7 @@ on.load(() => {
 
 	DRAGON_INSTRUCTION.merge = (cell) => {
 
-		//const splashes = getSplashesArrayFromArray(cell.content)
+		//const splashes = cell.content.getSplashes()
 		
 		const childCount = Math.abs(cell.splitX) * Math.abs(cell.splitY)
 
@@ -1406,13 +1406,13 @@ on.load(() => {
 	}
 	DRAGON_INSTRUCTION.merge.type = "MERGE"
 
-	const GREY = makeArrayFromSplash(Colour.Grey.splash)
-	const BLACK = makeArrayFromSplash(Colour.Black.splash)
-	const CYAN = makeArrayFromSplash(Colour.Cyan.splash)
-	const BLUE = makeArrayFromSplash(Colour.Blue.splash)
-	const YELLOW = makeArrayFromSplash(Colour.Yellow.splash)
-	const PURPLE = makeArrayFromSplash(Colour.Cyan.splash - 111)
-	const RED = makeArrayFromSplash(Colour.Red.splash)
+	const GREY = DragonArray.fromSplash(Colour.Grey.splash)
+	const BLACK = DragonArray.fromSplash(Colour.Black.splash)
+	const CYAN = DragonArray.fromSplash(Colour.Cyan.splash)
+	const BLUE = DragonArray.fromSplash(Colour.Blue.splash)
+	const YELLOW = DragonArray.fromSplash(Colour.Yellow.splash)
+	const PURPLE = DragonArray.fromSplash(Colour.Cyan.splash - 111)
+	const RED = DragonArray.fromSplash(Colour.Red.splash)
 	let [RED_R, RED_G, RED_B] = getRGB(Colour.Red.splash)
 	RED_R /= 100
 	RED_G /= 10
@@ -1420,267 +1420,267 @@ on.load(() => {
 	BLACK.channels[1].values[RED_G] = true
 	BLACK.channels[2].values[RED_B] = true*/
 
-	const ROCK_FALL_DIAGRAM = makeDiagram({
+	const ROCK_FALL_DIAGRAM = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: GREY}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: GREY}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, content: GREY}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, content: GREY}),
 		],
 	})
 	
-	const SAND_FALL_DIAGRAM = makeDiagram({
+	const SAND_FALL_DIAGRAM = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: YELLOW}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: YELLOW}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, content: YELLOW}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, content: YELLOW}),
 		],
 	})
 	
-	const SAND_SLIDE_DIAGRAM = makeDiagram({
+	const SAND_SLIDE_DIAGRAM = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: YELLOW}),
-			makeDiagramCell({x: 1, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: YELLOW}),
+			new DiagramCell({x: 1, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 1, y: 1, content: YELLOW}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 1, y: 1, content: YELLOW}),
 		],
 	})
 
-	const WATER_RIGHT = makeDiagram({
+	const WATER_RIGHT = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
-			makeDiagramCell({x: 1, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 1, y: 0, content: BLUE}),
 		],
 	})
 
-	const WATER_RIGHT_FALL = makeDiagram({
+	const WATER_RIGHT_FALL = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, content: BLUE}),
 		],
 	})
 
-	const WATER_RIGHT_FLIP = makeDiagram({
+	const WATER_RIGHT_FLIP = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: PURPLE}),
-			makeDiagramCell({x: 1, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: PURPLE}),
+			new DiagramCell({x: 1, y: 0, content: CYAN}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
-			makeDiagramCell({x: 1, y: 0, content: PURPLE}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 1, y: 0, content: PURPLE}),
 		],
 	})
 
-	const WATER_RIGHT_SLIP = makeDiagram({
+	const WATER_RIGHT_SLIP = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 0.5, content: PURPLE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 0.5, content: PURPLE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN}),
 		],
 	})
 
-	const WATER_RIGHT_UNSLIP = makeDiagram({
+	const WATER_RIGHT_UNSLIP = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
-			makeDiagramCell({x: 0, y: 1, width: 2, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 1, width: 2, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0, y: 1, width: 2, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0, y: 1, width: 2, content: BLACK}),
 		],
 	})
 
-	const WATER_RIGHT_UNSLIPP = makeDiagram({
+	const WATER_RIGHT_UNSLIPP = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: PURPLE}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: PURPLE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
 		],
 	})
 
-	const WATER_RIGHT_UNSLIPC = makeDiagram({
+	const WATER_RIGHT_UNSLIPC = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: CYAN}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0, y: 0, width: 2, content: BLUE, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
 		],
 	})
 
-	const WATER_RIGHT_SLIDE = makeDiagram({
+	const WATER_RIGHT_SLIDE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
-			makeDiagramCell({x: 2, y: 0, width: 2, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: PURPLE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 2, y: 0, width: 2, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 2, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 2, y: 0, width: 1, content: PURPLE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 3, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 2, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 2, y: 0, width: 1, content: PURPLE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 3, y: 0, width: 1, content: CYAN}),
 		],
 	})
 
-	const WATER_RIGHT_FALL_BLUE = makeDiagram({
+	const WATER_RIGHT_FALL_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 0.5, content: BLUE}),
-			makeDiagramCell({x: 0.5, y: 0, width: 0.5, content: BLUE}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 0.5, content: BLUE}),
+			new DiagramCell({x: 0.5, y: 0, width: 0.5, content: BLUE}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1.0, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0, y: 1, width: 0.5, content: BLUE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0.5, y: 1, width: 0.5, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, width: 1.0, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0, y: 1, width: 0.5, content: BLUE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0.5, y: 1, width: 0.5, content: BLUE}),
 		],
 	})
 
-	const WATER_RIGHT_FALL_CYAN = makeDiagram({
+	const WATER_RIGHT_FALL_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 0.5, content: CYAN}),
-			makeDiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 0.5, content: CYAN}),
+			new DiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1.0, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0, y: 1, width: 0.5, content: CYAN, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0.5, y: 1, width: 0.5, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 1.0, content: BLACK, instruction: DRAGON_INSTRUCTION.merge, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0, y: 1, width: 0.5, content: CYAN, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0.5, y: 1, width: 0.5, content: CYAN}),
 		],
 	})
 	
 
-	const WATER_RIGHT_SPIN = makeDiagram({
+	const WATER_RIGHT_SPIN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
-			makeDiagramCell({x: 1, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 1, y: 0, content: CYAN}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
-			makeDiagramCell({x: 1, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 1, y: 0, content: BLUE}),
 		],
 	})
 	
-	const WATER_RIGHT_SPAWN_DIAGRAM = makeDiagram({
+	const WATER_RIGHT_SPAWN_DIAGRAM = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: PURPLE}),
+			new DiagramCell({x: 0, y: 0, content: PURPLE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 0.5, content: BLUE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
-			makeDiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN, instruction: DRAGON_INSTRUCTION.recolour}),
+			new DiagramCell({x: 0, y: 0, width: 0.5, content: BLUE, instruction: DRAGON_INSTRUCTION.split, splitX: 2, splitY: 1}),
+			new DiagramCell({x: 0.5, y: 0, width: 0.5, content: CYAN, instruction: DRAGON_INSTRUCTION.recolour}),
 		],
 	})
 	
-	const WATER_RIGHT_RESPAWN_BLUE = makeDiagram({
+	const WATER_RIGHT_RESPAWN_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: BLUE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
 		],
 	})
 	
-	const WATER_RIGHT_RESPAWN_CYAN = makeDiagram({
+	const WATER_RIGHT_RESPAWN_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: CYAN}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLUE}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: CYAN}),
 		],
 	})
 	
-	const WATER_DARK_FALL = makeDiagram({
+	const WATER_DARK_FALL = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: GREY}),
-			makeDiagramCell({x: 0, y: 1, width: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: GREY}),
+			new DiagramCell({x: 0, y: 1, width: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, width: 1, content: GREY}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, width: 1, content: GREY}),
 		],
 	})
 	
-	const WATER_DARK_SLIP = makeDiagram({
+	const WATER_DARK_SLIP = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: GREY}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: GREY}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, width: 1, content: BLACK}),
-			makeDiagramCell({x: 1, y: 0, width: 1, content: GREY}),
+			new DiagramCell({x: 0, y: 0, width: 1, content: BLACK}),
+			new DiagramCell({x: 1, y: 0, width: 1, content: GREY}),
 		],
 	})
 	
-	//registerRule(makeRule({steps: [ROCK_FALL_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	/*registerRule(makeRule({steps: [SAND_FALL_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	registerRule(makeRule({steps: [SAND_SLIDE_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [ROCK_FALL_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	/*ruleRegistry.register(new Rule({steps: [SAND_FALL_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	ruleRegistry.register(new Rule({steps: [SAND_SLIDE_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.X}))
 
-	registerRule(makeRule({steps: [WATER_DARK_FALL], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	registerRule(makeRule({steps: [WATER_DARK_SLIP], transformations: DRAGON_TRANSFORMATIONS.X}))*/
+	ruleRegistry.register(new Rule({steps: [WATER_DARK_FALL], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	ruleRegistry.register(new Rule({steps: [WATER_DARK_SLIP], transformations: DRAGON_TRANSFORMATIONS.X}))*/
 
-	//registerRule(makeRule({steps: [WATER_RIGHT_SPAWN_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_FALL], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_SLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_SLIDE, WATER_RIGHT_FLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_UNSLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_UNSLIPP], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_UNSLIPC], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	//registerRule(makeRule({steps: [], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_FALL_CYAN], transformations: DRAGON_TRANSFORMATIONS.NONE}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_SLIDE_DIAGRAM, WATER_RIGHT_SPIN], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_SPAWN_DIAGRAM], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_FALL], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_SLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_SLIDE, WATER_RIGHT_FLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_UNSLIP], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_UNSLIPP], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_UNSLIPC], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	//ruleRegistry.register(new Rule({steps: [], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_FALL_CYAN], transformations: DRAGON_TRANSFORMATIONS.NONE}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_SLIDE_DIAGRAM, WATER_RIGHT_SPIN], transformations: DRAGON_TRANSFORMATIONS.X}))
 
-	//registerRule(makeRule({steps: [], transformations: DRAGON_TRANSFORMATIONS.X}))
-	//registerRule(makeRule({steps: [WATER_RIGHT_SPIN], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [], transformations: DRAGON_TRANSFORMATIONS.X}))
+	//ruleRegistry.register(new Rule({steps: [WATER_RIGHT_SPIN], transformations: DRAGON_TRANSFORMATIONS.X}))
 
 	/*
 
-registerRule(
-	makeRule({
+ruleRegistry.register(
+	new Rule({
 		transformations: DRAGON_TRANSFORMATIONS.R,
 		steps: [
-			makeDiagram({
+			new Diagram({
 				left: [
-					makeDiagramCell({x: 0, y: 0, content: makeArrayFromSplash(999)}),
-					makeDiagramCell({x: 1, y: 0, content: makeArrayFromSplash(000)}),
+					new DiagramCell({x: 0, y: 0, content: DragonArray.fromSplash(999)}),
+					new DiagramCell({x: 1, y: 0, content: DragonArray.fromSplash(000)}),
 				],
 				right: [
-					makeDiagramCell({x: 0, y: 0, content: makeArrayFromSplash(000)}),
-					makeDiagramCell({x: 1, y: 0, content: makeArrayFromSplash(999)}),
+					new DiagramCell({x: 0, y: 0, content: DragonArray.fromSplash(000)}),
+					new DiagramCell({x: 1, y: 0, content: DragonArray.fromSplash(999)}),
 				],
 			})
 		],
 	}),
 )
 
-registerRule(
-	makeRule({
+ruleRegistry.register(
+	new Rule({
 		transformations: DRAGON_TRANSFORMATIONS.X,
 		steps: [
-			makeDiagram({
+			new Diagram({
 				left: [
-					makeDiagramCell({x: 0, y: 0, content: makeArrayFromSplash(999)}),
+					new DiagramCell({x: 0, y: 0, content: DragonArray.fromSplash(999)}),
 				],
 				right: [
-					makeDiagramCell({x: 0, y: 0, width: 0.5, splitX: 2, splitY: 1, content: makeArrayFromSplash(Colour.Blue.splash), instruction: DRAGON_INSTRUCTION.split}),
-					makeDiagramCell({x: 0.5, y: 0, width: 0.5, content: makeArrayFromSplash(Colour.Red.splash), instruction: DRAGON_INSTRUCTION.recolour}),
+					new DiagramCell({x: 0, y: 0, width: 0.5, splitX: 2, splitY: 1, content: DragonArray.fromSplash(Colour.Blue.splash), instruction: DRAGON_INSTRUCTION.split}),
+					new DiagramCell({x: 0.5, y: 0, width: 0.5, content: DragonArray.fromSplash(Colour.Red.splash), instruction: DRAGON_INSTRUCTION.recolour}),
 				],
 			})
 		],
@@ -1689,8 +1689,8 @@ registerRule(
 
 	*/
 
-	const RAINBOW = makeArray()
-	RAINBOW.channels = [makeNumber(), makeNumber(), makeNumber()]
+	const RAINBOW = new DragonArray()
+	RAINBOW.channels = [new DragonNumber(), new DragonNumber(), new DragonNumber()]
 	for (let c = 0; c < 3; c++) {
 		const channel = RAINBOW.channels[c]
 		for (let i = 0; i < 10; i++) {
@@ -1699,14 +1699,14 @@ registerRule(
 		}
 	}
 
-	RAINBOW_DIAGRAM = makeDiagram({
+	RAINBOW_DIAGRAM = new Diagram({
 		left: [
-			makeDiagramCell({content: RAINBOW})
+			new DiagramCell({content: RAINBOW})
 		]
 	})
 
-	const RAINBOW2 = makeArray()
-	RAINBOW2.channels = [makeNumber(), makeNumber(), makeNumber()]
+	const RAINBOW2 = new DragonArray()
+	RAINBOW2.channels = [new DragonNumber(), new DragonNumber(), new DragonNumber()]
 	for (let c = 0; c < 3; c++) {
 		const channel = RAINBOW2.channels[c]
 		for (let i = 0; i < 10; i++) {
@@ -1716,102 +1716,102 @@ registerRule(
 		}
 	}
 	
-	RAINBOW_DIAGRAM_2 = makeDiagram({
+	RAINBOW_DIAGRAM_2 = new Diagram({
 		left: [
-			makeDiagramCell({content: RAINBOW2})
+			new DiagramCell({content: RAINBOW2})
 		]
 	})
 
 	
 	
-	const WATER_SPAWN_DIAGRAM_CYAN = makeDiagram({
+	const WATER_SPAWN_DIAGRAM_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: PURPLE}),
+			new DiagramCell({x: 0, y: 0, content: PURPLE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
 		],
 	})
 	
-	const WATER_SPAWN_DIAGRAM_BLUE = makeDiagram({
+	const WATER_SPAWN_DIAGRAM_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: PURPLE}),
+			new DiagramCell({x: 0, y: 0, content: PURPLE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
 		],
 	})
 	
-	const WATER_FALL_CYAN = makeDiagram({
+	const WATER_FALL_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, content: CYAN}),
 		],
 	})
 	
-	const WATER_FALL_BLUE = makeDiagram({
+	const WATER_FALL_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
-			makeDiagramCell({x: 0, y: 1, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 1, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 0, y: 1, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 1, content: BLUE}),
 		],
 	})
 
-	const WATER_SLIDE_BLUE = makeDiagram({
+	const WATER_SLIDE_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
-			makeDiagramCell({x: 1, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 1, y: 0, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: 1, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: 1, y: 0, content: BLUE}),
 		],
 	})
 
-	const WATER_SLIDE_CYAN = makeDiagram({
+	const WATER_SLIDE_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
-			makeDiagramCell({x: -1, y: 0, content: BLACK}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: -1, y: 0, content: BLACK}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLACK}),
-			makeDiagramCell({x: -1, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: BLACK}),
+			new DiagramCell({x: -1, y: 0, content: CYAN}),
 		],
 	})
 
-	const WATER_SWAP_BLUE = makeDiagram({
+	const WATER_SWAP_BLUE = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
 		],
 	})
 
-	const WATER_SWAP_CYAN = makeDiagram({
+	const WATER_SWAP_CYAN = new Diagram({
 		left: [
-			makeDiagramCell({x: 0, y: 0, content: CYAN}),
+			new DiagramCell({x: 0, y: 0, content: CYAN}),
 		],
 		right: [
-			makeDiagramCell({x: 0, y: 0, content: BLUE}),
+			new DiagramCell({x: 0, y: 0, content: BLUE}),
 		],
 	})
 
-	/*registerRule(makeRule({steps: [WATER_SPAWN_DIAGRAM_CYAN]}))
-	registerRule(makeRule({steps: [WATER_SPAWN_DIAGRAM_BLUE]}))
+	/*ruleRegistry.register(new Rule({steps: [WATER_SPAWN_DIAGRAM_CYAN]}))
+	ruleRegistry.register(new Rule({steps: [WATER_SPAWN_DIAGRAM_BLUE]}))
 
-	registerRule(makeRule({steps: [WATER_FALL_BLUE]}))
-	registerRule(makeRule({steps: [WATER_FALL_CYAN]}))
+	ruleRegistry.register(new Rule({steps: [WATER_FALL_BLUE]}))
+	ruleRegistry.register(new Rule({steps: [WATER_FALL_CYAN]}))
 
-	registerRule(makeRule({steps: [WATER_SLIDE_BLUE, WATER_SWAP_BLUE]}))
-	registerRule(makeRule({steps: [WATER_SLIDE_CYAN, WATER_SWAP_CYAN]}))*/
+	ruleRegistry.register(new Rule({steps: [WATER_SLIDE_BLUE, WATER_SWAP_BLUE]}))
+	ruleRegistry.register(new Rule({steps: [WATER_SLIDE_CYAN, WATER_SWAP_CYAN]}))*/
 	
 
 	//state.brush.colour = RAINBOW_DIAGRAM_2
@@ -2964,10 +2964,10 @@ registerRule(
 		if (typeof value === "number") {
 			state.brush.colour = value
 			squareTool.toolbarNeedsColourUpdate = true
-			squareTool.value = makeArrayFromSplash(value)
+			squareTool.value = DragonArray.fromSplash(value)
 		} else {
-			const diagramCell = makeDiagramCell({content: value})
-			state.brush.colour = makeDiagram({left: [diagramCell]})
+			const diagramCell = new DiagramCell({content: value})
+			state.brush.colour = new Diagram({left: [diagramCell]})
 			squareTool.value = diagramCell.content
 			squareTool.toolbarNeedsColourUpdate = true
 		}
@@ -3169,16 +3169,16 @@ registerRule(
 			atom.needsColoursUpdate = true
 			atom.colourTicker = Infinity
 
-			/*const diagramCell = makeDiagramCell({content: atom.value})
-			state.brush.colour = makeDiagram({left: [diagramCell]})*/
+			/*const diagramCell = new DiagramCell({content: atom.value})
+			state.brush.colour = new Diagram({left: [diagramCell]})*/
 
 			if (atom.parent !== COLOURTODE_BASE_PARENT) {
 				const paddle = atom.parent
 				updatePaddleRule(paddle)
 			}
 
-			const brushDiagramCell = makeDiagramCell({content: atom.value})
-			state.brush.colour = makeDiagram({left: [brushDiagramCell]})
+			const brushDiagramCell = new DiagramCell({content: atom.value})
+			state.brush.colour = new Diagram({left: [brushDiagramCell]})
 
 			squareTool.toolbarNeedsColourUpdate = true
 			triangleTool.toolbarNeedsColourUpdate = true
@@ -3196,13 +3196,13 @@ registerRule(
 			/*const r = Random.Uint8 % 10
 			const g = Random.Uint8 % 10
 			const b = Random.Uint8 % 10*/
-			//atom.value = makeArrayFromSplash(r*100 + g*10 + b)
-			//atom.value = makeArrayFromSplash(555)
+			//atom.value = DragonArray.fromSplash(r*100 + g*10 + b)
+			//atom.value = DragonArray.fromSplash(555)
 			//const splash = TODEPOND_COLOURS[Random.Uint8 % TODEPOND_COLOURS.length]
 			if (typeof state.brush.colour === "number") {
-				atom.value = makeArrayFromSplash(state.brush.colour)
+				atom.value = DragonArray.fromSplash(state.brush.colour)
 			} else {
-				atom.value = cloneDragonArray(state.brush.colour.left[0].content)
+				atom.value = DragonArray.cloneContent(state.brush.colour.left[0].content)
 			}
 			
 			atom.colourId = 0
@@ -3218,9 +3218,9 @@ registerRule(
 		},
 
 		updateGradient: (atom) => {
-			const valueClone = cloneDragonArray(atom.value)
+			const valueClone = DragonArray.cloneContent(atom.value)
 			valueClone.joins = []
-			atom.colours = getSplashesArrayFromArray(valueClone)
+			atom.colours = valueClone.getSplashes()
 
 			// Create pixel values for gradient
 			atom.isGradient = true
@@ -3266,7 +3266,7 @@ registerRule(
 				if (atom.multiAtoms === undefined || atom.multiAtoms.length === 0) {
 					atom.multiAtoms = []
 					const diagram = atom.value
-					const [diagramWidth, diagramHeight] = getDiagramDimensions(diagram)
+					const [diagramWidth, diagramHeight] = diagram.getDimensions()
 					const cellAtomWidth = atom.width / diagramWidth
 					const cellAtomHeight = atom.height / diagramHeight
 					for (const diagramCell of diagram.left) {
@@ -4732,9 +4732,9 @@ registerRule(
 				else if (atom.highlightedSlot === "green") atom.variable = "blue"
 				else if (atom.highlightedSlot === "blue") atom.variable = "red"
 			}
-			const add = atom.direction === "up" ? makeNumberFromInt(1) : undefined
-			const subtract = atom.direction === "down" ? makeNumberFromInt(1) : undefined
-			const value = makeNumber({channel: atom.channelId, variable: atom.variable, add, subtract})
+			const add = atom.direction === "up" ? DragonNumber.fromInt(1) : undefined
+			const subtract = atom.direction === "down" ? DragonNumber.fromInt(1) : undefined
+			const value = new DragonNumber({channel: atom.channelId, variable: atom.variable, add, subtract})
 			atom.value = value
 		},
 
@@ -4765,8 +4765,8 @@ registerRule(
 					square.needsColoursUpdate = true
 				}
 
-				const diagramCell = makeDiagramCell({content: square.value})
-				state.brush.colour = makeDiagram({left: [diagramCell]})
+				const diagramCell = new DiagramCell({content: square.value})
+				state.brush.colour = new Diagram({left: [diagramCell]})
 
 				squareTool.toolbarNeedsColourUpdate = true
 				circleTool.toolbarNeedsColourUpdate = true
@@ -4936,7 +4936,7 @@ registerRule(
 			const {x, y} = getAtomPosition(atom)
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
-			clone.value = cloneDragonNumber(atom.value)
+			clone.value = atom.value.clone()
 			if (atom.expanded) {
 				clone.createOptions(clone)
 				clone.expanded = true
@@ -4994,7 +4994,7 @@ registerRule(
 		construct: (atom) => {
 			const values = [false, false, false, false, false, false, false, false, false, true]
 			const channel = Random.Uint8 % 3
-			atom.value = makeNumber({values, channel})
+			atom.value = new DragonNumber({values, channel})
 			atom.needsColoursUpdate = true
 			atom.colourId = 0
 			atom.dcolourId = 1
@@ -5095,12 +5095,12 @@ registerRule(
 						}
 						else {
 							const values = [true, false, false, false, false, false, false, false, false, false]
-							channels[i] = makeNumber({values, channel: i})
+							channels[i] = new DragonNumber({values, channel: i})
 						}
 					}
 					
-					const array = makeArray({channels})
-					atom.colours = getSplashesArrayFromArray(array)
+					const array = new DragonArray({channels})
+					atom.colours = array.getSplashes()
 
 				}
 				else {
@@ -5110,7 +5110,7 @@ registerRule(
 					for (let i = 0; i < 10; i++) {
 						const v = atom.value.values[i]
 						if (v === false) continue
-						const join = makeArrayFromSplash(`${i}${i}${i}`)
+						const join = DragonArray.fromSplash(`${i}${i}${i}`)
 						if (array === undefined) {
 							array = join
 						} else {
@@ -5118,7 +5118,7 @@ registerRule(
 						}
 					}
 
-					atom.colours = getSplashesArrayFromArray(array)
+					atom.colours = array.getSplashes()
 				}
 
 				atom.isGradient = true
@@ -5378,19 +5378,19 @@ registerRule(
 				let greenNumber = atom.parent.value.channels[1]
 				let blueNumber = atom.parent.value.channels[2]
 
-				if (redNumber === undefined) redNumber = makeNumber({channel: 0, values: [true, false, false, false, false, false, false, false, false, false]})
-				if (greenNumber === undefined) greenNumber = makeNumber({channel: 1, values: [true, false, false, false, false, false, false, false, false, false]})
-				if (blueNumber === undefined) blueNumber = makeNumber({channel: 2, values: [true, false, false, false, false, false, false, false, false, false]})
+				if (redNumber === undefined) redNumber = new DragonNumber({channel: 0, values: [true, false, false, false, false, false, false, false, false, false]})
+				if (greenNumber === undefined) greenNumber = new DragonNumber({channel: 1, values: [true, false, false, false, false, false, false, false, false, false]})
+				if (blueNumber === undefined) blueNumber = new DragonNumber({channel: 2, values: [true, false, false, false, false, false, false, false, false, false]})
 
-				parentR = makeNumber({values: [...redNumber.values], channel: redNumber.channel})
-				parentG = makeNumber({values: [...greenNumber.values], channel: greenNumber.channel})
-				parentB = makeNumber({values: [...blueNumber.values], channel: blueNumber.channel})
+				parentR = new DragonNumber({values: [...redNumber.values], channel: redNumber.channel})
+				parentG = new DragonNumber({values: [...greenNumber.values], channel: greenNumber.channel})
+				parentB = new DragonNumber({values: [...blueNumber.values], channel: blueNumber.channel})
 			}
 			else {
 				const values = [false, false, false, false, false, false, false, false, false, false]
-				parentR = makeNumber({values: [...values], channel: 0})
-				parentG = makeNumber({values: [...values], channel: 1})
-				parentB = makeNumber({values: [...values], channel: 2})
+				parentR = new DragonNumber({values: [...values], channel: 0})
+				parentG = new DragonNumber({values: [...values], channel: 1})
+				parentB = new DragonNumber({values: [...values], channel: 2})
 			}
 
 			const parentChannels = [parentR, parentG, parentB]
@@ -5412,9 +5412,9 @@ registerRule(
 						}
 					}
 
-					const baseArray = makeArray({channels: parentChannels})
+					const baseArray = new DragonArray({channels: parentChannels})
 
-					const colours = getSplashesArrayFromArray(baseArray)
+					const colours = baseArray.getSplashes()
 
 					option.colours = colours
 					option.colourTicker = Infinity
@@ -5700,10 +5700,10 @@ registerRule(
 			const bothZero = !addZero && !subtractZero
 			const addValues = [addZero || bothZero, atom.ons[1], atom.ons[0], atom.ons[5], false, false, false, false, false, false]
 			const subtractValues = [subtractZero || bothZero, atom.ons[2], atom.ons[3], atom.ons[4], false, false, false, false, false, false]
-			const add = makeNumber({values: addValues})
-			const subtract = makeNumber({values: subtractValues})
+			const add = new DragonNumber({values: addValues})
+			const subtract = new DragonNumber({values: subtractValues})
 			
-			const value = makeNumber({channel, variable: atom.variable, add, subtract})
+			const value = new DragonNumber({channel, variable: atom.variable, add, subtract})
 			atom.value = value
 		},
 		hover: (atom) => {
@@ -5967,7 +5967,7 @@ registerRule(
 			/*let colour = "pink"
 			if (atom.parent !== COLOURTODE_BASE_PARENT) {
 				if (atom.parent.parent !== COLOURTODE_BASE_PARENT) {
-					const colours = getSplashesArrayFromArray(atom.parent.parent.value)
+					const colours = atom.parent.parent.value.getSplashes()
 					colour = colours[Random.Uint32 % colours.length]
 				}
 			}*/
@@ -6031,7 +6031,7 @@ registerRule(
 				values[i] = true
 			}
 
-			const number = makeNumber({channel: oldNumber.channel, values})
+			const number = new DragonNumber({channel: oldNumber.channel, values})
 			atom.parent.value = number
 			atom.parent.deleteOptions(atom.parent)
 			atom.parent.createOptions(atom.parent)
@@ -6124,7 +6124,7 @@ registerRule(
 
 			const values = [false, false, false, false, false, false, false, false, false, false]
 			values[atom.value] = true
-			const number = makeNumber({values, channel: atom.parent.value.channel})
+			const number = new DragonNumber({values, channel: atom.parent.value.channel})
 			const parent = atom.parent
 			parent.value = number
 			parent.deleteOptions(parent)
@@ -6386,7 +6386,7 @@ registerRule(
 		width: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
 		construct: (atom) => {
 			atom.variable = CHANNEL_VARIABLES[Random.Uint8 % 3]
-			atom.value = makeNumber({variable: atom.variable})
+			atom.value = new DragonNumber({variable: atom.variable})
 			atom.updateAppearance(atom)
 			if (!atom.isTool) {
 				atom.width += BORDER_THICKNESS/2
@@ -6739,7 +6739,7 @@ registerRule(
 
 		click: (paddle) => {
 			const cells = makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-			const diagram = makeDiagram({left: cells})
+			const diagram = new Diagram({left: cells})
 			setBrushColour(diagram)
 		},
 
@@ -6749,12 +6749,12 @@ registerRule(
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
 				const cells = makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-				const diagram = makeDiagram({left: cells})
-				normaliseDiagram(diagram)
+				const diagram = new Diagram({left: cells})
+				diagram.normalise()
 
 				square.value = diagram
 				registerAtom(square)
-				state.brush.colour = makeDiagram({left: [makeDiagramCell({content: diagram})]})
+				state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
 				square.update(square)
 				return square
 			}
@@ -6766,19 +6766,19 @@ registerRule(
 			let cellAtoms = paddle.cellAtoms
 			if (cellAtoms.length === 0) {
 				
-				//const red = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-				//const green = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-				//const blue = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
-				const leftClone = makeArray({channels: [undefined, undefined, undefined]})
+				//const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+				//const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+				//const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
 				return leftClone
 
 			} else if (cellAtoms.length === 1) {
-				const leftClone = cloneDragonArray(cellAtoms[0].value)
+				const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
 				return leftClone
 			}
 			const cells = makeDiagramCellsFromCellAtoms(cellAtoms)
-			const diagram = makeDiagram({left: cells})
-			normaliseDiagram(diagram)
+			const diagram = new Diagram({left: cells})
+			diagram.normalise()
 			return diagram
 		},
 		rightDrag: (paddle) => {
@@ -6788,10 +6788,10 @@ registerRule(
 				const square = makeAtom(COLOURTODE_SQUARE)
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
-				//const red = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-				//const green = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-				//const blue = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
-				const leftClone = makeArray({channels: [undefined, undefined, undefined]})
+				//const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+				//const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+				//const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
 				setBrushColour(leftClone)
 				registerAtom(square)
 				square.value = leftClone
@@ -6799,7 +6799,7 @@ registerRule(
 				return square
 
 			} else if (cellAtoms.length === 1) {
-				const leftClone = cloneDragonArray(cellAtoms[0].value)
+				const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
 				const square = cellAtoms[0].clone(cellAtoms[0])
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
@@ -6813,8 +6813,8 @@ registerRule(
 			hand.offset.x = -square.width/2
 			hand.offset.y = -square.height/2
 			const cells = makeDiagramCellsFromCellAtoms(cellAtoms)
-			const diagram = makeDiagram({left: cells})
-			normaliseDiagram(diagram)
+			const diagram = new Diagram({left: cells})
+			diagram.normalise()
 
 			square.value = diagram
 			registerAtom(square)
@@ -7059,7 +7059,7 @@ registerRule(
 	}
 
 	const isDragonArraySingleColour = (array) => {
-		const splashes = getSplashesSetFromArray(array)
+		const splashes = array.getSplashSet()
 		return splashes.size === 1
 	}
 
@@ -7074,8 +7074,8 @@ registerRule(
 			if (achannel.variable !== bchannel.variable) return false
 		}
 
-		const asplashes = getSplashesArrayFromArray(a)
-		const bsplashes = getSplashesArrayFromArray(b)
+		const asplashes = a.getSplashes()
+		const bsplashes = b.getSplashes()
 
 		for (const asplash of asplashes) {
 			const id = bsplashes.indexOf(asplash)
@@ -7153,7 +7153,7 @@ registerRule(
 	
 	const makeDiagramCellsFromCellAtoms = (cellAtoms) => {
 
-		const orderedCellAtoms = getOrderedCellAtoms(cellAtoms)
+		const orderedCellAtoms = sortByPosition(cellAtoms)
 		const [left, , top, ] = getBounds(cellAtoms)
 		const diagramCells = []
 
@@ -7161,8 +7161,8 @@ registerRule(
 			const x = (cellAtom.x - left) / cellAtom.width
 			const y = (cellAtom.y - top) / cellAtom.height
 
-			const leftClone = cloneDragonArray(cellAtom.value) //TODO: should act different for multis
-			const diagramCell = makeDiagramCell({x, y, content: leftClone})
+			const leftClone = DragonArray.cloneContent(cellAtom.value) //TODO: should act different for multis
+			const diagramCell = new DiagramCell({x, y, content: leftClone})
 			diagramCells.push(diagramCell)
 
 		}
@@ -7174,7 +7174,7 @@ registerRule(
 
 	//this only works on nested diagrams where every cell is the same size
 	const flattenAndFillDiagramCells = (diagramCells, fillContent) => {
-		const orderedCells = getOrderedCellAtoms(diagramCells)
+		const orderedCells = sortByPosition(diagramCells)
 		
 		const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
 		
@@ -7195,7 +7195,7 @@ registerRule(
 				
 				if (miniDiagramCell === undefined || ((miniDiagramCell.x-diagramLeft)/diagramWidth+128 != x/dimX+128) || ((miniDiagramCell.y-diagramTop)/diagramHeight+128 != y/dimY+128)){
 					if(fillContent){
-						miniClone = cloneDragonArray(fillContent)
+						miniClone = DragonArray.cloneContent(fillContent)
 					} else {
 						continue
 					}
@@ -7203,7 +7203,7 @@ registerRule(
 					addCount++
 					if (miniDiagramCell.content.isDiagram){ //if mini-mini cells
 						for (const miniMiniCell of flattenAndFillDiagramCells(miniDiagramCell.content.left,fillContent)) {
-							const diagramCell = makeDiagramCell({
+							const diagramCell = new DiagramCell({
 								x: (x + miniMiniCell.x)/dimX,
 								y: (y + miniMiniCell.y)/dimY,
 								width: miniWidth * miniMiniCell.width,
@@ -7214,11 +7214,11 @@ registerRule(
 						}
 						continue
 					} else{
-						miniClone = cloneDragonArray(miniDiagramCell.content)
+						miniClone = DragonArray.cloneContent(miniDiagramCell.content)
 					}
 				}
 				
-				const diagramCell = makeDiagramCell({
+				const diagramCell = new DiagramCell({
 					x: x/dimX,
 					y: y/dimY,
 					width: miniWidth,
@@ -7238,12 +7238,12 @@ registerRule(
 	const addDiagramCellsToLeftList = (diagramCells, list, stampeds, posX, posY, sizeX=1, sizeY=1) => {
 		//if empty list 
 		if (diagramCells.length == 0){
-			const red = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-			const green = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-			const blue = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
-			const miniClone = makeArray({channels: [red, green, blue]})
+			const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+			const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+			const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+			const miniClone = new DragonArray({channels: [red, green, blue]})
 			applyRangeStamp(stampeds, miniClone)
-				const diagramCell = makeDiagramCell({
+				const diagramCell = new DiagramCell({
 					x: posX,
 					y: posY,
 					width: sizeX,
@@ -7257,7 +7257,7 @@ registerRule(
 		
 		
 		let addCount = 0
-		const orderedMiniLeftCells = getOrderedCellAtoms(diagramCells)
+		const orderedMiniLeftCells = sortByPosition(diagramCells)
 		// get diagram dimensions
 		const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
 		const diagramWidth = diagramRight - diagramLeft
@@ -7280,10 +7280,10 @@ registerRule(
 				let miniClone
 				//fills in not filled spaces
 				if (miniDiagramCell === undefined || ((miniDiagramCell.x-diagramLeft)/diagramWidth+128 != x/dimX+128) || ((miniDiagramCell.y-diagramTop)/diagramHeight+128 != y/dimY+128)){
-					const red = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-					const green = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-					const blue = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
-					miniClone = makeArray({channels: [red, green, blue]})
+					const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+					const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+					const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+					miniClone = new DragonArray({channels: [red, green, blue]})
 					
 				} else { 
 					addCount++
@@ -7295,12 +7295,12 @@ registerRule(
 						}
 						continue
 					} else{
-						miniClone = cloneDragonArray(miniDiagramCell.content)
+						miniClone = DragonArray.cloneContent(miniDiagramCell.content)
 					}
 				}
 				
 				applyRangeStamp(stampeds, miniClone)
-				const diagramCell = makeDiagramCell({
+				const diagramCell = new DiagramCell({
 					x: miniX,
 					y: miniY,
 					width: miniWidth,
@@ -7321,7 +7321,7 @@ registerRule(
 		//if empty cell fill with nothing(s)
 		if (diagramCells === undefined || diagramCells.length==0) {
 			for (let i = 0; i < miniCounts.total;i++) {
-				const nothingCell = makeDiagramCell({
+				const nothingCell = new DiagramCell({
 					x: posX,
 					y: posY,
 					width: sizeX,
@@ -7334,7 +7334,7 @@ registerRule(
 			return
 		}
 		
-		const orderedMiniLeftCells = getOrderedCellAtoms(diagramCells)
+		const orderedMiniLeftCells = sortByPosition(diagramCells)
 		// get diagram dimensions
 		const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
 		const diagramWidth = diagramRight - diagramLeft
@@ -7344,7 +7344,7 @@ registerRule(
 		
 		if(miniCounts.X != dimX || miniCounts.Y != dimY){ //left and right arent split the same
 			if (miniCounts.total > 1){ // merge if left is split
-				const mergeCell = makeDiagramCell({
+				const mergeCell = new DiagramCell({
 						x: posX,
 						y: posY,
 						width: sizeX,
@@ -7358,7 +7358,7 @@ registerRule(
 			}
 
 			if (dimX * dimY != 1) { // split if rigth is split
-				const splitCell = makeDiagramCell({
+				const splitCell = new DiagramCell({
 					x: posX,
 					y: posY,
 					width: sizeX,
@@ -7395,9 +7395,9 @@ registerRule(
 					addDiagramCellsToRightList([miniDiagramCell], list, stampeds, miniX, miniY, miniCounts[x*dimY + y], miniWidth, miniHeight)
 					
 				} else { // left and right have same dimensions => recolour
-					miniClone = cloneDragonArray(miniDiagramCell.content)
+					miniClone = DragonArray.cloneContent(miniDiagramCell.content)
 					applyRangeStamp(stampeds, miniClone)
-					const diagramCell = makeDiagramCell({
+					const diagramCell = new DiagramCell({
 						x: miniX,
 						y: miniY,
 						width: miniWidth,
@@ -7443,7 +7443,7 @@ registerRule(
 			transformations = DRAGON_TRANSFORMATIONS[key]
 		}
 
-		const orderedCellAtoms = getOrderedCellAtoms(paddle.cellAtoms)
+		const orderedCellAtoms = sortByPosition(paddle.cellAtoms)
 		const origin = orderedCellAtoms[0]
 		const left = []
 		const right = []
@@ -7458,12 +7458,12 @@ registerRule(
 			let miniCount
 			if (cellAtom.isLeftSlot) {
 
-				const red = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-				const green = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-				const blue = makeNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
-				const leftClone = makeArray({channels: [red, green, blue]})
+				const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+				const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+				const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+				const leftClone = new DragonArray({channels: [red, green, blue]})
 				applyRangeStamp(stampeds, leftClone)
-				const diagramCell = makeDiagramCell({x, y, content: leftClone})
+				const diagramCell = new DiagramCell({x, y, content: leftClone})
 				left.push(diagramCell)
 
 			} else if (cellAtom.value.isDiagram) {
@@ -7473,9 +7473,9 @@ registerRule(
 			} else {
 				
 				// Just check for a single cell
-				const leftClone = cloneDragonArray(cellAtom.value)
+				const leftClone = DragonArray.cloneContent(cellAtom.value)
 				applyRangeStamp(stampeds, leftClone)
-				const diagramCell = makeDiagramCell({x, y, content: leftClone})
+				const diagramCell = new DiagramCell({x, y, content: leftClone})
 				left.push(diagramCell)
 			}
 
@@ -7495,24 +7495,22 @@ registerRule(
 			} else if (rightContent === undefined){
 				addDiagramCellsToRightList(rightContent, right, stampeds, x, y, miniCount)
 			} else {
-				const rightClone = cloneDragonArray(rightContent)
-				addDiagramCellsToRightList([makeDiagramCell({x, y, content: rightClone})], right, stampeds, x, y, miniCount)
+				const rightClone = DragonArray.cloneContent(rightContent)
+				addDiagramCellsToRightList([new DiagramCell({x, y, content: rightClone})], right, stampeds, x, y, miniCount)
 			}
 		}
 		
-		const diagram = makeMaximisedDiagram(makeDiagram({left, right}))
+		const diagram = Diagram.maximised(new Diagram({left, right}))
 
 		const locked = paddle.pinhole.locked
 		const chance = paddle.chance === undefined? undefined : paddle.chance.getValue(paddle.chance)
-		const rule = makeRule({steps: [diagram], transformations, locked, chance})
+		const rule = new Rule({steps: [diagram], transformations, locked, chance})
 		paddle.rule = rule
 		if (paddle.registry !== undefined) {
-			unregisterRegistry(paddle.registry)
+			ruleRegistry.unregister(paddle.registry)
 		}
 		if (locked && paddle.rightTriangle !== undefined) {
-			//debugRule(rule)
-			paddle.registry = registerRule(rule)
-			//debugRegistry(paddle.registry, {redundants: false})
+			paddle.registry = ruleRegistry.register(rule)
 		}
 	}
 	const getAllAtoms = (pool = state.colourTode.atoms) => {
@@ -7573,7 +7571,7 @@ registerRule(
 	const deletePaddle = (paddle, id = paddles.indexOf(paddle)) => {
 		paddles.splice(id, 1)
 		if (paddle.registry !== undefined) {
-			unregisterRegistry(paddle.registry)
+			ruleRegistry.unregister(paddle.registry)
 		}
 		deleteAtom(paddle)
 		positionPaddles()
@@ -8160,7 +8158,7 @@ registerRule(
 	const makeSquareFromValue = (value) => {
 
 		const newAtom = makeAtom({...COLOURTODE_SQUARE})
-		newAtom.value = cloneDragonArray(value)
+		newAtom.value = DragonArray.cloneContent(value)
 
 		if (newAtom.value !== undefined) {
 			if (newAtom.value.joins !== undefined) {
@@ -8319,7 +8317,7 @@ registerRule(
 	const tallRectangleTool = {} //addMenuTool(COLOURTODE_TALL_RECTANGLE, "tall_rectangle")
 	createPaddle()
 	
-	squareTool.value = makeArrayFromSplash(state.brush.colour)
+	squareTool.value = DragonArray.fromSplash(state.brush.colour)
 
 	circleTool.borderScale = 1
 	
@@ -8332,10 +8330,10 @@ registerRule(
 
 		/*
 		if (typeof state.brush.colour === "number") {
-			atom.value = makeArrayFromSplash(state.brush.colour)
+			atom.value = DragonArray.fromSplash(state.brush.colour)
 		} else {
 			const content = state.brush.colour.left[0].content
-			//atom.value = cloneDragonArray(content)
+			//atom.value = DragonArray.cloneContent(content)
 			if (atom === squareTool) {
 				atom.stamp = atom.value.stamp
 			}
@@ -8356,7 +8354,7 @@ registerRule(
 
 				if (atom.value.isDiagram) {
 					const diagram = atom.value
-					const [diagramWidth, diagramHeight] = getDiagramDimensions(diagram)
+					const [diagramWidth, diagramHeight] = diagram.getDimensions()
 					const cellAtomWidth = atom.width / diagramWidth
 					const cellAtomHeight = atom.height / diagramHeight
 					for (const diagramCell of diagram.left) {
@@ -8373,8 +8371,8 @@ registerRule(
 			}
 		}
 
-		const valueClone = cloneDragonArray(atom.value)
-		atom.colours = getSplashesArrayFromArray(valueClone)
+		const valueClone = DragonArray.cloneContent(atom.value)
+		atom.colours = valueClone.getSplashes()
 
 		if (atom.colourId >= atom.colours.length) {
 			atom.colourId = 0

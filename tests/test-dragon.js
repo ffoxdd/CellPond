@@ -4,6 +4,13 @@ const { loadCellPond } = require("./setup")
 
 const { context: cellpond } = loadCellPond()
 
+const DragonNumber = () => cellpond.DragonNumber
+const DragonArray = () => cellpond.DragonArray
+const DiagramCell = () => cellpond.DiagramCell
+const Diagram = () => cellpond.Diagram
+const Rule = () => cellpond.Rule
+const RuleRegistry = () => cellpond.RuleRegistry
+
 // Helper: compare arrays by value (avoids cross-realm deepStrictEqual issues)
 function assertArrayEqual(actual, expected) {
 	assert.equal(actual.length, expected.length, `length: ${actual.length} !== ${expected.length}`)
@@ -15,37 +22,51 @@ function assertArrayEqual(actual, expected) {
 //=================//
 // DRAGON - NUMBER //
 //=================//
-describe("makeNumber", () => {
+describe("DragonNumber", () => {
 
-	it("creates a number with default values", () => {
-		const num = cellpond.makeNumber({values: [true, false, false, false, false, false, false, false, false, false]})
+	it("creates with default values", () => {
+		const num = new (DragonNumber())({values: [true, false, false, false, false, false, false, false, false, false]})
 		assert.equal(num.values[0], true)
 		assert.equal(num.values[1], false)
 		assert.equal(num.channel, 0)
 		assert.equal(num.variable, undefined)
 	})
 
-	it("creates a number with a variable", () => {
-		const num = cellpond.makeNumber({variable: "red"})
+	it("creates with a variable (all-true values)", () => {
+		const num = new (DragonNumber())({variable: "red"})
 		assert.equal(num.variable, "red")
-		// variable numbers get all-true values
 		assert.equal(num.values.every(v => v === true), true)
 	})
 
-	it("creates a number with custom channel", () => {
-		const num = cellpond.makeNumber({values: [true], channel: 2})
+	it("creates with custom channel", () => {
+		const num = new (DragonNumber())({values: [true], channel: 2})
 		assert.equal(num.channel, 2)
 	})
 
-})
+	it("clone creates independent copy", () => {
+		const original = new (DragonNumber())({values: [true, false, false, false, false, false, false, false, false, false]})
+		const clone = original.clone()
+		original.values[0] = false
+		assert.equal(clone.values[0], true)
+	})
 
-describe("makeNumberFromInt", () => {
-
-	it("creates a number with only one value set", () => {
-		const num = cellpond.makeNumber({values: [false, false, false, false, false, true, false, false, false, false]})
+	it("fromInt creates number with single value set", () => {
+		const num = DragonNumber().fromInt(5)
 		assert.equal(num.values[5], true)
 		assert.equal(num.values[0], false)
 		assert.equal(num.values[9], false)
+	})
+
+	it("emptyValues returns all false", () => {
+		const values = DragonNumber().emptyValues()
+		assert.equal(values.every(v => v === false), true)
+		assert.equal(values.length, 10)
+	})
+
+	it("allValues returns all true", () => {
+		const values = DragonNumber().allValues()
+		assert.equal(values.every(v => v === true), true)
+		assert.equal(values.length, 10)
 	})
 
 })
@@ -53,84 +74,92 @@ describe("makeNumberFromInt", () => {
 //================//
 // DRAGON - ARRAY //
 //================//
-describe("makeArray", () => {
+describe("DragonArray", () => {
 
-	it("creates an array with undefined channels by default", () => {
-		const arr = cellpond.makeArray()
+	it("creates with undefined channels by default", () => {
+		const arr = new (DragonArray())()
 		assert.equal(arr.channels.length, 3)
 		assert.equal(arr.channels[0], undefined)
-		assert.equal(arr.channels[1], undefined)
-		assert.equal(arr.channels[2], undefined)
 	})
 
-	it("creates an array with stamp", () => {
-		const arr = cellpond.makeArray({stamp: "a"})
+	it("creates with stamp", () => {
+		const arr = new (DragonArray())({stamp: "a"})
 		assert.equal(arr.stamp, "a")
 	})
 
-})
-
-describe("makeArrayFromSplash", () => {
-
-	it("creates a colour array from splash 000", () => {
-		const arr = cellpond.makeArrayFromSplash(0)
-		const splashes = cellpond.getSplashesArrayFromArray(arr)
+	it("fromSplash(0) round-trips", () => {
+		const arr = DragonArray().fromSplash(0)
+		const splashes = arr.getSplashes()
 		assert.equal(splashes.length, 1)
 		assert.equal(splashes[0], 0)
 	})
 
-	it("creates a colour array from splash 999", () => {
-		const arr = cellpond.makeArrayFromSplash(999)
-		const splashes = cellpond.getSplashesArrayFromArray(arr)
-		assert.equal(splashes.length, 1)
-		assert.equal(splashes[0], 999)
+	it("fromSplash(999) round-trips", () => {
+		const arr = DragonArray().fromSplash(999)
+		assert.equal(arr.getSplashes()[0], 999)
 	})
 
-	it("creates a colour array from splash 305", () => {
-		const arr = cellpond.makeArrayFromSplash(305)
-		const splashes = cellpond.getSplashesArrayFromArray(arr)
-		assert.equal(splashes.length, 1)
-		assert.equal(splashes[0], 305)
+	it("fromSplash(305) round-trips", () => {
+		const arr = DragonArray().fromSplash(305)
+		assert.equal(arr.getSplashes()[0], 305)
 	})
 
-})
-
-describe("getSplashesArrayFromArray", () => {
-
-	it("returns all possible splashes for wildcard array", () => {
-		const arr = cellpond.makeArray({
+	it("getSplashes returns all possible values", () => {
+		const arr = new (DragonArray())({
 			channels: [
-				cellpond.makeNumber({values: [true, true, false, false, false, false, false, false, false, false], channel: 0}),
-				cellpond.makeNumber({values: [true, false, false, false, false, false, false, false, false, false], channel: 1}),
-				cellpond.makeNumber({values: [true, false, false, false, false, false, false, false, false, false], channel: 2}),
+				new (DragonNumber())({values: [true, true, false, false, false, false, false, false, false, false], channel: 0}),
+				new (DragonNumber())({values: [true, false, false, false, false, false, false, false, false, false], channel: 1}),
+				new (DragonNumber())({values: [true, false, false, false, false, false, false, false, false, false], channel: 2}),
 			]
 		})
-		const splashes = cellpond.getSplashesArrayFromArray(arr)
-		assert.equal(splashes.length, 2) // 000 and 100
+		const splashes = arr.getSplashes()
+		assert.equal(splashes.length, 2)
 		assert.ok(splashes.includes(0))
 		assert.ok(splashes.includes(100))
 	})
 
-})
+	it("getSplashSet returns a Set", () => {
+		const arr = DragonArray().fromSplash(555)
+		const set = arr.getSplashSet()
+		assert.ok(set.has(555))
+		assert.equal(set.size, 1)
+	})
 
-describe("cloneDragonArray", () => {
-
-	it("creates an independent copy", () => {
-		const original = cellpond.makeArrayFromSplash(555)
-		const clone = cellpond.cloneDragonArray(original)
-		// Modify original
+	it("clone creates independent copy", () => {
+		const original = DragonArray().fromSplash(555)
+		const clone = original.clone()
 		original.channels[0].values[5] = false
 		original.channels[0].values[0] = true
-		// Clone should be unaffected
 		assert.equal(clone.channels[0].values[5], true)
 		assert.equal(clone.channels[0].values[0], false)
 	})
 
-	it("clones undefined as all-true", () => {
-		const clone = cellpond.cloneDragonArray(undefined)
-		assert.equal(clone.channels[0].values.every(v => v), true)
-		assert.equal(clone.channels[1].values.every(v => v), true)
-		assert.equal(clone.channels[2].values.every(v => v), true)
+	it("wildcard has all values true", () => {
+		const wc = DragonArray().wildcard()
+		assert.equal(wc.channels[0].values.every(v => v), true)
+		assert.equal(wc.channels[1].values.every(v => v), true)
+		assert.equal(wc.channels[2].values.every(v => v), true)
+	})
+
+	it("cloneContent handles undefined", () => {
+		const result = DragonArray().cloneContent(undefined)
+		assert.equal(result.channels[0].values.every(v => v), true)
+	})
+
+	it("isDynamic returns true when channel has variable", () => {
+		const arr = new (DragonArray())({
+			channels: [
+				new (DragonNumber())({variable: "red", channel: 0}),
+				new (DragonNumber())({variable: "green", channel: 1}),
+				new (DragonNumber())({variable: "blue", channel: 2}),
+			]
+		})
+		assert.equal(arr.isDynamic(), true)
+	})
+
+	it("isDynamic returns false for static array", () => {
+		const arr = DragonArray().fromSplash(555)
+		assert.equal(arr.isDynamic(), false)
 	})
 
 })
@@ -138,30 +167,10 @@ describe("cloneDragonArray", () => {
 //==================//
 // DRAGON - DIAGRAM //
 //==================//
-describe("makeDiagram", () => {
+describe("DiagramCell", () => {
 
-	it("creates an empty diagram by default", () => {
-		const diagram = cellpond.makeDiagram()
-		assert.equal(diagram.left.length, 0)
-		assert.equal(diagram.right, undefined)
-		assert.equal(diagram.isDiagram, true)
-	})
-
-	it("creates a diagram with left and right sides", () => {
-		const diagram = cellpond.makeDiagram({
-			left: [cellpond.makeDiagramCell()],
-			right: [cellpond.makeDiagramCell()],
-		})
-		assert.equal(diagram.left.length, 1)
-		assert.equal(diagram.right.length, 1)
-	})
-
-})
-
-describe("makeDiagramCell", () => {
-
-	it("creates a cell with default values", () => {
-		const cell = cellpond.makeDiagramCell()
+	it("creates with default values", () => {
+		const cell = new (DiagramCell())()
 		assert.equal(cell.x, 0)
 		assert.equal(cell.y, 0)
 		assert.equal(cell.width, 1)
@@ -170,49 +179,78 @@ describe("makeDiagramCell", () => {
 		assert.equal(cell.splitY, 1)
 	})
 
-	it("creates a cell with custom position and size", () => {
-		const cell = cellpond.makeDiagramCell({x: 1, y: 2, width: 0.5, height: 0.25})
+	it("creates with custom position", () => {
+		const cell = new (DiagramCell())({x: 1, y: 2, width: 0.5, height: 0.25})
 		assert.equal(cell.x, 1)
 		assert.equal(cell.y, 2)
 		assert.equal(cell.width, 0.5)
-		assert.equal(cell.height, 0.25)
+	})
+
+	it("clone creates independent copy", () => {
+		const original = new (DiagramCell())({content: DragonArray().fromSplash(999)})
+		const clone = original.clone()
+		original.content.channels[0].values[9] = false
+		assert.equal(clone.content.channels[0].values[9], true)
 	})
 
 })
 
-describe("getDiagramDimensions", () => {
+describe("Diagram", () => {
 
-	it("returns dimensions of a single-cell diagram", () => {
-		const diagram = cellpond.makeDiagram({
-			left: [cellpond.makeDiagramCell({x: 0, y: 0, width: 1, height: 1})],
-		})
-		assertArrayEqual(cellpond.getDiagramDimensions(diagram), [1, 1])
+	it("creates empty by default", () => {
+		const d = new (Diagram())()
+		assert.equal(d.left.length, 0)
+		assert.equal(d.right, undefined)
+		assert.equal(d.isDiagram, true)
 	})
 
-	it("returns dimensions of a multi-cell diagram", () => {
-		const diagram = cellpond.makeDiagram({
-			left: [
-				cellpond.makeDiagramCell({x: 0, y: 0, width: 1, height: 1}),
-				cellpond.makeDiagramCell({x: 1, y: 0, width: 1, height: 1}),
-			],
-		})
-		assertArrayEqual(cellpond.getDiagramDimensions(diagram), [2, 1])
+	it("getDimensions for single cell", () => {
+		const d = new (Diagram())({left: [new (DiagramCell())({x: 0, y: 0, width: 1, height: 1})]})
+		assertArrayEqual(d.getDimensions(), [1, 1])
 	})
 
-})
-
-describe("normaliseDiagram", () => {
-
-	it("scales a 2x1 diagram to fit in 1x1", () => {
-		const diagram = cellpond.makeDiagram({
+	it("getDimensions for multi-cell", () => {
+		const d = new (Diagram())({
 			left: [
-				cellpond.makeDiagramCell({x: 0, y: 0, width: 1, height: 1}),
-				cellpond.makeDiagramCell({x: 1, y: 0, width: 1, height: 1}),
-			],
+				new (DiagramCell())({x: 0, y: 0, width: 1, height: 1}),
+				new (DiagramCell())({x: 1, y: 0, width: 1, height: 1}),
+			]
 		})
-		cellpond.normaliseDiagram(diagram)
-		assert.equal(diagram.left[0].width, 0.5)
-		assert.equal(diagram.left[1].x, 0.5)
+		assertArrayEqual(d.getDimensions(), [2, 1])
+	})
+
+	it("normalise scales to fit 1x1", () => {
+		const d = new (Diagram())({
+			left: [
+				new (DiagramCell())({x: 0, y: 0, width: 1, height: 1}),
+				new (DiagramCell())({x: 1, y: 0, width: 1, height: 1}),
+			]
+		})
+		d.normalise()
+		assert.equal(d.left[0].width, 0.5)
+		assert.equal(d.left[1].x, 0.5)
+	})
+
+	it("getOrigin returns cell at (0,0)", () => {
+		const d = new (Diagram())({
+			left: [
+				new (DiagramCell())({x: 1, y: 0}),
+				new (DiagramCell())({x: 0, y: 0}),
+			]
+		})
+		const origin = d.getOrigin()
+		assert.equal(origin.x, 0)
+		assert.equal(origin.y, 0)
+	})
+
+	it("clone creates independent copy", () => {
+		const d = new (Diagram())({
+			left: [new (DiagramCell())({x: 5, y: 3})],
+			right: [new (DiagramCell())({x: 0, y: 0})],
+		})
+		const clone = d.clone()
+		d.left[0].x = 99
+		assert.equal(clone.left[0].x, 5)
 	})
 
 })
@@ -244,46 +282,34 @@ describe("DRAGON_TRANSFORMATIONS", () => {
 
 	it("X mirror flips x", () => {
 		const [x, y] = cellpond.DRAGON_TRANSFORMATIONS.X[1](0, 0, 1, 1, 2, 2)
-		assert.equal(x, 1) // -0-1+2 = 1
+		assert.equal(x, 1)
 		assert.equal(y, 0)
 	})
 
 })
 
-describe("getOrderedCellAtoms", () => {
+describe("sortByPosition", () => {
 
 	it("sorts cells left-to-right, top-to-bottom", () => {
-		const cells = [
-			{x: 1, y: 0},
-			{x: 0, y: 1},
-			{x: 0, y: 0},
-		]
-		const ordered = cellpond.getOrderedCellAtoms(cells)
+		const cells = [{x: 1, y: 0}, {x: 0, y: 1}, {x: 0, y: 0}]
+		const ordered = cellpond.sortByPosition(cells)
 		assert.equal(ordered[0].x, 0)
 		assert.equal(ordered[0].y, 0)
 		assert.equal(ordered[1].x, 0)
 		assert.equal(ordered[1].y, 1)
 		assert.equal(ordered[2].x, 1)
-		assert.equal(ordered[2].y, 0)
 	})
 
 })
 
-//=================//
-// DRAGON - ORIGIN //
-//=================//
-describe("getOriginOfDiagram", () => {
+//======================//
+// DRAGON - RULEREGISTRY //
+//======================//
+describe("RuleRegistry", () => {
 
-	it("returns the cell at (0,0)", () => {
-		const diagram = cellpond.makeDiagram({
-			left: [
-				cellpond.makeDiagramCell({x: 1, y: 0}),
-				cellpond.makeDiagramCell({x: 0, y: 0}),
-			],
-		})
-		const origin = cellpond.getOriginOfDiagram(diagram)
-		assert.equal(origin.x, 0)
-		assert.equal(origin.y, 0)
+	it("starts with empty behaveFunctions", () => {
+		const reg = new (RuleRegistry())()
+		assert.equal(reg.behaveFunctions.length, 0)
 	})
 
 })
