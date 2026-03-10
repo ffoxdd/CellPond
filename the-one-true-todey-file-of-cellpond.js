@@ -4123,11 +4123,11 @@ on.load(() => {
 		behindOtherChildren: true,
 		expanded: false,
 		draw: (atom, ctx) => {
-			if (atom.direction === "right") TRIANGLE_RIGHT.draw(atom)
-			else if (atom.direction === "down") TRIANGLE_DOWN.draw(atom)
-			else if (atom.direction === "up") TRIANGLE_UP.draw(atom)
-			else if (atom.direction === "left") TRIANGLE_LEFT.draw(atom)
-			else TRIANGLE_RIGHT.draw(atom)
+			if (atom.direction === "right") TRIANGLE_RIGHT.draw(atom, ctx)
+			else if (atom.direction === "down") TRIANGLE_DOWN.draw(atom, ctx)
+			else if (atom.direction === "up") TRIANGLE_UP.draw(atom, ctx)
+			else if (atom.direction === "left") TRIANGLE_LEFT.draw(atom, ctx)
+			else TRIANGLE_RIGHT.draw(atom, ctx)
 		},
 		colour: Colour.splash(999),
 		overlaps: TRIANGLE_RIGHT.overlaps,
@@ -6180,7 +6180,7 @@ on.load(() => {
 
 	const DIAMOND_CHOICE = {
 		draw: (atom, ctx) => {
-			COLOURTODE_TALL_RECTANGLE.draw(atom)
+			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
 		},
 		offscreen: COLOURTODE_RECTANGLE.offscreen,
 		overlaps: COLOURTODE_RECTANGLE.overlaps,
@@ -6222,7 +6222,7 @@ on.load(() => {
 	
 	const DIAMOND_PIN = {
 		draw: (atom, ctx) => {
-			COLOURTODE_TALL_RECTANGLE.draw(atom)
+			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
 		},
 		offscreen: COLOURTODE_RECTANGLE.offscreen,
 		overlaps: COLOURTODE_RECTANGLE.overlaps,
@@ -7535,7 +7535,7 @@ on.load(() => {
 		draw: (atom, ctx) => {
 			// atom.colour = atom.value? Colour.Silver : Colour.Black
 			// atom.colour = Colour.Black
-			TRIANGLE_UP.draw(atom)
+			TRIANGLE_UP.draw(atom, ctx)
 		},
 		touch: (atom) => {
 			atom.colour = Colour.Silver
@@ -7575,7 +7575,7 @@ on.load(() => {
 		draw: (atom, ctx) => {
 			// atom.colour = atom.value? Colour.Silver : Colour.Black
 			// atom.colour = Colour.Black
-			TRIANGLE_DOWN.draw(atom)
+			TRIANGLE_DOWN.draw(atom, ctx)
 		},
 		touch: (atom) => {
 			atom.colour = Colour.Silver
@@ -7807,7 +7807,7 @@ on.load(() => {
 				atom.update(atom)
 			}
 			if (atom.unlocked) {
-				atom.element.draw(atom)
+				atom.element.draw(atom, ctx)
 			}
 		},
 		overlaps: (atom, x, y) => atom.element.overlaps(atom, x, y),
