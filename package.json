@@ -1,0 +1,28 @@
+{
+  "name": "cellpond",
+  "version": "1.0.0",
+  "description": "<img align=\"right\" height=\"100\" src=\"https://user-images.githubusercontent.com/15892272/164454144-25d4aa67-4942-463e-b4fe-edbd3b17adc1.png\">",
+  "main": "the-one-true-todey-file-of-cellpond.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node tests/test-cells.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TodePond/CellPond.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TodePond/CellPond/issues"
+  },
+  "homepage": "https://github.com/TodePond/CellPond#readme",
+  "devDependencies": {
+    "jsdom": "^28.1.0"
+  }
+}
