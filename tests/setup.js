@@ -114,6 +114,18 @@ function loadCellPond() {
 		readScript("libraries/lz-string.js"),
 		readScript("source/cell.js"),
 		coreSource,
+		// Stub DRAGON_INSTRUCTION — defined inside on.load (which is truncated for tests)
+		// dragon.js's makeDiagramCell defaults to DRAGON_INSTRUCTION.recolour at call time
+		`DRAGON_INSTRUCTION = {};
+		 DRAGON_INSTRUCTION.nothing = (cell) => () => ({drawn: 0});
+		 DRAGON_INSTRUCTION.nothing.type = "NOTHING";
+		 DRAGON_INSTRUCTION.recolour = (cell) => () => ({drawn: 0});
+		 DRAGON_INSTRUCTION.recolour.type = "RECOLOUR";
+		 DRAGON_INSTRUCTION.split = (cell) => () => ({drawn: 0});
+		 DRAGON_INSTRUCTION.split.type = "SPLIT";
+		 DRAGON_INSTRUCTION.merge = (cell) => () => ({drawn: 0});
+		 DRAGON_INSTRUCTION.merge.type = "MERGE";`,
+		readScript("source/dragon.js"),
 	]
 
 	const combined = scripts.join("\n;\n")
@@ -129,6 +141,15 @@ function loadCellPond() {
 			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
 			setWorldSize,
 			fits, aligns, isFit,
+			makeNumber, makeArray, makeArrayFromSplash,
+			makeDiagram, makeDiagramCell, makeRule,
+			DRAGON_TRANSFORMATIONS, CHANNEL_VARIABLES,
+			getSplashesArrayFromArray, getSplashesSetFromArray,
+			cloneDragonArray, cloneDragonNumber,
+			evaluateNumber, addChannelToResults,
+			registerRule, unregisterRegistry,
+			getOrderedCellAtoms, getOriginOfRule, getOriginOfDiagram,
+			normaliseDiagram, getDiagramDimensions,
 		};
 		for (var __k__ in __cellpond_exports__) {
 			this[__k__] = __cellpond_exports__[__k__];
