@@ -116,17 +116,6 @@ function loadCellPond() {
 		readScript("source/camera.js"),
 		readScript("source/cell.js"),
 		coreSource,
-		// Stub DRAGON_INSTRUCTION — defined inside on.load (which is truncated for tests)
-		// dragon.js's makeDiagramCell defaults to DRAGON_INSTRUCTION.recolour at call time
-		`DRAGON_INSTRUCTION = {};
-		 DRAGON_INSTRUCTION.nothing = (cell) => () => ({drawn: 0});
-		 DRAGON_INSTRUCTION.nothing.type = "NOTHING";
-		 DRAGON_INSTRUCTION.recolour = (cell) => () => ({drawn: 0});
-		 DRAGON_INSTRUCTION.recolour.type = "RECOLOUR";
-		 DRAGON_INSTRUCTION.split = (cell) => () => ({drawn: 0});
-		 DRAGON_INSTRUCTION.split.type = "SPLIT";
-		 DRAGON_INSTRUCTION.merge = (cell) => () => ({drawn: 0});
-		 DRAGON_INSTRUCTION.merge.type = "MERGE";`,
 		readScript("source/dragon.js"),
 		// Initialize ruleRegistry — normally done inside on.load which is truncated for tests
 		`ruleRegistry = new RuleRegistry();`,
@@ -146,7 +135,7 @@ function loadCellPond() {
 			fits, aligns, isFit,
 			DragonNumber, DragonArray, DiagramCell, Diagram, Rule,
 			RuleRegistry, ruleRegistry,
-			DRAGON_TRANSFORMATIONS, CHANNEL_VARIABLES,
+			DRAGON_TRANSFORMATIONS, CHANNEL_VARIABLES, DRAGON_INSTRUCTION,
 			sortByPosition,
 		};
 		for (var __k__ in __cellpond_exports__) {
