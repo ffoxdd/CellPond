@@ -264,7 +264,6 @@ const state = {
 		},
 	},
 
-	dragon: {},
 }
 
 let WORLD_SIZE = undefined
@@ -611,7 +610,7 @@ on.load(() => {
 			pencilled = false
 		}
 
-		if (state.colourTode.hand.state !== HAND.BRUSHING && state.colourTode.hand.state !== HAND.PENCILLING) return
+		if (uiState.hand.state !== HAND.BRUSHING && uiState.hand.state !== HAND.PENCILLING) return
 
 		if (Mouse.Middle && !pencilled) {
 			const [x, y] = Mouse.position
@@ -1409,7 +1408,7 @@ on.load(() => {
 	//====================//
 	// COLOURTODE - STATE //
 	//====================//
-	state.colourTode = {
+	const uiState = {
 		atoms: [],
 		hand: {
 			state: undefined,
@@ -1421,7 +1420,7 @@ on.load(() => {
 			previous: {x: 0, y: 0},
 		},
 	}
-	const hand = state.colourTode.hand
+	const hand = uiState.hand
 
 	//====================//
 	// COLOURTODE - SETUP //
@@ -1476,7 +1475,7 @@ on.load(() => {
 	
 	const COLOURTODE_FRICTION = 0.9
 	const colourTodeUpdate = () => {
-		for (const atom of state.colourTode.atoms) {
+		for (const atom of uiState.atoms) {
 			updateAtom(atom)
 		}
 	}
@@ -1555,7 +1554,7 @@ on.load(() => {
 			colourTodeContext.filter = "grayscale(100%)"
 		}*/
 		colourTodeContext.scale(CT_SCALE, CT_SCALE)
-		for (const atom of state.colourTode.atoms) {
+		for (const atom of uiState.atoms) {
 			drawAtom(atom)
 		}
 		colourTodeContext.scale(1/CT_SCALE, 1/CT_SCALE)
@@ -2168,8 +2167,8 @@ on.load(() => {
 	const getAtom = (x, y) => {
 		x *= DPR
 		y *= DPR
-		for (let i = state.colourTode.atoms.length-1; i >= 0; i--) {
-			const atom = state.colourTode.atoms[i]
+		for (let i = uiState.atoms.length-1; i >= 0; i--) {
+			const atom = uiState.atoms[i]
 			if (atom.justVisual) continue
 			const result = isAtomOverlapping(atom, x, y)
 			if (result !== undefined) return result
@@ -2188,12 +2187,12 @@ on.load(() => {
 	}
 
 	const deleteAtom = (atom) => {
-		const id = state.colourTode.atoms.indexOf(atom)
-		state.colourTode.atoms.splice(id, 1)
+		const id = uiState.atoms.indexOf(atom)
+		uiState.atoms.splice(id, 1)
 	}
 
 	const registerAtom = (atom) => {
-		state.colourTode.atoms.push(atom)
+		uiState.atoms.push(atom)
 	}
 
 	// including children
@@ -2278,9 +2277,9 @@ on.load(() => {
 
 	const bringAtomToBack = (grabbed) => {
 		if (grabbed.parent === COLOURTODE_BASE_PARENT) {
-			const id = state.colourTode.atoms.indexOf(grabbed)
-			state.colourTode.atoms.splice(id, 1)
-			state.colourTode.atoms.unshift(grabbed)
+			const id = uiState.atoms.indexOf(grabbed)
+			uiState.atoms.splice(id, 1)
+			uiState.atoms.unshift(grabbed)
 		}
 		else {
 			const childId = grabbed.parent.children.indexOf(grabbed)
@@ -7098,7 +7097,7 @@ on.load(() => {
 			paddle.registry = ruleRegistry.register(rule)
 		}
 	}
-	const getAllAtoms = (pool = state.colourTode.atoms) => {
+	const getAllAtoms = (pool = uiState.atoms) => {
 		const atoms = [...pool]
 		for (const atom of atoms) {
 			atoms.push(...getAllAtoms(atom.children))
@@ -7107,7 +7106,7 @@ on.load(() => {
 	}
 
 	const getAllBaseAtoms = () => {
-		const atoms = [...state.colourTode.atoms]
+		const atoms = [...uiState.atoms]
 		for (const paddle of paddles) {
 			for (const child of paddle.children) {
 				if (child.isPinhole) continue
@@ -7340,14 +7339,14 @@ on.load(() => {
 			
 			const {x, y} = getAtomPosition(atom)
 
-			const id = state.colourTode.atoms.indexOf(atom)
+			const id = uiState.atoms.indexOf(atom)
 			const left = x
 			const top = y
 			const right = x + atom.width
 			const bottom = y + atom.height
 
 			if (hand.content === atom) for (const paddle of paddles) {
-				const pid = state.colourTode.atoms.indexOf(paddle)
+				const pid = uiState.atoms.indexOf(paddle)
 				const {x: px, y: py} = getAtomPosition(paddle)
 				const pright = px + paddle.width
 				const ptop = py
