@@ -138,7 +138,6 @@ function loadCellPond() {
 		var __cellpond_exports__ = {
 			Cell, CellGrid, cellGrid,
 			getRGB, clamp, wrap,
-			GRID_SIZE,
 			state, world,
 			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
 			setWorldSize,

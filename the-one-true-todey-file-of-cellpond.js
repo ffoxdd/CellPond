@@ -278,6 +278,7 @@ const setWorldSize = (size) => {
 }
 setWorldSize(6)
 
+const GRID_SIZE = 128
 const cellGrid = new CellGrid(GRID_SIZE)
 var ruleRegistry
 
