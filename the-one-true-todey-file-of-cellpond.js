@@ -238,13 +238,14 @@ setWorldSize(6)
 const GRID_SIZE = 128
 const cellGrid = new CellGrid(GRID_SIZE)
 var ruleRegistry
+var drawQueue
 
 const overrideCells = (cells) => {
 	cellGrid.clear()
 	for (const cell of cells) {
 		cellGrid.add(cell)
 	}
-	drawQueueNeedsReset = true
+	drawQueue.requestReset()
 }
 
 
@@ -263,7 +264,206 @@ on.load(() => {
 	const show = Show.start({paused: false, scale: DPR})
 	const {context, canvas} = show
 	canvas.style["position"] = "absolute"
-	
+
+	class DrawQueue {
+		constructor(state, canvas, cellGrid) {
+			this.state = state
+			this.canvas = canvas
+			this.cellGrid = cellGrid
+			this.queue = new Set()
+			this.priority = new Set()
+			this.needsReset = false
+			this.gridMode = true
+		}
+
+		requestReset() {
+			this.needsReset = true
+		}
+
+		isSectionVisible(section) {
+			if (section.right <= this.state.region.left) return false
+			if (section.left >= this.state.region.right) return false
+			if (section.bottom <= this.state.region.top) return false
+			if (section.top >= this.state.region.bottom) return false
+			return true
+		}
+
+		isCellVisible(cell) {
+			if (cell.right <= this.state.region.left) return false
+			if (cell.left >= this.state.region.right) return false
+			if (cell.bottom <= this.state.region.top) return false
+			if (cell.top >= this.state.region.bottom) return false
+			return true
+		}
+
+		queueCell(cell, colour) {
+			cell.colour = colour
+			if (!this.isCellVisible(cell)) return 0
+			this.priority.add(cell)
+			this.queue.delete(cell)
+			return 0.01
+		}
+
+		drawCell(cell, override) {
+			return this.setCellColour(cell, cell.colour, override)
+		}
+
+		drawAll() {
+			const cells = this.cellGrid.getAll()
+			for (const cell of cells.values()) {
+				this.setCellColour(cell, cell.colour)
+			}
+		}
+
+		addAllCells() {
+			this.queue.clear()
+			for (const section of shuffleArray([...this.cellGrid.sections])) {
+				if (!this.isSectionVisible(section)) continue
+				for (const cell of section.values()) {
+					this.queue.add(cell)
+				}
+			}
+		}
+
+		setCellColour(cell, colour, override = false) {
+			if (cell.isDeleted) return 0
+			cell.colour = colour
+			if (!this.isCellVisible(cell)) return 0
+
+			const size = this.state.image.size
+			const imageWidth = this.canvas.width
+
+			const panX = this.state.camera.x * this.state.camera.scale
+			const panY = this.state.camera.y * this.state.camera.scale
+
+			// Position
+			let left = Math.round(size * cell.left + panX)
+			if (left > this.canvas.width) return 0
+			if (left < 0) left = 0
+
+			let top = Math.round(size * cell.top + panY)
+			if (top > this.canvas.height) return 0
+			if (top < 0) top = 0
+
+			let right = Math.round(size * cell.right + panX)
+			if (right < 0) return 0
+			if (right > this.canvas.width) right = this.canvas.width
+
+			let bottom = Math.round(size * cell.bottom + panY)
+			if (bottom < 0) return 0
+			if (bottom > this.canvas.height) bottom = this.canvas.height
+
+			// Colour
+			const splash = Colour.splash(cell.colour)
+			let red = splash[0]
+			let green = splash[1]
+			let blue = splash[2]
+
+			// Draw
+			const iy = imageWidth * 4
+
+			const width = right-left
+			const ix = 4
+			const sx = width * ix
+
+			let id = (top*imageWidth + left) * 4
+			const data = this.state.image.data.data
+
+			let borderRed = Colour.Void.red
+			let borderGreen = Colour.Void.green
+			let borderBlue = Colour.Void.blue
+
+			if (!this.gridMode || width <= 3 || bottom-top <= 3) {
+				borderRed = red
+				borderGreen = green
+				borderBlue = blue
+
+				for (let y = top; y < bottom; y++) {
+					for (let x = left; x < right; x++) {
+						data[id] = red
+						data[id+1] = green
+						data[id+2] = blue
+						id += 4
+					}
+					id += iy
+					id -= sx
+				}
+
+				return 1
+			}
+
+			const left1 = left + 1
+			const right_1 = right - 1
+			const top1 = top + 1
+			const bottom_1 = bottom - 1
+
+			// DRAW TOP ROW
+			data[id] = borderRed
+			data[id+1] = borderGreen
+			data[id+2] = borderBlue
+			id += 4
+
+			for (let x = left1; x < right_1; x++) {
+				data[id] = borderRed
+				data[id+1] = borderGreen
+				data[id+2] = borderBlue
+				id += 4
+			}
+
+			data[id] = borderRed
+			data[id+1] = borderGreen
+			data[id+2] = borderBlue
+			id += 4
+			id -= sx
+			id += iy
+
+			// DRAW MIDDLE ROWS
+			for (let y = top1; y < bottom_1; y++) {
+
+				data[id] = borderRed
+				data[id+1] = borderGreen
+				data[id+2] = borderBlue
+				id += 4
+
+				for (let x = left1; x < right_1; x++) {
+					data[id] = red
+					data[id+1] = green
+					data[id+2] = blue
+					id += 4
+				}
+
+				data[id] = borderRed
+				data[id+1] = borderGreen
+				data[id+2] = borderBlue
+				id += 4
+
+				id -= sx
+				id += iy
+			}
+
+			// DRAW BOTTOM ROW
+			data[id] = borderRed
+			data[id+1] = borderGreen
+			data[id+2] = borderBlue
+			id += 4
+
+			for (let x = left1; x < right_1; x++) {
+				data[id] = borderRed
+				data[id+1] = borderGreen
+				data[id+2] = borderBlue
+				id += 4
+			}
+
+			data[id] = borderRed
+			data[id+1] = borderGreen
+			data[id+2] = borderBlue
+
+			return 1
+		}
+	}
+
+	drawQueue = new DrawQueue(state, canvas, cellGrid)
+
 	//===============//
 	// IMAGE + SIZES //
 	//===============//
@@ -300,7 +500,7 @@ on.load(() => {
 
 		//state.image.data = context.getImageData(0, 0, state.image.size.iwidth, state.image.size.iheight)
 
-		drawQueueNeedsReset = true
+		drawQueue.requestReset()
 	}
 
 	const updateImageData = () => {
@@ -341,208 +541,6 @@ on.load(() => {
 		}*/
 
 		updateImageSize()
-	}
-
-	const drawCells = () => {
-		const cells = cellGrid.getAll()
-		for (const cell of cells.values()) {
-			setCellColour(cell, cell.colour)
-		}
-	}
-
-	const drawCell = (cell, override) => {
-		return setCellColour(cell, cell.colour, override)
-	}
-
-	const isSectionVisible = (section) => {
-		if (section.right <= state.region.left) return false
-		if (section.left >= state.region.right) return false
-		if (section.bottom <= state.region.top) return false
-		if (section.top >= state.region.bottom) return false
-		return true
-	}
-
-	const isCellVisible = (cell) => {
-		if (cell.right <= state.region.left) return false
-		if (cell.left >= state.region.right) return false
-		if (cell.bottom <= state.region.top) return false
-		if (cell.top >= state.region.bottom) return false
-		return true
-	}
-
-	const queueCellDraw = (cell, colour) => {
-		cell.colour = colour
-		if (!isCellVisible(cell)) return 0
-		drawQueuePriority.add(cell)
-		drawQueue.delete(cell)
-		return 0.01
-	}
-
-	const setCellColour = (cell, colour, override = false) => {
-		if (cell.isDeleted) return 0
-		cell.colour = colour
-		if (!isCellVisible(cell)) return 0
-		
-		/*
-		if (!override && cell.lastDraw === state.time) {
-			cell.lastDrawRepeat += state.speed.redrawRepeatPenalty
-			return state.speed.redrawRepeatScore * cell.lastDrawRepeat
-		}
-		*/
-
-		const size = state.image.size
-		const imageWidth = canvas.width
-
-		const panX = state.camera.x * state.camera.scale
-		const panY = state.camera.y * state.camera.scale
-
-		// Position 
-		let left = Math.round(size * cell.left + panX)
-		if (left > canvas.width) return 0
-		if (left < 0) left = 0
-
-		let top = Math.round(size * cell.top + panY)
-		if (top > canvas.height) return 0
-		if (top < 0) top = 0
-
-		let right = Math.round(size * cell.right + panX)
-		if (right < 0) return 0
-		if (right > canvas.width) right = canvas.width
-
-		let bottom = Math.round(size * cell.bottom + panY)
-		if (bottom < 0) return 0
-		if (bottom > canvas.height) bottom = canvas.height
-
-		// Colour
-		const splash = Colour.splash(cell.colour)
-		let red = splash[0]
-		let green = splash[1]
-		let blue = splash[2]
-
-		/*if (!NO_FOOLS_MODE) {
-			const average = Math.round((red + green + blue) / 3)
-			red = average
-			green = average
-			blue = average
-		}*/
-
-		// Draw
-		const iy = imageWidth * 4
-
-		const width = right-left
-		const ix = 4
-		const sx = width * ix
-
-		//let pixelCount = 0
-		let id = (top*imageWidth + left) * 4
-		const data = state.image.data.data
-
-		let borderRed = Colour.Void.red
-		let borderGreen = Colour.Void.green
-		let borderBlue = Colour.Void.blue
-
-		if (!gridMode || width <= 3 || bottom-top <= 3) {
-			/*
-			borderRed = Colour.Void.red
-			borderGreen = Colour.Void.green
-			borderBlue = Colour.Void.blue
-			*/
-			
-			borderRed = red
-			borderGreen = green
-			borderBlue = blue
-
-			for (let y = top; y < bottom; y++) {
-				for (let x = left; x < right; x++) { 
-					data[id] = red
-					data[id+1] = green
-					data[id+2] = blue
-					id += 4
-					//pixelCount++
-				}
-				id += iy
-				id -= sx
-			}
-
-			return 1
-		}
-
-		const left1 = left + 1
-		const right_1 = right - 1
-		const top1 = top + 1
-		const bottom_1 = bottom - 1
-
-		// DRAW TOP ROW
-		data[id] = borderRed
-		data[id+1] = borderGreen
-		data[id+2] = borderBlue
-		id += 4
-
-		for (let x = left1; x < right_1; x++) {
-			data[id] = borderRed
-			data[id+1] = borderGreen
-			data[id+2] = borderBlue
-			id += 4
-			//pixelCount++
-		}
-
-		data[id] = borderRed
-		data[id+1] = borderGreen
-		data[id+2] = borderBlue
-		id += 4
-		id -= sx
-		id += iy
-
-		// DRAW MIDDLE ROWS
-		for (let y = top1; y < bottom_1; y++) {
- 
-			data[id] = borderRed
-			data[id+1] = borderGreen
-			data[id+2] = borderBlue
-			id += 4
-
-			for (let x = left1; x < right_1; x++) { 
-				data[id] = red
-				data[id+1] = green
-				data[id+2] = blue
-				id += 4
-				//pixelCount++
-			}
-
-			data[id] = borderRed
-			data[id+1] = borderGreen
-			data[id+2] = borderBlue
-			id += 4
-
-			id -= sx
-			id += iy
-		}
-
-		// DRAW BOTTOM ROW
-		data[id] = borderRed
-		data[id+1] = borderGreen
-		data[id+2] = borderBlue
-		id += 4
-
-		for (let x = left1; x < right_1; x++) { 
-			data[id] = borderRed
-			data[id+1] = borderGreen
-			data[id+2] = borderBlue
-			id += 4
-			//pixelCount++
-		}
-
-		data[id] = borderRed
-		data[id+1] = borderGreen
-		data[id+2] = borderBlue
-
-		/*
-		cell.lastDraw = state.time
-		//cell.lastDrawCount = pixelCount
-		cell.lastDrawRepeat = 1
-		*/
-		return 1
-
 	}
 
 	//========//
@@ -665,7 +663,7 @@ on.load(() => {
 
 		if (typeof state.brush.colour === "number") {
 			cell.colour = state.brush.colour
-			drawCell(cell)
+			drawQueue.drawCell(cell)
 			return
 		}
 
@@ -677,7 +675,7 @@ on.load(() => {
 		}
 
 		for (const child of children) {
-			drawCell(child)
+			drawQueue.drawCell(child)
 		}
 
 	}
@@ -804,7 +802,7 @@ on.load(() => {
 					squareTool.toolbarNeedsColourUpdate = true
 				}
 
-				drawQueueNeedsReset = true
+				drawQueue.requestReset()
 
 			}
 
@@ -813,7 +811,7 @@ on.load(() => {
 			return
 		}
 
-		drawQueueNeedsReset = true
+		drawQueue.requestReset()
 		
 		if (dropperStartX === undefined) {
 			dropperStartX = x
@@ -962,10 +960,9 @@ on.load(() => {
 	KEYDOWN["-"] = () => edgeMode = 0
 	KEYDOWN["o"] = () => edgeMode = edgeMode === 0 ? 1 : 0
 
-	gridMode = true
 	KEYDOWN["g"] = () => {
-		gridMode = !gridMode
-		drawQueueNeedsReset = true
+		drawQueue.gridMode = !drawQueue.gridMode
+		drawQueue.requestReset()
 	}
 
 	//========//
@@ -1040,16 +1037,16 @@ on.load(() => {
 	//======//
 	// TICK //
 	//======//
-	drawCells()
+	drawQueue.drawAll()
 	show.tick = () => {
-		
+
 		updateHand()
 		updateCursor()
 		updateCamera()
-		
-		if (drawQueueNeedsReset) {
-			addAllCellsTodrawQueue()
-			drawQueueNeedsReset = false
+
+		if (drawQueue.needsReset) {
+			drawQueue.addAllCells()
+			drawQueue.needsReset = false
 		}
 
 		if (!show.paused) fireRandomSpotEvents()
@@ -1070,27 +1067,12 @@ on.load(() => {
 
 	}
 
-	const drawQueue = new Set()
-	const drawQueuePriority = new Set()
-	drawQueueNeedsReset = false
-	
 	const shuffleArray = (array) => {
 		for (let i = array.length - 1; i > 0; i--) {
 			const r = Random.Uint32 % (i+1)
 			;[array[i], array[r]] = [array[r], array[i]]
 		}
 		return array
-	}
-
-	const addAllCellsTodrawQueue = () => {
-		drawQueue.clear()
-		for (const section of shuffleArray([...cellGrid.sections])) {
-			if (!isSectionVisible(section)) continue
-			for (const cell of section.values()) {
-				//if (!isCellVisible(cell)) continue
-				drawQueue.add(cell)
-			}
-		}
 	}
 
 	const fireRandomSpotEvents = () => {
@@ -1103,45 +1085,23 @@ on.load(() => {
 		let drawnCount = 0
 		for (let i = 0; i < count; i++) {
 			const cell = pickRandomCell()
-			
+
 			if (redraw && drawnCount >= redrawCount) redraw = false
 			const drawn = fireCellEvent(cell, redraw)
 			drawnCount += drawn
 		}
 
-		for (const cell of drawQueuePriority) {
-			drawnCount += drawCell(cell)
-			drawQueuePriority.delete(cell)
+		for (const cell of drawQueue.priority) {
+			drawnCount += drawQueue.drawCell(cell)
+			drawQueue.priority.delete(cell)
 			if (drawnCount >= redrawCount) break
 		}
 
-		for (const cell of drawQueue) {
-			drawnCount += drawCell(cell)
-			drawQueue.delete(cell)
+		for (const cell of drawQueue.queue) {
+			drawnCount += drawQueue.drawCell(cell)
+			drawQueue.queue.delete(cell)
 			if (drawnCount >= redrawCount) break
 		}
-
-		/*
-		for (const cell of drawQueue) {
-			drawnCount += drawCell(cell)
-			drawQueue.shift(cell)
-			if (drawnCount >= redrawCount) return
-		}
-		*/
-
-		/*
-		for (const cell of drawQueue) {
-			drawnCount += drawCell(cell)
-			drawQueue.shift()
-			if (drawnCount >= redrawCount) return
-		}
-		*/
-
-		/*if (!state.view.visible) return
-		while (drawnCount < redrawCount) {
-			const cell = pickRandomVisibleCell()
-			drawnCount += drawCell(cell)
-		}*/
 	}
 
 	const fireRandomSpotDrawEvents = () => {
@@ -1152,16 +1112,11 @@ on.load(() => {
 
 		let drawnCount = 0
 
-		for (const cell of drawQueue) {
-			drawnCount += drawCell(cell)
-			drawQueue.delete(cell)
+		for (const cell of drawQueue.queue) {
+			drawnCount += drawQueue.drawCell(cell)
+			drawQueue.queue.delete(cell)
 			if (drawnCount >= redrawCount) break
 		}
-
-		/*for (let i = 0; i < redrawCount; i++) {
-			const cell = pickRandomVisibleCell()
-			drawnCount += drawCell(cell)
-		}*/
 	}
 
 	// this function is currently full of debug code
@@ -1234,7 +1189,7 @@ on.load(() => {
 		const height = 2
 		const children = cellGrid.split(cell, width, height)
 		for (const child of children) {
-			drawCell(child)
+			drawQueue.drawCell(child)
 		}
 
 		return 1
@@ -1304,7 +1259,7 @@ on.load(() => {
 			}
 
 			let drawn = 0
-			if (redraw) drawn += queueCellDraw(target, colour, true)
+			if (redraw) drawn += drawQueue.queueCell(target, colour)
 			else target.colour = colour
 
 			return {drawn, stampNameTakenFrom}
