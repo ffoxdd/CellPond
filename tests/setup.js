@@ -112,6 +112,7 @@ function loadCellPond() {
 		"Habitat.install(this);",
 		readScript("libraries/colour.js"),
 		readScript("libraries/lz-string.js"),
+		readScript("source/cell.js"),
 		coreSource,
 	]
 
@@ -129,6 +130,7 @@ function loadCellPond() {
 			state, world,
 			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
 			setWorldSize,
+			splitCell, mergeCells, fits, aligns, isFit,
 		};
 		for (var __k__ in __cellpond_exports__) {
 			this[__k__] = __cellpond_exports__[__k__];

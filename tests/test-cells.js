@@ -2,7 +2,14 @@ const { describe, it, run } = require("./runner")
 const assert = require("node:assert/strict")
 const { loadCellPond } = require("./setup")
 
-const { context: w } = loadCellPond()
+const { context: cellpond } = loadCellPond()
+
+// Helper: approximate equality for floating point
+assert.closeTo = (actual, expected, tolerance, message) => {
+	if (Math.abs(actual - expected) > tolerance) {
+		throw new Error(message || `Expected ${actual} to be within ${tolerance} of ${expected}`)
+	}
+}
 
 // Helper: compare arrays by value (avoids cross-realm deepStrictEqual issues)
 function assertArrayEqual(actual, expected) {
@@ -18,7 +25,7 @@ function assertArrayEqual(actual, expected) {
 describe("makeCell", () => {
 
 	it("creates a cell with default values", () => {
-		const cell = w.makeCell()
+		const cell = cellpond.makeCell()
 		assert.equal(cell.x, 0)
 		assert.equal(cell.y, 0)
 		assert.equal(cell.width, 1)
@@ -27,7 +34,7 @@ describe("makeCell", () => {
 	})
 
 	it("creates a cell with custom values", () => {
-		const cell = w.makeCell({ x: 0.25, y: 0.5, width: 0.25, height: 0.25, colour: 999 })
+		const cell = cellpond.makeCell({ x: 0.25, y: 0.5, width: 0.25, height: 0.25, colour: 999 })
 		assert.equal(cell.x, 0.25)
 		assert.equal(cell.y, 0.5)
 		assert.equal(cell.width, 0.25)
@@ -36,7 +43,7 @@ describe("makeCell", () => {
 	})
 
 	it("computes left/right/top/bottom", () => {
-		const cell = w.makeCell({ x: 0.25, y: 0.5, width: 0.25, height: 0.125 })
+		const cell = cellpond.makeCell({ x: 0.25, y: 0.5, width: 0.25, height: 0.125 })
 		assert.equal(cell.left, 0.25)
 		assert.equal(cell.right, 0.5)
 		assert.equal(cell.top, 0.5)
@@ -44,18 +51,18 @@ describe("makeCell", () => {
 	})
 
 	it("computes center", () => {
-		const cell = w.makeCell({ x: 0.0, y: 0.0, width: 0.5, height: 0.5 })
+		const cell = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.5, height: 0.5 })
 		assert.equal(cell.centerX, 0.25)
 		assert.equal(cell.centerY, 0.25)
 	})
 
 	it("computes size as area", () => {
-		const cell = w.makeCell({ x: 0, y: 0, width: 0.5, height: 0.25 })
+		const cell = cellpond.makeCell({ x: 0, y: 0, width: 0.5, height: 0.25 })
 		assert.equal(cell.size, 0.125)
 	})
 
 	it("starts with empty sections array", () => {
-		const cell = w.makeCell()
+		const cell = cellpond.makeCell()
 		assert.equal(cell.sections.length, 0)
 	})
 
@@ -67,23 +74,23 @@ describe("makeCell", () => {
 describe("getRGB", () => {
 
 	it("splits splash into r, g, b components", () => {
-		assertArrayEqual(w.getRGB(999), [900, 90, 9])
+		assertArrayEqual(cellpond.getRGB(999), [900, 90, 9])
 	})
 
 	it("handles zeros", () => {
-		assertArrayEqual(w.getRGB(0), [0, 0, 0])
+		assertArrayEqual(cellpond.getRGB(0), [0, 0, 0])
 	})
 
 	it("handles mixed values", () => {
-		assertArrayEqual(w.getRGB(305), [300, 0, 5])
+		assertArrayEqual(cellpond.getRGB(305), [300, 0, 5])
 	})
 
 	it("handles single digit", () => {
-		assertArrayEqual(w.getRGB(7), [0, 0, 7])
+		assertArrayEqual(cellpond.getRGB(7), [0, 0, 7])
 	})
 
 	it("handles two digits", () => {
-		assertArrayEqual(w.getRGB(42), [0, 40, 2])
+		assertArrayEqual(cellpond.getRGB(42), [0, 40, 2])
 	})
 
 })
@@ -91,23 +98,23 @@ describe("getRGB", () => {
 describe("clamp", () => {
 
 	it("returns value when in range", () => {
-		assert.equal(w.clamp(5, 0, 10), 5)
+		assert.equal(cellpond.clamp(5, 0, 10), 5)
 	})
 
 	it("clamps to min", () => {
-		assert.equal(w.clamp(-1, 0, 10), 0)
+		assert.equal(cellpond.clamp(-1, 0, 10), 0)
 	})
 
 	it("clamps to max", () => {
-		assert.equal(w.clamp(15, 0, 10), 10)
+		assert.equal(cellpond.clamp(15, 0, 10), 10)
 	})
 
 	it("returns min when equal to min", () => {
-		assert.equal(w.clamp(0, 0, 10), 0)
+		assert.equal(cellpond.clamp(0, 0, 10), 0)
 	})
 
 	it("returns max when equal to max", () => {
-		assert.equal(w.clamp(10, 0, 10), 10)
+		assert.equal(cellpond.clamp(10, 0, 10), 10)
 	})
 
 })
@@ -115,23 +122,23 @@ describe("clamp", () => {
 describe("wrap", () => {
 
 	it("returns value when in range", () => {
-		assert.equal(w.wrap(5, 0, 9), 5)
+		assert.equal(cellpond.wrap(5, 0, 9), 5)
 	})
 
 	it("wraps above max", () => {
-		assert.equal(w.wrap(10, 0, 9), 0)
+		assert.equal(cellpond.wrap(10, 0, 9), 0)
 	})
 
 	it("wraps below min", () => {
-		assert.equal(w.wrap(-1, 0, 9), 9)
+		assert.equal(cellpond.wrap(-1, 0, 9), 9)
 	})
 
 	it("wraps multiple times above", () => {
-		assert.equal(w.wrap(20, 0, 9), 0)
+		assert.equal(cellpond.wrap(20, 0, 9), 0)
 	})
 
 	it("wraps multiple times below", () => {
-		assert.equal(w.wrap(-11, 0, 9), 9)
+		assert.equal(cellpond.wrap(-11, 0, 9), 9)
 	})
 
 })
@@ -142,42 +149,42 @@ describe("wrap", () => {
 describe("grid and caching", () => {
 
 	it("grid has GRID_SIZE * GRID_SIZE sections", () => {
-		assert.equal(w.state.grid.length, w.GRID_SIZE * w.GRID_SIZE)
+		assert.equal(cellpond.state.grid.length, cellpond.GRID_SIZE * cellpond.GRID_SIZE)
 	})
 
 	it("sections are Sets", () => {
 		// Can't use instanceof cross-realm, so check for Set-like behaviour
-		const section = w.state.grid[0]
+		const section = cellpond.state.grid[0]
 		assert.equal(typeof section.has, "function")
 		assert.equal(typeof section.add, "function")
 		assert.equal(typeof section.delete, "function")
 	})
 
 	it("cacheCell places cell into correct sections", () => {
-		const cell = w.makeCell({ x: 0.0, y: 0.0, width: 1 / w.GRID_SIZE, height: 1 / w.GRID_SIZE })
-		w.cacheCell(cell)
+		const cell = cellpond.makeCell({ x: 0.0, y: 0.0, width: 1 / cellpond.GRID_SIZE, height: 1 / cellpond.GRID_SIZE })
+		cellpond.cacheCell(cell)
 
 		assert.ok(cell.sections.length > 0)
-		assert.ok(w.state.grid[0].has(cell))
+		assert.ok(cellpond.state.grid[0].has(cell))
 
-		w.uncacheCell(cell)
+		cellpond.uncacheCell(cell)
 	})
 
 	it("uncacheCell removes cell from all sections", () => {
-		const cell = w.makeCell({ x: 0.0, y: 0.0, width: 1 / w.GRID_SIZE, height: 1 / w.GRID_SIZE })
-		w.cacheCell(cell)
-		w.uncacheCell(cell)
+		const cell = cellpond.makeCell({ x: 0.0, y: 0.0, width: 1 / cellpond.GRID_SIZE, height: 1 / cellpond.GRID_SIZE })
+		cellpond.cacheCell(cell)
+		cellpond.uncacheCell(cell)
 
-		assert.equal(w.state.grid[0].has(cell), false)
+		assert.equal(cellpond.state.grid[0].has(cell), false)
 	})
 
 	it("large cell spans multiple sections", () => {
-		const cell = w.makeCell({ x: 0.0, y: 0.0, width: 0.5, height: 0.5 })
-		w.cacheCell(cell)
+		const cell = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.5, height: 0.5 })
+		cellpond.cacheCell(cell)
 
 		assert.ok(cell.sections.length > 1)
 
-		w.uncacheCell(cell)
+		cellpond.uncacheCell(cell)
 	})
 
 })
@@ -188,25 +195,25 @@ describe("grid and caching", () => {
 describe("addCell and deleteCell", () => {
 
 	it("addCell increments cellCount", () => {
-		const before = w.state.cellCount
-		const cell = w.makeCell({ x: 0.1, y: 0.1, width: 0.01, height: 0.01 })
-		w.addCell(cell)
-		assert.equal(w.state.cellCount, before + 1)
-		w.deleteCell(cell)
+		const before = cellpond.state.cellCount
+		const cell = cellpond.makeCell({ x: 0.1, y: 0.1, width: 0.01, height: 0.01 })
+		cellpond.addCell(cell)
+		assert.equal(cellpond.state.cellCount, before + 1)
+		cellpond.deleteCell(cell)
 	})
 
 	it("deleteCell decrements cellCount", () => {
-		const cell = w.makeCell({ x: 0.1, y: 0.1, width: 0.01, height: 0.01 })
-		w.addCell(cell)
-		const before = w.state.cellCount
-		w.deleteCell(cell)
-		assert.equal(w.state.cellCount, before - 1)
+		const cell = cellpond.makeCell({ x: 0.1, y: 0.1, width: 0.01, height: 0.01 })
+		cellpond.addCell(cell)
+		const before = cellpond.state.cellCount
+		cellpond.deleteCell(cell)
+		assert.equal(cellpond.state.cellCount, before - 1)
 	})
 
 	it("deleteCell marks cell as deleted", () => {
-		const cell = w.makeCell({ x: 0.2, y: 0.2, width: 0.01, height: 0.01 })
-		w.addCell(cell)
-		w.deleteCell(cell)
+		const cell = cellpond.makeCell({ x: 0.2, y: 0.2, width: 0.01, height: 0.01 })
+		cellpond.addCell(cell)
+		cellpond.deleteCell(cell)
 		assert.equal(cell.isDeleted, true)
 	})
 
@@ -218,20 +225,20 @@ describe("addCell and deleteCell", () => {
 describe("pickCell", () => {
 
 	it("returns undefined for out-of-bounds coordinates", () => {
-		assert.equal(w.pickCell(-0.1, 0.5), undefined)
-		assert.equal(w.pickCell(0.5, -0.1), undefined)
-		assert.equal(w.pickCell(1.0, 0.5), undefined)
-		assert.equal(w.pickCell(0.5, 1.0), undefined)
+		assert.equal(cellpond.pickCell(-0.1, 0.5), undefined)
+		assert.equal(cellpond.pickCell(0.5, -0.1), undefined)
+		assert.equal(cellpond.pickCell(1.0, 0.5), undefined)
+		assert.equal(cellpond.pickCell(0.5, 1.0), undefined)
 	})
 
 	it("finds a cell inside bounds", () => {
-		const found = w.pickCell(0.5, 0.5)
+		const found = cellpond.pickCell(0.5, 0.5)
 		assert.ok(found !== undefined)
 	})
 
 	it("returns the world cell when only world exists", () => {
-		const found = w.pickCell(0.5, 0.5)
-		assert.equal(found, w.world)
+		const found = cellpond.pickCell(0.5, 0.5)
+		assert.equal(found, cellpond.world)
 	})
 
 })
@@ -242,13 +249,13 @@ describe("pickCell", () => {
 describe("pickNeighbour", () => {
 
 	it("returns undefined when neighbour is out of bounds", () => {
-		const cell = w.makeCell({ x: 0.9, y: 0.9, width: 0.1, height: 0.1 })
-		w.addCell(cell)
+		const cell = cellpond.makeCell({ x: 0.9, y: 0.9, width: 0.1, height: 0.1 })
+		cellpond.addCell(cell)
 
-		const found = w.pickNeighbour(cell, 1, 0)
+		const found = cellpond.pickNeighbour(cell, 1, 0)
 		assert.equal(found, undefined)
 
-		w.deleteCell(cell)
+		cellpond.deleteCell(cell)
 	})
 
 })
@@ -259,22 +266,22 @@ describe("pickNeighbour", () => {
 describe("getCells", () => {
 
 	it("returns cells including world", () => {
-		const cells = w.getCells()
+		const cells = cellpond.getCells()
 		assert.ok(cells.size > 0)
 	})
 
 	it("added cell appears exactly once", () => {
-		const cell = w.makeCell({ x: 0.7, y: 0.7, width: 0.01, height: 0.01 })
-		w.addCell(cell)
+		const cell = cellpond.makeCell({ x: 0.7, y: 0.7, width: 0.01, height: 0.01 })
+		cellpond.addCell(cell)
 
-		const cells = w.getCells()
+		const cells = cellpond.getCells()
 		let count = 0
 		for (const c of cells) {
 			if (c === cell) count++
 		}
 		assert.equal(count, 1)
 
-		w.deleteCell(cell)
+		cellpond.deleteCell(cell)
 	})
 
 })
@@ -285,19 +292,148 @@ describe("getCells", () => {
 describe("world size constants", () => {
 
 	it("WORLD_SIZE is set", () => {
-		assert.notEqual(w.WORLD_SIZE, undefined)
+		assert.notEqual(cellpond.WORLD_SIZE, undefined)
 	})
 
 	it("WORLD_CELL_COUNT is 2^(WORLD_SIZE*2)", () => {
-		assert.equal(w.WORLD_CELL_COUNT, 2 ** (w.WORLD_SIZE * 2))
+		assert.equal(cellpond.WORLD_CELL_COUNT, 2 ** (cellpond.WORLD_SIZE * 2))
 	})
 
 	it("WORLD_DIMENSION is 2^WORLD_SIZE", () => {
-		assert.equal(w.WORLD_DIMENSION, 2 ** w.WORLD_SIZE)
+		assert.equal(cellpond.WORLD_DIMENSION, 2 ** cellpond.WORLD_SIZE)
 	})
 
 	it("WORLD_CELL_SIZE is 1/WORLD_DIMENSION", () => {
-		assert.equal(w.WORLD_CELL_SIZE, 1 / w.WORLD_DIMENSION)
+		assert.equal(cellpond.WORLD_CELL_SIZE, 1 / cellpond.WORLD_DIMENSION)
+	})
+
+})
+
+//===========//
+// splitCell //
+//===========//
+describe("splitCell", () => {
+
+	it("splits a cell into a 2x2 grid", () => {
+		const cell = cellpond.makeCell({ x: 0.2, y: 0.2, width: 0.1, height: 0.1, colour: 555 })
+		cellpond.addCell(cell)
+		const countBefore = cellpond.state.cellCount
+
+		const children = cellpond.splitCell(cell, 2, 2)
+
+		assert.equal(children.length, 4)
+		// Original cell removed, 4 children added: net +3
+		assert.equal(cellpond.state.cellCount, countBefore + 3)
+		assert.equal(cell.isDeleted, true)
+
+		// Children should tile the original cell's area
+		for (const child of children) {
+			assert.equal(child.width, 0.05)
+			assert.equal(child.height, 0.05)
+			assert.equal(child.colour, 555)
+			cellpond.deleteCell(child)
+		}
+	})
+
+	it("splits a cell into a 1x3 grid", () => {
+		const cell = cellpond.makeCell({ x: 0.0, y: 0.6, width: 0.3, height: 0.3, colour: 222 })
+		cellpond.addCell(cell)
+
+		const children = cellpond.splitCell(cell, 1, 3)
+
+		assert.equal(children.length, 3)
+		for (const child of children) {
+			assert.equal(child.width, 0.3)
+			assert.closeTo(child.height, 0.1, 1e-10)
+			cellpond.deleteCell(child)
+		}
+	})
+
+})
+
+//============//
+// mergeCells //
+//============//
+describe("mergeCells", () => {
+
+	it("merges adjacent cells into one", () => {
+		const a = cellpond.makeCell({ x: 0.2, y: 0.2, width: 0.1, height: 0.1, colour: 333 })
+		const b = cellpond.makeCell({ x: 0.3, y: 0.2, width: 0.1, height: 0.1, colour: 333 })
+		cellpond.addCell(a)
+		cellpond.addCell(b)
+		const countBefore = cellpond.state.cellCount
+
+		const merged = cellpond.mergeCells([a, b])
+
+		// Two removed, one added: net -1
+		assert.equal(cellpond.state.cellCount, countBefore - 1)
+		assert.equal(merged.x, 0.2)
+		assert.equal(merged.y, 0.2)
+		assert.closeTo(merged.width, 0.2, 1e-9)
+		assert.closeTo(merged.height, 0.1, 1e-9)
+		assert.equal(merged.colour, 333)
+		assert.equal(a.isDeleted, true)
+		assert.equal(b.isDeleted, true)
+
+		cellpond.deleteCell(merged)
+	})
+
+})
+
+//=================//
+// fits and aligns //
+//=================//
+describe("isFit", () => {
+
+	it("returns true for horizontally adjacent cells", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.1, y: 0.0, width: 0.1, height: 0.1 })
+		assert.ok(cellpond.isFit(a, b))
+	})
+
+	it("returns true for vertically adjacent cells", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.0, y: 0.1, width: 0.1, height: 0.1 })
+		assert.ok(cellpond.isFit(a, b))
+	})
+
+	it("returns undefined for non-adjacent cells", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.5, y: 0.5, width: 0.1, height: 0.1 })
+		assert.equal(cellpond.isFit(a, b), undefined)
+	})
+
+})
+
+describe("aligns", () => {
+
+	it("returns true when all cells are the same size", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.1, y: 0.0, width: 0.1, height: 0.1 })
+		const c = cellpond.makeCell({ x: 0.2, y: 0.0, width: 0.1, height: 0.1 })
+		assert.equal(cellpond.aligns([a, b, c]), true)
+	})
+
+	it("returns false when cells have different sizes", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.1, y: 0.0, width: 0.2, height: 0.1 })
+		assert.equal(cellpond.aligns([a, b]), false)
+	})
+
+})
+
+describe("fits", () => {
+
+	it("returns true for cells that tile a rectangle", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.1, y: 0.0, width: 0.1, height: 0.1 })
+		assert.equal(cellpond.fits([a, b]), true)
+	})
+
+	it("returns false for disconnected cells", () => {
+		const a = cellpond.makeCell({ x: 0.0, y: 0.0, width: 0.1, height: 0.1 })
+		const b = cellpond.makeCell({ x: 0.5, y: 0.5, width: 0.1, height: 0.1 })
+		assert.equal(cellpond.fits([a, b]), false)
 	})
 
 })
