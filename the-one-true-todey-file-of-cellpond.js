@@ -611,7 +611,7 @@ on.load(() => {
 			pencilled = false
 		}
 
-		if (uiState.hand.state !== HAND.BRUSHING && uiState.hand.state !== HAND.PENCILLING) return
+		if (hand.state !== HAND.BRUSHING && hand.state !== HAND.PENCILLING) return
 
 		if (Mouse.Middle && !pencilled) {
 			const [x, y] = Mouse.position
@@ -798,7 +798,7 @@ on.load(() => {
 			const cell = cellGrid.pick(...getCursorView(x, y))
 			if (cell !== undefined)	state.brush.hoverColour = cell.colour
 		} else {
-			const atom = getAtom(x / CT_SCALE, y / CT_SCALE)
+			const atom = atomRegistry.getAt(x / CT_SCALE, y / CT_SCALE)
 
 			if (atom !== undefined) {
 				if (atom.isSquare || atom === squareTool) {
@@ -1409,19 +1409,15 @@ on.load(() => {
 	//====================//
 	// COLOURTODE - STATE //
 	//====================//
-	const uiState = {
-		atoms: [],
-		hand: {
-			state: undefined,
-			content: undefined,
-			offset: {x: 0, y: 0},
-			velocity: {x: 0, y: 0},
-			velocityHistory: [],
-			velocityMemory: 5,
-			previous: {x: 0, y: 0},
-		},
+	const hand = {
+		state: undefined,
+		content: undefined,
+		offset: {x: 0, y: 0},
+		velocity: {x: 0, y: 0},
+		velocityHistory: [],
+		velocityMemory: 5,
+		previous: {x: 0, y: 0},
 	}
-	const hand = uiState.hand
 
 	//====================//
 	// COLOURTODE - SETUP //
@@ -1476,7 +1472,7 @@ on.load(() => {
 	
 	const COLOURTODE_FRICTION = 0.9
 	const colourTodeUpdate = () => {
-		for (const atom of uiState.atoms) {
+		for (const atom of atomRegistry.atoms) {
 			updateAtom(atom)
 		}
 	}
@@ -1508,7 +1504,7 @@ on.load(() => {
 		atom.dy *= COLOURTODE_FRICTION
 
 		if (checkOffscreen && isAtomOffscreen(atom)) {
-			deleteAtom(atom)
+			atomRegistry.delete(atom)
 			return
 		}
 
@@ -1555,7 +1551,7 @@ on.load(() => {
 			colourTodeContext.filter = "grayscale(100%)"
 		}*/
 		colourTodeContext.scale(CT_SCALE, CT_SCALE)
-		for (const atom of uiState.atoms) {
+		for (const atom of atomRegistry.atoms) {
 			drawAtom(atom)
 		}
 		colourTodeContext.scale(1/CT_SCALE, 1/CT_SCALE)
@@ -1578,7 +1574,7 @@ on.load(() => {
 		mousemove: (e) => {
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (!Mouse.Left) {
@@ -1681,7 +1677,7 @@ on.load(() => {
 		mousemove: (e) => {
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -1741,7 +1737,7 @@ on.load(() => {
 				return
 			}
 			const [x, y] = Mouse.position.map(n => n / CT_SCALE)
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -1767,7 +1763,7 @@ on.load(() => {
 		
 		mousedown: (e) => {
 
-			const atom = getAtom(e.clientX / CT_SCALE, e.clientY / CT_SCALE)
+			const atom = atomRegistry.getAt(e.clientX / CT_SCALE, e.clientY / CT_SCALE)
 			if (atom === undefined) return
 			if (!atom.grabbable) return
 			grabAtom(atom, e.clientX / CT_SCALE, e.clientY / CT_SCALE)
@@ -1795,7 +1791,7 @@ on.load(() => {
 		mousemove: (e) => {
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -1816,7 +1812,7 @@ on.load(() => {
 
 		atommove: (atom, x, y) => {
 			if (isAtomOverlapping(atom, x, y)) return
-			const newAtom = getAtom(x, y)
+			const newAtom = atomRegistry.getAt(x, y)
 			if (newAtom !== undefined) {
 				return
 			}
@@ -1831,7 +1827,7 @@ on.load(() => {
 		},
 
 		rightmousedown: (e) => {
-			const atom = getAtom(e.clientX / CT_SCALE, e.clientY / CT_SCALE)
+			const atom = atomRegistry.getAt(e.clientX / CT_SCALE, e.clientY / CT_SCALE)
 			if (atom === undefined) return
 			if (!atom.grabbable) return
 			grabAtom(atom, e.clientX / CT_SCALE, e.clientY / CT_SCALE)
@@ -1935,7 +1931,7 @@ on.load(() => {
 				return
 			}
 
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -1971,7 +1967,7 @@ on.load(() => {
 
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
 				else if (atom.dragOnly) changeHandState(HAND.HOVER, "move")
@@ -1997,7 +1993,7 @@ on.load(() => {
 
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
 				else if (atom.dragOnly) changeHandState(HAND.HOVER, "move")
@@ -2047,7 +2043,7 @@ on.load(() => {
 			hand.content = undefined
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -2076,7 +2072,7 @@ on.load(() => {
 			hand.content = undefined
 			const x = e.clientX / CT_SCALE
 			const y = e.clientY / CT_SCALE
-			const atom = getAtom(x, y)
+			const atom = atomRegistry.getAt(x, y)
 			if (atom !== undefined) {
 				if (atom.grabbable) {
 					if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -2118,12 +2114,69 @@ on.load(() => {
 	//===================//
 	// COLOURTODE - ATOM //
 	//===================//
-	const COLOURTODE_BASE_PARENT = {
-		x: 0,
-		y: 0,
-		grab: (atom, x, y, child = atom) => child,
-		touch: (atom, child = atom) => child,
+	class AtomRegistry {
+		constructor() {
+			this.atoms = []
+			this.baseParent = {
+				x: 0,
+				y: 0,
+				grab: (atom, x, y, child = atom) => child,
+				touch: (atom, child = atom) => child,
+			}
+		}
+
+		register(atom) {
+			this.atoms.push(atom)
+		}
+
+		delete(atom) {
+			const id = this.atoms.indexOf(atom)
+			this.atoms.splice(id, 1)
+		}
+
+		getAt(x, y) {
+			x *= DPR
+			y *= DPR
+			for (let i = this.atoms.length-1; i >= 0; i--) {
+				const atom = this.atoms[i]
+				if (atom.justVisual) continue
+				const result = isAtomOverlapping(atom, x, y)
+				if (result !== undefined) return result
+			}
+		}
+
+		bringToFront(atom) {
+			if (atom.parent === this.baseParent) {
+				this.delete(atom)
+				this.register(atom)
+			}
+			else {
+				const childId = atom.parent.children.indexOf(atom)
+				atom.parent.children.splice(childId, 1)
+				atom.parent.children.push(atom)
+				if (atom.parent.stayAtBack) this.bringToBack(atom.parent)
+				else this.bringToFront(atom.parent)
+			}
+		}
+
+		bringToBack(atom) {
+			if (atom.parent === this.baseParent) {
+				const id = this.atoms.indexOf(atom)
+				this.atoms.splice(id, 1)
+				this.atoms.unshift(atom)
+			}
+			else {
+				const childId = atom.parent.children.indexOf(atom)
+				atom.parent.children.splice(childId, 1)
+				atom.parent.children.unshift(atom)
+				if (atom.parent.stayAtBack) this.bringToBack(atom.parent)
+				else this.bringToFront(atom.parent)
+			}
+		}
 	}
+
+	const atomRegistry = new AtomRegistry()
+
 	const makeAtom = ({
 			grabbable = true,
 			draggable = true,
@@ -2131,7 +2184,7 @@ on.load(() => {
 			rightClick = () => {},
 			drag = (a) => a, // Fires when you start dragging the atom
 			rightDrag = (a) => a,
-			move = () => {}, // Fires when you start or continue dragging the atom //TODO: change this to be whenever the atom moves for any reason
+			move = () => {}, // Fires when you start or continue dragging the atom
 			drop = () => {}, // Fires when you let go of the atom after a drag
 			draw = () => {},
 			update = () => {},
@@ -2139,9 +2192,9 @@ on.load(() => {
 			overlaps = () => false,
 			grab = (a) => a, // Fires when you start a clock on the atom - returns atom that gets dragged
 			touch = (a) => a, // Fires when you start a click on the atom - returns atom that handles the click
-			highlighter = false, // If true, enables the hover and place events // I dont think its needed lollll, i think it does it either way>???
-			hover = () => {}, // Fires whenever you are dragging the atom - returns what atom should get highlighted (if any) (the returned atom gets auto-highlighted unless you manually set the 'highlight' property in this function)
-			place = () => {}, // Fires whenever you drop the atom onto a highlighted atom
+			highlighter = false,
+			hover = () => {},
+			place = () => {},
 			x = 0,
 			y = 0,
 			dx = 0,
@@ -2153,7 +2206,7 @@ on.load(() => {
 			size = 40,
 			colour = Colour.splash(999),
 			children = [],
-			parent = COLOURTODE_BASE_PARENT,
+			parent = atomRegistry.baseParent,
 			width = size,
 			height = size,
 			construct = () => {},
@@ -2163,17 +2216,6 @@ on.load(() => {
 		const atom = {highlighter, place, hover, hasInner, move, drop, maxX, minX, maxY, minY, update, construct, draggable, width, height, touch, parent, children, draw, grabbable, click, drag, overlaps, offscreen, grab, x, y, dx, dy, size, colour, rightClick, rightDrag, ...properties}
 		atom.construct(atom, ...args)
 		return atom
-	}
-
-	const getAtom = (x, y) => {
-		x *= DPR
-		y *= DPR
-		for (let i = uiState.atoms.length-1; i >= 0; i--) {
-			const atom = uiState.atoms[i]
-			if (atom.justVisual) continue
-			const result = isAtomOverlapping(atom, x, y)
-			if (result !== undefined) return result
-		}
 	}
 
 	const drawAtom = (atom) => {
@@ -2187,15 +2229,6 @@ on.load(() => {
 		if (!atom.behindChildren) atom.draw(atom)
 	}
 
-	const deleteAtom = (atom) => {
-		const id = uiState.atoms.indexOf(atom)
-		uiState.atoms.splice(id, 1)
-	}
-
-	const registerAtom = (atom) => {
-		uiState.atoms.push(atom)
-	}
-
 	// including children
 	const isAtomOffscreen = (atom) => {
 		for (const child of atom.children) {
@@ -2206,18 +2239,18 @@ on.load(() => {
 
 	// including children
 	const isAtomOverlapping = (atom, x, y) => {
-		
+
 		if (!atom.behindChildren && atom.overlaps(atom, x, y)) return atom
-		
+
 		for (let i = atom.children.length-1; i >= 0; i--) {
 			const child = atom.children[i]
 			if (child.behindParent) continue
 			const result = isAtomOverlapping(child, x, y)
 			if (result) return result
 		}
-		
+
 		if (atom.behindChildren && atom.overlaps(atom, x, y)) return atom
-		
+
 		for (let i = atom.children.length-1; i >= 0; i--) {
 			const child = atom.children[i]
 			if (!child.behindParent) continue
@@ -2237,7 +2270,7 @@ on.load(() => {
 		}
 		hand.clickContent = touched
 
-		
+
 		let previousGrabbed = atom
 		let grabbed = atom.grab(atom, x, y)
 
@@ -2255,40 +2288,10 @@ on.load(() => {
 		grabbed.dx = 0
 		grabbed.dy = 0
 
-		if (atom.stayAtBack) bringAtomToBack(grabbed)
-		else bringAtomToFront(grabbed)
+		if (atom.stayAtBack) atomRegistry.bringToBack(grabbed)
+		else atomRegistry.bringToFront(grabbed)
 
 		return grabbed
-	}
-
-	const bringAtomToFront = (grabbed) => {
-		// If atom isn't a child, bring it to the top level
-		if (grabbed.parent === COLOURTODE_BASE_PARENT) {
-			deleteAtom(grabbed)
-			registerAtom(grabbed)
-		}
-		else {
-			const childId = grabbed.parent.children.indexOf(grabbed)
-			grabbed.parent.children.splice(childId, 1)
-			grabbed.parent.children.push(grabbed)
-			if (grabbed.parent.stayAtBack) bringAtomToBack(grabbed.parent)
-			else bringAtomToFront(grabbed.parent)
-		}
-	}
-
-	const bringAtomToBack = (grabbed) => {
-		if (grabbed.parent === COLOURTODE_BASE_PARENT) {
-			const id = uiState.atoms.indexOf(grabbed)
-			uiState.atoms.splice(id, 1)
-			uiState.atoms.unshift(grabbed)
-		}
-		else {
-			const childId = grabbed.parent.children.indexOf(grabbed)
-			grabbed.parent.children.splice(childId, 1)
-			grabbed.parent.children.unshift(grabbed)
-			if (grabbed.parent.stayAtBack) bringAtomToBack(grabbed.parent)
-			else bringAtomToFront(grabbed.parent)
-		}
 	}
 
 	const getAtomPosition = (atom, {forceAbsolute = false} = {}) => {
@@ -2318,7 +2321,7 @@ on.load(() => {
 			else throw new Error(`Can't delete child of atom because I can't find it!`)
 		}
 		parent.children.splice(id, 1)
-		child.parent = COLOURTODE_BASE_PARENT
+		child.parent = atomRegistry.baseParent
 	}
 	
 	const giveChild = (parent, atom) => {
@@ -2328,7 +2331,7 @@ on.load(() => {
 		if (parent === undefined) {
 			throw new Error(`Can't give child because parent is undefined`)
 		}
-		deleteAtom(atom)
+		atomRegistry.delete(atom)
 		if (atom.stayAtBack || atom.behindOtherChildren) parent.children.unshift(atom)
 		else parent.children.push(atom)
 		atom.parent = parent
@@ -2341,7 +2344,7 @@ on.load(() => {
 			hand.offset.y += y
 		}
 		deleteChild(parent, child)
-		registerAtom(child)
+		atomRegistry.register(child)
 	}
 
 	//======================//
@@ -2575,7 +2578,7 @@ on.load(() => {
 		click: (atom) => {
 
 			if (atom.joins.length > 0) {
-				if (atom.parent === COLOURTODE_BASE_PARENT || !atom.parent.isPaddle) {
+				if (atom.parent === atomRegistry.baseParent || !atom.parent.isPaddle) {
 					if (atom.joinExpanded) {
 						atom.joinUnepxand(atom)
 					} else {
@@ -2590,7 +2593,7 @@ on.load(() => {
 
 			else if (!atom.expanded) {
 
-				if (atom.parent === COLOURTODE_BASE_PARENT || !atom.parent.isPaddle) {
+				if (atom.parent === atomRegistry.baseParent || !atom.parent.isPaddle) {
 					atom.expand(atom)
 				}
 
@@ -2645,7 +2648,7 @@ on.load(() => {
 					// alert('no')
 					const hexagon = atom.variableAtoms[2]
 					hexagon.behindOtherChildren = false
-					registerAtom(hexagon)
+					atomRegistry.register(hexagon)
 					giveChild(atom, hexagon)
 					hexagon.variable = "blue"
 					hexagon.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size)*3 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - hexagon.width/3
@@ -2672,7 +2675,7 @@ on.load(() => {
 					// alert('noo')
 					const hexagon = atom.variableAtoms[1]
 					hexagon.behindOtherChildren = false
-					registerAtom(hexagon)
+					atomRegistry.register(hexagon)
 					giveChild(atom, hexagon)
 					hexagon.variable = "green"
 					hexagon.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size)*2 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - hexagon.width/3
@@ -2698,7 +2701,7 @@ on.load(() => {
 				} else {
 					const triangle = atom.variableAtoms[0]
 					triangle.behindOtherChildren = false
-					registerAtom(triangle)
+					atomRegistry.register(triangle)
 					giveChild(atom, triangle)
 					triangle.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size) + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - triangle.width/3
 					triangle.y = atom.height/2 - triangle.height/2
@@ -2757,7 +2760,7 @@ on.load(() => {
 			/*const diagramCell = new DiagramCell({content: atom.value})
 			state.brush.colour = new Diagram({left: [diagramCell]})*/
 
-			if (atom.parent !== COLOURTODE_BASE_PARENT) {
+			if (atom.parent !== atomRegistry.baseParent) {
 				const paddle = atom.parent
 				updatePaddleRule(paddle)
 			}
@@ -2912,7 +2915,7 @@ on.load(() => {
 						if (other.isPicker) {
 							atom.highlightedAtom = other.parent
 						} else {
-							if (other.parent !== COLOURTODE_BASE_PARENT) continue
+							if (other.parent !== atomRegistry.baseParent) continue
 							atom.highlightedAtom = other
 						}
 
@@ -3370,7 +3373,7 @@ on.load(() => {
 					}
 
 					if (paddle.rightTriangle !== undefined && atom.slotted !== undefined) {
-						registerAtom(atom.slotted)
+						atomRegistry.register(atom.slotted)
 						giveChild(paddle, atom.slotted)
 					}
 
@@ -3396,7 +3399,7 @@ on.load(() => {
 					}
 
 					joinee.joins.push(joiner)
-					deleteAtom(joiner)
+					atomRegistry.delete(joiner)
 					
 					joinee.joinExpand(joinee)
 					
@@ -3445,7 +3448,7 @@ on.load(() => {
 
 			for (let i = 0; i < atom.joins.length; i++) {
 				const joiner = atom.joins[i]
-				registerAtom(joiner)
+				atomRegistry.register(joiner)
 				giveChild(atom, joiner)
 				joiner.x = 0
 				joiner.y = (i+1) * (atom.height + OPTION_MARGIN) + OPTION_MARGIN
@@ -3461,7 +3464,7 @@ on.load(() => {
 
 			if (atom.multiAtoms !== undefined) {
 				for (const multiAtom of atom.multiAtoms) {
-					bringAtomToFront(multiAtom)
+					atomRegistry.bringToFront(multiAtom)
 				}
 			}
 
@@ -3502,7 +3505,7 @@ on.load(() => {
 			hand.offset.x -= atom.x - newAtom.x
 			hand.offset.y -= atom.y - newAtom.y
 
-			registerAtom(newAtom)
+			atomRegistry.register(newAtom)
 			setBrushColour(newAtom.value)
 
 			return newAtom
@@ -4331,7 +4334,7 @@ on.load(() => {
 
 				const square = receiver
 				square.receiveNumber(square, atom.value, atom.channelId, {expanded: atom.expanded, numberAtom: atom})
-				deleteAtom(atom)
+				atomRegistry.delete(atom)
 				atom.dx = 0
 				atom.dy = 0
 				return
@@ -4379,7 +4382,7 @@ on.load(() => {
 
 				for (const cellAtom of paddle.cellAtoms) {
 					if (cellAtom.slotted !== undefined) {
-						registerAtom(cellAtom.slotted)
+						atomRegistry.register(cellAtom.slotted)
 						giveChild(paddle, cellAtom.slotted)
 					}
 				}
@@ -4406,7 +4409,7 @@ on.load(() => {
 			hand.offset.y -= atom.y - y
 			clone.x = x
 			clone.y = y
-			registerAtom(clone)
+			atomRegistry.register(clone)
 			return clone
 		},
 
@@ -4431,7 +4434,7 @@ on.load(() => {
 			// 	hand.offset.y -= atom.y - y
 			// 	clone.x = x
 			// 	clone.y = y
-			// 	registerAtom(clone)
+			// 	atomRegistry.register(clone)
 			// 	return clone
 			// }
 
@@ -4448,7 +4451,7 @@ on.load(() => {
 					cellAtom.slotted.x = x
 					cellAtom.slotted.y = y
 					cellAtom.slotted.slottee = false
-					//deleteAtom(cellAtom.slotted)
+					//atomRegistry.delete(cellAtom.slotted)
 					cellAtom.slotted = undefined
 				}
 			}
@@ -4517,7 +4520,7 @@ on.load(() => {
 		rightDraggable: true,
 		rightDrag: (atom) => {
 			const clone = makeAtom(COLOURTODE_PICKER_CHANNEL)
-			registerAtom(clone)
+			atomRegistry.register(clone)
 			const {x, y} = getAtomPosition(atom)
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
@@ -4888,7 +4891,7 @@ on.load(() => {
 					atom.y = OPTION_MARGIN
 					atom.x = square.size + OPTION_MARGIN*2 + slotId*(OPTION_MARGIN*square.size)*/
 					square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded})
-					deleteAtom(atom)
+					atomRegistry.delete(atom)
 				} else {
 					const diamond = atom.highlightedAtom.parent
 					//diamond.unexpand(diamond)
@@ -5390,7 +5393,7 @@ on.load(() => {
 			// 	atom.updateValue(atom)
 			// 	const slotId = CHANNEL_IDS[atom.highlightedSlot]
 			// 	square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded, numberAtom: atom})
-			// 	deleteAtom(atom)
+			// 	atomRegistry.delete(atom)
 			// 	atom.dx = 0
 			// 	atom.dy = 0
 			// }
@@ -5415,7 +5418,7 @@ on.load(() => {
 		rightDraggable: true,
 		rightDrag: (atom) => {
 			const clone = atom.clone(atom)
-			registerAtom(clone)
+			atomRegistry.register(clone)
 			hand.offset.x -= atom.x - clone.x
 			hand.offset.y -= atom.y - clone.y
 			return clone
@@ -5483,7 +5486,7 @@ on.load(() => {
 				square.receiveNumber(square, hexagon.value, slotId, {expanded: hexagon.expanded, numberAtom: hexagon})
 			}
 
-			bringAtomToFront(atom.parent)
+			atomRegistry.bringToFront(atom.parent)
 		}
 	}
 
@@ -5550,8 +5553,8 @@ on.load(() => {
 			const {x, y} = getAtomPosition(atom)
 
 			/*let colour = "pink"
-			if (atom.parent !== COLOURTODE_BASE_PARENT) {
-				if (atom.parent.parent !== COLOURTODE_BASE_PARENT) {
+			if (atom.parent !== atomRegistry.baseParent) {
+				if (atom.parent.parent !== atomRegistry.baseParent) {
 					const colours = atom.parent.parent.value.getSplashes()
 					colour = colours[Random.Uint32 % colours.length]
 				}
@@ -5752,7 +5755,7 @@ on.load(() => {
 		rightDraggable: true,
 		rightDrag: (atom) => {
 			const clone = makeAtom(COLOURTODE_TALL_RECTANGLE)
-			registerAtom(clone)
+			atomRegistry.register(clone)
 			const {x, y} = getAtomPosition(atom)
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
@@ -5921,7 +5924,7 @@ on.load(() => {
 			const square = atom.highlightedAtom
 			const slotId = CHANNEL_IDS[atom.highlightedSlot]
 			square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded, numberAtom: atom})
-			deleteAtom(atom)
+			atomRegistry.delete(atom)
 		},
 		draw: (atom) => {
 			const {x, y} = getAtomPosition(atom)
@@ -6128,7 +6131,7 @@ on.load(() => {
 			for (const operation of ["padTop", "padBottom"]) {
 				const operationAtom = atom.operationAtoms[operation]
 				if (operationAtom === undefined) continue
-				registerAtom(operationAtom)
+				atomRegistry.register(operationAtom)
 				giveChild(atom, operationAtom)
 			}
 
@@ -6202,7 +6205,7 @@ on.load(() => {
 			let topDiamond = diamond
 			let top = diamond.parent
 			while (!top.isSquare) {
-				if (top === COLOURTODE_BASE_PARENT) return
+				if (top === atomRegistry.baseParent) return
 				topDiamond = top
 				top = top.parent
 			}
@@ -6338,7 +6341,7 @@ on.load(() => {
 				diagram.normalise()
 
 				square.value = diagram
-				registerAtom(square)
+				atomRegistry.register(square)
 				state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
 				square.update(square)
 				return square
@@ -6378,7 +6381,7 @@ on.load(() => {
 				//const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
 				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
 				setBrushColour(leftClone)
-				registerAtom(square)
+				atomRegistry.register(square)
 				square.value = leftClone
 				square.update(square)
 				return square
@@ -6389,7 +6392,7 @@ on.load(() => {
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
 				setBrushColour(leftClone)
-				registerAtom(square)
+				atomRegistry.register(square)
 				square.value = leftClone
 				square.update(square)
 				return square
@@ -6402,7 +6405,7 @@ on.load(() => {
 			diagram.normalise()
 
 			square.value = diagram
-			registerAtom(square)
+			atomRegistry.register(square)
 			setBrushColour(diagram)
 			square.update(square)
 			return square
@@ -7098,7 +7101,7 @@ on.load(() => {
 			paddle.registry = ruleRegistry.register(rule)
 		}
 	}
-	const getAllAtoms = (pool = uiState.atoms) => {
+	const getAllAtoms = (pool = atomRegistry.atoms) => {
 		const atoms = [...pool]
 		for (const atom of atoms) {
 			atoms.push(...getAllAtoms(atom.children))
@@ -7107,7 +7110,7 @@ on.load(() => {
 	}
 
 	const getAllBaseAtoms = () => {
-		const atoms = [...uiState.atoms]
+		const atoms = [...atomRegistry.atoms]
 		for (const paddle of paddles) {
 			for (const child of paddle.children) {
 				if (child.isPinhole) continue
@@ -7149,7 +7152,7 @@ on.load(() => {
 
 			paddle.y = previous.y + previous.height + PADDLE_MARGIN
 			previous = paddle
-			//bringAtomToBack(paddle) //causes bug where circle tool disappears but really shouldn't :(
+			//atomRegistry.bringToBack(paddle) //causes bug where circle tool disappears but really shouldn't :(
 		}
 	}
 
@@ -7158,7 +7161,7 @@ on.load(() => {
 		if (paddle.registry !== undefined) {
 			ruleRegistry.unregister(paddle.registry)
 		}
-		deleteAtom(paddle)
+		atomRegistry.delete(paddle)
 		positionPaddles()
 	}
 
@@ -7166,7 +7169,7 @@ on.load(() => {
 		const paddle = makeAtom(PADDLE)
 		paddles.push(paddle)
 		positionPaddles()
-		registerAtom(paddle)
+		atomRegistry.register(paddle)
 		return paddle
 	}
 
@@ -7340,14 +7343,14 @@ on.load(() => {
 			
 			const {x, y} = getAtomPosition(atom)
 
-			const id = uiState.atoms.indexOf(atom)
+			const id = atomRegistry.atoms.indexOf(atom)
 			const left = x
 			const top = y
 			const right = x + atom.width
 			const bottom = y + atom.height
 
 			if (hand.content === atom) for (const paddle of paddles) {
-				const pid = uiState.atoms.indexOf(paddle)
+				const pid = atomRegistry.atoms.indexOf(paddle)
 				const {x: px, y: py} = getAtomPosition(paddle)
 				const pright = px + paddle.width
 				const ptop = py
@@ -7417,7 +7420,7 @@ on.load(() => {
 					hand.offset.y -= atom.y - y
 					clone.x = x
 					clone.y = y
-					registerAtom(clone)
+					atomRegistry.register(clone)
 					return clone
 				}*/
 
@@ -7440,7 +7443,7 @@ on.load(() => {
 			hand.offset.y -= atom.y - y
 			clone.x = x
 			clone.y = y
-			registerAtom(clone)
+			atomRegistry.register(clone)
 			return clone
 		},
 	}
@@ -7636,7 +7639,7 @@ on.load(() => {
 			x = atom.value? 100 : 0
 			atom.parent.value = x+y+r
 			const circle = atom.parent
-			if (circle.parent !== COLOURTODE_BASE_PARENT) {
+			if (circle.parent !== atomRegistry.baseParent) {
 				const paddle = circle.parent
 				updatePaddleRule(paddle)
 			}
@@ -7677,7 +7680,7 @@ on.load(() => {
 			y = atom.value? 10 : 0
 			atom.parent.value = x+y+r
 			const circle = atom.parent
-			if (circle.parent !== COLOURTODE_BASE_PARENT) {
+			if (circle.parent !== atomRegistry.baseParent) {
 				const paddle = circle.parent
 				updatePaddleRule(paddle)
 			}
@@ -7725,7 +7728,7 @@ on.load(() => {
 			r = atom.value? 1 : 0
 			atom.parent.value = x+y+r
 			const circle = atom.parent
-			if (circle.parent !== COLOURTODE_BASE_PARENT) {
+			if (circle.parent !== atomRegistry.baseParent) {
 				const paddle = circle.parent
 				updatePaddleRule(paddle)
 			}
@@ -7815,12 +7818,12 @@ on.load(() => {
 
 			if (atom === squareTool) {
 				const newAtom = makeSquareFromValue(atom.value)
-				registerAtom(newAtom)
+				atomRegistry.register(newAtom)
 				return newAtom
 			}
 
 			const newAtom = makeAtom({...atom.element, x: atom.x, y: atom.y})
-			registerAtom(newAtom)
+			atomRegistry.register(newAtom)
 
 			if (newAtom.value !== undefined) {
 				/*
@@ -7862,7 +7865,7 @@ on.load(() => {
 		menuRight += width
 		menuRight += OPTION_MARGIN
 
-		registerAtom(atom)
+		atomRegistry.register(atom)
 
 		if (unlockName === undefined) {
 			atom.unlocked = true
@@ -7883,7 +7886,7 @@ on.load(() => {
 		unlock.unlocked = true
 		unlock.grabbable = true
 
-		/*registerAtom(unlock)
+		/*atomRegistry.register(unlock)
 		menuRight += unlock.width
 		menuRight += OPTION_MARGIN*/
 
@@ -8056,7 +8059,7 @@ on.load(() => {
 			}
 			const square = v.isLeftSlot ? makeAtom(SLOT) : makeSquareFromValue(v.value)
 			square.isLeftSlot = v.isLeftSlot
-			registerAtom(square)
+			atomRegistry.register(square)
 			giveChild(paddle, square)
 			square.attached = true
 			square.x = v.x
@@ -8066,7 +8069,7 @@ on.load(() => {
 
 			if (v.slotted !== undefined) {
 				const slotted = makeSquareFromValue(v.slotted)
-				registerAtom(slotted)
+				atomRegistry.register(slotted)
 				giveChild(paddle, slotted)
 				slotted.attached = true
 				slotted.cellAtom = square
