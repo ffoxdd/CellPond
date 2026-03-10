@@ -146,7 +146,7 @@ let edgeMode = 0
 const pickRandomCell = () => {
 	const x = Random.Uint32 / 4294967295
 	const y = Random.Uint32 / 4294967295
-	const cell = pickCell(x, y)
+	const cell = cellGrid.pick(x, y)
 	return cell
 }
 
@@ -157,7 +157,7 @@ const pickRandomVisibleCell = () => {
 	
 	const x = state.region.left + (Random.Uint32 / 4294967295) * state.region.width
 	const y = state.region.top + (Random.Uint32 / 4294967295) * state.region.height
-	const cell = pickCell(x, y)
+	const cell = cellGrid.pick(x, y)
 	return cell
 }
 
@@ -165,9 +165,6 @@ const pickRandomVisibleCell = () => {
 // STATE //
 //=======//
 const state = {
-
-	grid: [],
-	cellCount: 0,
 
 	ticker: () => {},
 	time: 0,
@@ -284,14 +281,12 @@ const setWorldSize = (size) => {
 }
 setWorldSize(6)
 
-initialiseGrid()
+const cellGrid = new CellGrid(GRID_SIZE)
 
 const overrideCells = (cells) => {
-	deleteAllCells()
+	cellGrid.clear()
 	for (const cell of cells) {
-		// cell.sections = []
-		// cacheCell(cell)
-		addCell(cell)
+		cellGrid.add(cell)
 	}
 	drawQueueNeedsReset = true
 }
@@ -301,8 +296,8 @@ const overrideCells = (cells) => {
 // SETUP //
 //=======//
 // Setup World
-const world = makeCell({colour: WORLD_SIZE * 111})
-addCell(world)
+const world = new Cell({colour: WORLD_SIZE * 111})
+cellGrid.add(world)
 
 on.load(() => {
 
@@ -392,7 +387,7 @@ on.load(() => {
 	}
 
 	const drawCells = () => {
-		const cells = getCells()
+		const cells = cellGrid.getAll()
 		for (const cell of cells.values()) {
 			setCellColour(cell, cell.colour)
 		}
@@ -701,12 +696,12 @@ on.load(() => {
 
 	const brush = (x, y, {single = false} = {}) => {
 
-		let cell = pickCell(x, y)
+		let cell = cellGrid.pick(x, y)
 		if (cell === undefined) return
 		if (!single && (cell.width !== WORLD_CELL_SIZE || cell.height != WORLD_CELL_SIZE)) {
 			const worldCells = getWorldCellsSet(x, y)
 			if (worldCells !== undefined) {
-				const merged = mergeCells([...worldCells])
+				const merged = cellGrid.merge([...worldCells])
 				cell = merged
 			}
 		}
@@ -752,7 +747,7 @@ on.load(() => {
 			for (let wy = 0; wy < sectionSizeScale; wy++) {
 				const gridY = Math.floor((snappedY + wy * WORLD_CELL_SIZE / sectionSizeScale) * GRID_SIZE)
 				const sectionId = gridX*GRID_SIZE + gridY
-				const section = state.grid[sectionId]
+				const section = cellGrid.sections[sectionId]
 				sections.add(section)
 			}
 		}
@@ -800,7 +795,7 @@ on.load(() => {
 		const [x, y] = Mouse.position
 
 		if (hand.state === HAND.BRUSH || hand.state === HAND.BRUSHING || hand.state === HAND.PENCILLING) {
-			const cell = pickCell(...getCursorView(x, y))
+			const cell = cellGrid.pick(...getCursorView(x, y))
 			if (cell !== undefined)	state.brush.hoverColour = cell.colour
 		} else {
 			const atom = getAtom(x / CT_SCALE, y / CT_SCALE)
@@ -1132,7 +1127,7 @@ on.load(() => {
 
 	const addAllCellsTodrawQueue = () => {
 		drawQueue.clear()
-		for (const section of shuffleArray([...state.grid])) {
+		for (const section of shuffleArray([...cellGrid.sections])) {
 			if (!isSectionVisible(section)) continue
 			for (const cell of section.values()) {
 				//if (!isCellVisible(cell)) continue
@@ -1142,8 +1137,8 @@ on.load(() => {
 	}
 
 	const fireRandomSpotEvents = () => {
-		let count = state.speed.dynamic? state.speed.aer * state.cellCount : state.speed.count
-		count = Math.min(count, state.cellCount)
+		let count = state.speed.dynamic? state.speed.aer * cellGrid.cellCount : state.speed.count
+		count = Math.min(count, cellGrid.cellCount)
 		count *= state.worldBuilt? 1 : 0.1
 		const redrawCount = count * state.speed.redraw
 		let redraw = true
@@ -1194,7 +1189,7 @@ on.load(() => {
 
 	const fireRandomSpotDrawEvents = () => {
 		if (!state.view.visible) return
-		const count = state.speed.dynamic? state.speed.aer * state.cellCount : state.speed.count
+		const count = state.speed.dynamic? state.speed.aer * cellGrid.cellCount : state.speed.count
 		let redrawCount = count * state.speed.redraw
 		if (!state.worldBuilt) redrawCount = 1
 
@@ -1241,7 +1236,7 @@ on.load(() => {
 			const colours = getSplashesArrayFromArray(diagramCell.content, {source: cell.colour})
 			const colour = colours[Random.Uint32 % colours.length]
 
-			const child = makeCell({
+			const child = new Cell({
 				x: cell.x + diagramCell.x * widthScale,
 				y: cell.y + diagramCell.y * heightScale,
 				width: diagramCell.width * widthScale,
@@ -1252,9 +1247,9 @@ on.load(() => {
 			children.push(child)
 		}
 
-		deleteCell(cell)
+		cellGrid.remove(cell)
 		for (const child of children) {
-			addCell(child)
+			cellGrid.add(child)
 		}
 
 		return children
@@ -1268,7 +1263,7 @@ on.load(() => {
 	// Behave functions must return how many cells got drawn
 	const BUILD_WORLD = (cell, redraw) => {
 		if (state.worldBuilt) return undefined
-		if (state.cellCount >= WORLD_CELL_COUNT) {
+		if (cellGrid.cellCount >= WORLD_CELL_COUNT) {
 			state.worldBuilt = true
 			return undefined
 		}
@@ -1280,7 +1275,7 @@ on.load(() => {
 		cell.colour -= 111
 		const width = 2
 		const height = 2
-		const children = splitCell(cell, width, height)
+		const children = cellGrid.split(cell, width, height)
 		for (const child of children) {
 			drawCell(child)
 		}
@@ -1908,7 +1903,7 @@ on.load(() => {
 				const centerX = x + width/2
 				const centerY = y + height/2
 
-				const neighbour = pickCell(centerX, centerY)
+				const neighbour = cellGrid.pick(centerX, centerY)
 
 				if (neighbour === undefined) return [undefined, undefined]
 				if (neighbour.left+8 !== x+8) return [undefined, undefined]
@@ -2152,7 +2147,7 @@ on.load(() => {
 
 		const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
 			
-			const children = splitCell(target, cell.splitX, cell.splitY)
+			const children = cellGrid.split(target, cell.splitX, cell.splitY)
 			//const [head, ...tail] = children
 
 			/*const colour = splashes[Random.Uint32 % splashes.length]
@@ -2177,7 +2172,7 @@ on.load(() => {
 		const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
 
 			const children = neighbours.slice(neighbourId, neighbourId+childCount)
-			const merged = mergeCells(children)
+			const merged = cellGrid.merge(children)
 
 			/*const colour = splashes[Random.Uint32 % splashes.length]
 			let drawn = 0
@@ -9541,7 +9536,7 @@ registerRule(
 
 	// store the state of the grid
 	window.packWorld = () => {
-		const cells = getCells().values()
+		const cells = cellGrid.getAll().values()
 		const packedCells = cells.map(cell => {
 			// x=0, y=0, width=1, height=1, colour=112
 			const packedCell = {
@@ -9565,7 +9560,7 @@ registerRule(
 		// deleteAllCells()
 		const cells = packedCells.map(packedCell => {
 			const {x, y, w, h, c} = packedCell
-			const cell = makeCell({
+			const cell = new Cell({
 				x,
 				y,
 				width: w,

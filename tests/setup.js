@@ -122,15 +122,13 @@ function loadCellPond() {
 	// Use var to re-export the bindings we need for testing.
 	const exportBlock = `
 		var __cellpond_exports__ = {
-			makeCell, getRGB, clamp, wrap,
-			pickCell, pickNeighbour, pickRandomCell,
-			addCell, deleteCell, getCells, deleteAllCells, overrideCells,
-			cacheCell, uncacheCell,
-			GRID_SIZE, initialiseGrid,
+			Cell, CellGrid, cellGrid,
+			getRGB, clamp, wrap,
+			GRID_SIZE,
 			state, world,
 			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
 			setWorldSize,
-			splitCell, mergeCells, fits, aligns, isFit,
+			fits, aligns, isFit,
 		};
 		for (var __k__ in __cellpond_exports__) {
 			this[__k__] = __cellpond_exports__[__k__];
