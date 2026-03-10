@@ -113,6 +113,7 @@ function loadCellPond() {
 		readScript("libraries/colour.js"),
 		readScript("libraries/lz-string.js"),
 		readScript("source/colour.js"),
+		readScript("source/camera.js"),
 		readScript("source/cell.js"),
 		coreSource,
 		// Stub DRAGON_INSTRUCTION — defined inside on.load (which is truncated for tests)

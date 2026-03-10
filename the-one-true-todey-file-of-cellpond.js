@@ -181,28 +181,7 @@ const state = {
 		height: 1.0,
 	},
 
-	camera: {
-		x: 0,
-		y: 0,
-
-		dx: 0,
-		dy: 0,
-
-		dxTarget: 0,
-		dyTarget: 0,
-		dsControl: 1,
-		dsTargetSpeed: 0.05,
-
-		underScale: 0.9,
-		scale: 0.9,
-		mscale: 1.0,
-		dmscale: 0.002,
-
-		mscaleTarget: 1.0,
-		mscaleTargetControl: 0.001,
-		mscaleTargetSpeed: 0.05,
-
-	},
+	camera: new Camera(),
 
 	brush: {
 		colour: Colour.Purple.splash,
@@ -831,7 +810,6 @@ on.load(() => {
 		}
 	}
 
-	const ZOOM = 0.02
 	let CT_SCALE = DPR * SCALE
 	on.wheel((e) => {
 
@@ -853,7 +831,7 @@ on.load(() => {
 			}
 			squareTool.toolbarNeedsColourUpdate = true
 		}
-		
+
 		else if (e.shiftKey) {
 			if (dy === 0) dy = e.deltaX / 100
 			state.brush.size -= Math.sign(dy)
@@ -861,9 +839,10 @@ on.load(() => {
 		}
 
 		else {
-			doZoom(dy, ...Mouse.position)
+			state.camera.zoom(dy, ...Mouse.position)
+			updateImageSize()
 		}
-		
+
 	}, {passive: false})
 
 	on.keydown(e => {
@@ -878,42 +857,6 @@ on.load(() => {
 			updateImageSize()
 		}
 	})
-
-	const getNeatScale = (underScale) => {
-		return underScale
-	}
-
-	const doZoom = (dy, centerX, centerY) => {
-
-		centerX *= DPR
-		centerY *= DPR
-
-		const sign = -Math.sign(dy)
-		const dd = Math.abs(dy)
-
-		for (let i = 0; i < dd; i++) {
-
-			const zoom = ZOOM * state.camera.underScale
-
-			const szoom = zoom * sign
-			state.camera.underScale += szoom
-
-			const oldScale = state.camera.scale
-			const newScale = getNeatScale(state.camera.underScale)
-			state.camera.scale = newScale
-			const scale = newScale / oldScale
-
-			state.camera.x += (1-scale) * centerX/newScale
-			state.camera.y += (1-scale) * centerY/newScale
-
-		}
-
-		//const newScale = state.camera.scale
-		//const scale = newScale / oldScale
-		//stampScale(scale)
-
-		updateImageSize()
-	}
 
 	on.contextmenu((e) => {
 		e.preventDefault()
@@ -965,73 +908,8 @@ on.load(() => {
 		drawQueue.requestReset()
 	}
 
-	//========//
-	// CAMERA //
-	//========//
 	const updateCamera = () => {
-		if (state.camera.mscale !== state.camera.mscaleTarget) {
-
-			const dd = state.camera.mscaleTarget - state.camera.mscale
-			state.camera.mscale += dd * state.camera.mscaleTargetSpeed
-
-			const sign = Math.sign(dd)
-			const snap = state.camera.mscaleTarget * state.camera.mscaleTargetControl * state.camera.mscaleTargetSpeed
-			if (sign === 1 && state.camera.mscale > state.camera.mscaleTarget - snap) state.camera.mscale = state.camera.mscaleTarget
-			if (sign === -1 && state.camera.mscale < state.camera.mscaleTarget + snap) state.camera.mscale = state.camera.mscaleTarget
-
-		}
-
-		if (state.camera.dx !== state.camera.dxTarget) {
-
-			const dd = state.camera.dxTarget - state.camera.dx
-			state.camera.dx += dd * state.camera.dsTargetSpeed
-
-			const sign = Math.sign(dd)
-			const snap = state.camera.dxTarget * state.camera.dsControl * state.camera.dsTargetSpeed
-			if (sign === 1 && state.camera.dx > state.camera.dxTarget - snap) state.camera.dx = state.camera.dxTarget
-			if (sign === -1 && state.camera.dx < state.camera.dxTarget + snap) state.camera.dx = state.camera.dxTarget
-
-		}
-
-		if (state.camera.dy !== state.camera.dyTarget) {
-
-			const dd = state.camera.dyTarget - state.camera.dy
-			state.camera.dy += dd * state.camera.dsTargetSpeed
-
-			const sign = Math.sign(dd)
-			const snap = state.camera.dyTarget * state.camera.dsControl * state.camera.dsTargetSpeed
-			if (sign === 1 && state.camera.dy > state.camera.dyTarget - snap) state.camera.dy = state.camera.dyTarget
-			if (sign === -1 && state.camera.dy < state.camera.dyTarget + snap) state.camera.dy = state.camera.dyTarget
-
-		}
-
-		if (state.camera.dx !== 0.0 || state.camera.dy !== 0.0) {
-			state.camera.x += state.camera.dx
-			state.camera.y += state.camera.dy
-			updateImageSize()
-			if (hand.state.camerapan) hand.state.camerapan()
-		}
-
-		if (state.camera.mscale !== 1.0) {
-
-			//addAllCellsToDrawQueue()
-
-			const oldScale = state.camera.scale
-			state.camera.scale *= state.camera.mscale
-			const newScale = state.camera.scale
-			const scale = newScale / oldScale
-
-			let centerX = Mouse.position[0]
-			let centerY = Mouse.position[1]
-
-			if (centerX === undefined) centerX = canvas.width/2
-			if (centerY === undefined) centerY = canvas.height/2
-
-			state.camera.x += (1-scale) * centerX/newScale
-			state.camera.y += (1-scale) * centerY/newScale
-
-			updateImageSize()
-		}
+		state.camera.update(hand, canvas, updateImageSize)
 	}
 
 	//======//
