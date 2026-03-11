@@ -6,9 +6,13 @@ class TrianglePickUp extends Atom {
 	colour = Colour.Black
 	borderColour = Colour.Black
 	value = false
-	size = UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5
-	x = TrianglePad.X + TrianglePad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5)/2
-	y = TrianglePad.Y + UI.OPTION_MARGIN*1.5/2
+
+	constructor({x, y, size} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.size = size
+	}
 
 	draw(ctx) { drawTriangleUp(this, ctx) }
 	offscreen() { return triangleOffscreen(this) }

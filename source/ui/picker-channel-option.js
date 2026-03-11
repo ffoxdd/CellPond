@@ -2,17 +2,18 @@
 // PICKER CHANNEL OPTION   //
 //=========================//
 class PickerChannelOption extends Atom {
-	height = UI.CHANNEL_HEIGHT
-	width = UI.SQUARE_SIZE
 	hasBorder = true
 	colourTicker = Infinity
 	colours = [999]
 	colourId = 0
 	dcolourId = 1
 
-	constructor(element = {}) {
+	constructor({width, height, pityTop, pityBottom} = {}) {
 		super()
-		Object.assign(this, element)
+		this.width = width
+		this.height = height
+		this.pityTop = pityTop
+		this.pityBottom = pityBottom
 		this.construct()
 	}
 
@@ -82,13 +83,15 @@ class PickerChannelOption extends Atom {
 	}
 
 	construct() {
+		const paddingLayout = {width: UI.SQUARE_SIZE, height: UI.OPTION_MARGIN}
+
 		if (this.pityTop) {
-			const topPity = UI.createChild(this, new OptionPadding())
+			const topPity = UI.createChild(this, new OptionPadding(paddingLayout))
 			topPity.y = -topPity.height
 		}
 
 		if (this.pityBottom) {
-			const bottomPity = UI.createChild(this, new OptionPadding())
+			const bottomPity = UI.createChild(this, new OptionPadding(paddingLayout))
 			bottomPity.y = this.height
 		}
 	}

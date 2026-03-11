@@ -118,17 +118,28 @@ class ColourtodeSquare extends Atom {
 	}
 
 	createPicker() {
-		const pickerHandle = UI.createChild(this, new SymmetryHandle())
-		pickerHandle.width += UI.OPTION_MARGIN
+		const S = UI.SYMMETRY_CIRCLE_SIZE
+		const pickerHandle = UI.createChild(this, new SymmetryHandle({
+			width: S/2 + UI.OPTION_MARGIN,
+			height: S / 3,
+			x: S/2 + S/4,
+			y: S/2 - (S / 3)/2,
+			behindParent: true,
+		}))
 		this.pickerHandle = pickerHandle
-		this.pickerHandle.behindParent = true
 
-		const pickerPad = UI.createChild(this, new PickerPad())
+		const pickerPad = UI.createChild(this, new PickerPad({
+			width: UI.OPTION_MARGIN + 3*(UI.SQUARE_SIZE + UI.OPTION_MARGIN),
+			height: UI.SQUARE_SIZE,
+			x: UI.SQUARE_SIZE + UI.OPTION_MARGIN,
+		}))
 		this.pickerPad = pickerPad
+
+		const channelLayout = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
 
 		if (this.value.channels[2] !== undefined) {
 			if (this.value.channels[2].variable === undefined) {
-				const blue = UI.createChild(this, new PickerChannel())
+				const blue = UI.createChild(this, new PickerChannel(channelLayout))
 				blue.channelSlot = "blue"
 				blue.x += UI.OPTION_MARGIN + 3 * (UI.SQUARE_SIZE + UI.OPTION_MARGIN)
 				blue.value = this.value.channels[2]
@@ -153,7 +164,7 @@ class ColourtodeSquare extends Atom {
 
 		if (this.value.channels[1] !== undefined) {
 			if (this.value.channels[1].variable === undefined) {
-				const green = UI.createChild(this, new PickerChannel())
+				const green = UI.createChild(this, new PickerChannel(channelLayout))
 				green.channelSlot = "green"
 				green.x += UI.OPTION_MARGIN + 2 * (UI.SQUARE_SIZE + UI.OPTION_MARGIN)
 				green.value = this.value.channels[1]
@@ -178,7 +189,7 @@ class ColourtodeSquare extends Atom {
 
 		if (this.value.channels[0] !== undefined) {
 			if (this.value.channels[0].variable === undefined) {
-				const red = UI.createChild(this, new PickerChannel())
+				const red = UI.createChild(this, new PickerChannel(channelLayout))
 				red.channelSlot = "red"
 				red.x += UI.OPTION_MARGIN + UI.SQUARE_SIZE + UI.OPTION_MARGIN
 				red.value = this.value.channels[0]
@@ -863,22 +874,25 @@ class ColourtodeSquare extends Atom {
 	joinExpand() {
 		this.joinExpanded = true
 
-		const pickerPad = UI.createChild(this, new PickerPad())
+		const pickerPad = UI.createChild(this, new PickerPad({
+			width: this.width + UI.OPTION_MARGIN*2,
+			height: (this.joins.length) * (this.height + UI.OPTION_MARGIN) + UI.OPTION_MARGIN,
+			x: -UI.OPTION_MARGIN,
+			y: this.height + UI.OPTION_MARGIN,
+		}))
 		this.pickerPad = pickerPad
-		pickerPad.width = this.width + UI.OPTION_MARGIN*2
-		pickerPad.x = -UI.OPTION_MARGIN
-		pickerPad.height = (this.joins.length) * (this.height + UI.OPTION_MARGIN) + UI.OPTION_MARGIN
-		pickerPad.y = this.height + UI.OPTION_MARGIN
 		pickerPad.touch = function() { return this }
 		pickerPad.grab = function() { return this.parent }
 		pickerPad.dragOnly = true
 
-		const pickerHandle = UI.createChild(this, new PickerPad())
+		const handleW = SymmetryHandle.HEIGHT
+		const pickerHandle = UI.createChild(this, new PickerPad({
+			width: handleW,
+			height: SymmetryHandle.WIDTH,
+			x: this.width/2 - handleW/2,
+			y: this.height,
+		}))
 		this.pickerHandle = pickerHandle
-		pickerHandle.width = SymmetryHandle.HEIGHT
-		pickerHandle.x = this.width/2 - pickerHandle.width/2
-		pickerHandle.height = SymmetryHandle.WIDTH
-		pickerHandle.y = this.height
 		pickerHandle.touch = function() { return this }
 		pickerHandle.grab = function() { return this.parent }
 		pickerHandle.dragOnly = true

@@ -3,11 +3,16 @@
 //==================//
 class SymmetryHandle extends Atom {
 	dragOnly = true
-	width = UI.SYMMETRY_CIRCLE_SIZE/2
-	x = UI.SYMMETRY_CIRCLE_SIZE/2 + UI.SYMMETRY_CIRCLE_SIZE/4
-	height = UI.SYMMETRY_CIRCLE_SIZE / 3
-	y = UI.SYMMETRY_CIRCLE_SIZE/2 - (UI.SYMMETRY_CIRCLE_SIZE / 3)/2
 	colour = Colour.Grey
+
+	constructor({x, y, width, height, behindParent} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+		this.behindParent = behindParent
+	}
 
 	draw(ctx) { drawRectangle(this, ctx) }
 	offscreen() { return rectangleOffscreen(this) }

@@ -7,13 +7,13 @@ class TallRectangle extends Atom {
 	rightDraggable = true
 	hasBorder = true
 	isTallRectangle = true
-	size = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 	expanded = false
 
-	constructor() {
+	constructor({size, width, height} = {}) {
 		super()
+		this.size = size
+		this.width = width
+		this.height = height
 		this.construct()
 	}
 
@@ -22,7 +22,8 @@ class TallRectangle extends Atom {
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 
 	rightDrag() {
-		const clone = new TallRectangle()
+		const ds = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+		const clone = new TallRectangle({size: ds, width: ds, height: ds})
 		UI.atomRegistry.register(clone)
 		const {x, y} = this.getPosition()
 		UI.hand.offset.x -= this.x - x
@@ -221,14 +222,16 @@ class TallRectangle extends Atom {
 
 			if (this.operationAtoms.padtop === undefined) {
 				if (this.value.add.variable === undefined) {
-					const operationAtom = UI.createChild(this, new PickerChannel())
+					const channelLayout = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
+					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout))
 					operationAtom.value = this.value.add
 					this.operationAtoms.padTop = operationAtom
 					operationAtom.x = this.padTop.x + UI.OPTION_MARGIN
 					operationAtom.y = this.padTop.y + this.padTop.height/2 - operationAtom.height/2
 					operationAtom.highlightedSlot = "padTop"
 				} else {
-					const operationAtom = UI.createChild(this, new TallRectangle())
+					const ds3 = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+					const operationAtom = UI.createChild(this, new TallRectangle({size: ds3, width: ds3, height: ds3}))
 					operationAtom.value = this.value.add
 					operationAtom.variable = this.value.add.variable
 					operationAtom.makeOperationAtoms()
@@ -245,7 +248,8 @@ class TallRectangle extends Atom {
 
 			if (this.operationAtoms.padBottom === undefined) {
 				if (this.value.subtract.variable === undefined) {
-					const operationAtom = UI.createChild(this, new PickerChannel())
+					const channelLayout2 = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
+					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout2))
 					operationAtom.value = this.value.subtract
 					this.operationAtoms.padBottom = operationAtom
 					operationAtom.x = this.padBottom.x + UI.OPTION_MARGIN
@@ -275,73 +279,91 @@ class TallRectangle extends Atom {
 
 		if (this.value.add === undefined) {
 			if (this.y < 0 || !(this.parent.isTallRectangle && this.parent.operationAtoms.padBottom === this)) {
-				this.handleTop = UI.createChild(this, new SymmetryHandle())
-				this.handleTop.width = this.handleTop.height
-				this.handleTop.height *= 2
-				this.handleTop.y = this.height/2 - this.handleTop.height
-				this.handleTop.x = this.width/2 - this.handleTop.width/2
-				this.handleTop.behindParent = true
+				const handleH = SymmetryHandle.HEIGHT
+				const padW = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
+				this.handleTop = UI.createChild(this, new SymmetryHandle({
+					width: handleH,
+					height: handleH * 2,
+					y: this.height/2 - handleH * 2,
+					x: this.width/2 - handleH/2,
+					behindParent: true,
+				}))
 
-				this.padTop = UI.createChild(this, new SymmetryPad())
-				this.padTop.height = PickerPad.HEIGHT
-				this.padTop.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
-				this.padTop.x = this.width/2 - this.padTop.width/2
-				this.padTop.y = -this.padTop.height - UI.OPTION_MARGIN
+				this.padTop = UI.createChild(this, new SymmetryPad({
+					height: PickerPad.HEIGHT,
+					width: padW,
+					x: this.width/2 - padW/2,
+					y: -PickerPad.HEIGHT - UI.OPTION_MARGIN,
+				}))
 			}
 		}
 
 		if (this.value.subtract === undefined) {
 			if (this.y > 0 || !(this.parent.isTallRectangle && this.parent.operationAtoms.padTop === this)) {
-				this.handleBottom = UI.createChild(this, new SymmetryHandle())
-				this.handleBottom.width = this.handleBottom.height
-				this.handleBottom.height *= 2
-				this.handleBottom.y = this.height/2
-				this.handleBottom.x = this.width/2 - this.handleBottom.width/2
-				this.handleBottom.behindParent = true
+				const handleH2 = SymmetryHandle.HEIGHT
+				const padW2 = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
+				this.handleBottom = UI.createChild(this, new SymmetryHandle({
+					width: handleH2,
+					height: handleH2 * 2,
+					y: this.height/2,
+					x: this.width/2 - handleH2/2,
+					behindParent: true,
+				}))
 
-				this.padBottom = UI.createChild(this, new SymmetryPad())
-				this.padBottom.height = PickerPad.HEIGHT
-				this.padBottom.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
-				this.padBottom.x = this.width/2 - this.padBottom.width/2
-				this.padBottom.y = this.height + UI.OPTION_MARGIN
+				this.padBottom = UI.createChild(this, new SymmetryPad({
+					height: PickerPad.HEIGHT,
+					width: padW2,
+					x: this.width/2 - padW2/2,
+					y: this.height + UI.OPTION_MARGIN,
+				}))
 			}
 		}
 
-		this.handleRight = UI.createChild(this, new SymmetryHandle())
-		this.handleRight.y = this.height/2 - this.handleRight.height/2
-		this.handleRight.x = this.width/2
-		this.handleRight.width *= 2.5
-		this.handleRight.behindParent = true
+		const handleW = SymmetryHandle.WIDTH * 2.5
+		this.handleRight = UI.createChild(this, new SymmetryHandle({
+			width: handleW,
+			height: SymmetryHandle.HEIGHT,
+			y: this.height/2 - SymmetryHandle.HEIGHT/2,
+			x: this.width/2,
+			behindParent: true,
+		}))
 
-		this.padRight = UI.createChild(this, new SymmetryPad())
-		this.padRight.height = PickerPad.HEIGHT
-		this.padRight.width = UI.OPTION_MARGIN + (this.width+UI.OPTION_MARGIN/1.5)*3
-		this.padRight.y = this.height/2 - this.padRight.height/2
-		this.padRight.x = this.width/2 + (UI.SQUARE_SIZE + UI.OPTION_MARGIN*2)/2 + UI.OPTION_MARGIN
+		const padRightW = UI.OPTION_MARGIN + (this.width+UI.OPTION_MARGIN/1.5)*3
+		this.padRight = UI.createChild(this, new SymmetryPad({
+			height: PickerPad.HEIGHT,
+			width: padRightW,
+			y: this.height/2 - PickerPad.HEIGHT/2,
+			x: this.width/2 + (UI.SQUARE_SIZE + UI.OPTION_MARGIN*2)/2 + UI.OPTION_MARGIN,
+		}))
 
 
 
-		this.red = UI.createChild(this, new DiamondChoice())
+		const choiceSize = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+		const choiceLayout = {size: choiceSize, width: choiceSize, height: choiceSize}
+		const pinSize = choiceSize / 2
+		const pinLayout = {size: pinSize, width: pinSize, height: pinSize}
+
+		this.red = UI.createChild(this, new DiamondChoice(choiceLayout))
 		this.red.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2
 		this.red.borderColour = Colour.Red
 		this.red.colour = Colour.Black
 		this.red.value = "red"
 
-		this.green = UI.createChild(this, new DiamondChoice())
-		this.green.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (this.green.width+UI.OPTION_MARGIN)*1
+		this.green = UI.createChild(this, new DiamondChoice(choiceLayout))
+		this.green.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (choiceSize+UI.OPTION_MARGIN)*1
 		this.green.borderColour = Colour.Green
 		this.green.colour = Colour.Black
 		this.green.value = "green"
 
-		this.blue = UI.createChild(this, new DiamondChoice())
-		this.blue.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (this.blue.width+UI.OPTION_MARGIN)*2
+		this.blue = UI.createChild(this, new DiamondChoice(choiceLayout))
+		this.blue.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (choiceSize+UI.OPTION_MARGIN)*2
 		this.blue.borderColour = Colour.Blue
 		this.blue.colour = Colour.Black
 		this.blue.value = "blue"
 
-		this.winnerPin = UI.createChild(this, new DiamondPin())
-		this.winnerPin.x = this[this.variable].x + this.winnerPin.width/2
-		this.winnerPin.y = this.winnerPin.height/2
+		this.winnerPin = UI.createChild(this, new DiamondPin(pinLayout))
+		this.winnerPin.x = this[this.variable].x + pinSize/2
+		this.winnerPin.y = pinSize/2
 		this.winnerPin.colour = this[this.variable].borderColour
 		this.winnerPin.borderColour = this.winnerPin.colour
 

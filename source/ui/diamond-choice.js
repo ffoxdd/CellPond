@@ -3,9 +3,13 @@
 //================//
 class DiamondChoice extends Atom {
 	hasBorder = true
-	size = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+
+	constructor({size, width, height} = {}) {
+		super()
+		this.size = size
+		this.width = width
+		this.height = height
+	}
 
 	draw(ctx) { drawDiamond(this, ctx) }
 	offscreen() { return rectangleOffscreen(this) }

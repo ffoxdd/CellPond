@@ -4,9 +4,14 @@
 class HexagonHandle extends Atom {
 	colour = Colour.Grey
 	rotation = 0
-	x = 50
-	width = UI.SQUARE_SIZE/2 + UI.SQUARE_SIZE/4
-	height = UI.SQUARE_SIZE / 3
+
+	constructor({x, y, width, height} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+	}
 
 	offscreen() { return rectangleOffscreen(this) }
 	touch() { return this.parent }

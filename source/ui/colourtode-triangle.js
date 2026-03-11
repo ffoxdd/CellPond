@@ -1,3 +1,33 @@
+//===================//
+// TRIANGLE LAYOUT   //
+//===================//
+function triangleLayout() {
+	const S = UI.SYMMETRY_CIRCLE_SIZE
+	const M = UI.OPTION_MARGIN
+	const pickSize = UI.SQUARE_SIZE - M * 1.5
+
+	const pad = {
+		width: S,
+		x: S * Math.sqrt(3)/2 + M,
+		height: (S * 2) - M,
+		y: -S/2 + M/2,
+	}
+
+	const pickX = pad.x + pad.width/2 - pickSize/2
+
+	return {
+		pad,
+		handle: {
+			width: S/2 + M,
+			x: S/2,
+			height: S / 3,
+			y: S/2 - (S / 3)/2,
+		},
+		pickUp: { size: pickSize, x: pickX, y: pad.y + M * 1.5/2 },
+		pickDown: { size: pickSize, x: pickX, y: pad.y + pad.height - pickSize - M/2 },
+	}
+}
+
 //======================//
 // COLOURTODE TRIANGLE  //
 //======================//
@@ -38,12 +68,13 @@ class ColourtodeTriangle extends Atom {
 	}
 
 	expand() {
-		this.pad = UI.createChild(this, new TrianglePad())
-		this.handle = UI.createChild(this, new TriangleHandle())
+		const layout = triangleLayout()
+		this.pad = UI.createChild(this, new TrianglePad(layout.pad))
+		this.handle = UI.createChild(this, new TriangleHandle(layout.handle))
 		this.expanded = true
 
-		this.upPick = UI.createChild(this, new TrianglePickUp())
-		this.downPick = UI.createChild(this, new TrianglePickDown())
+		this.upPick = UI.createChild(this, new TrianglePickUp(layout.pickUp))
+		this.downPick = UI.createChild(this, new TrianglePickDown(layout.pickDown))
 
 		if (this.direction === "up") this.upPick.value = true
 		if (this.direction === "down") this.downPick.value = true

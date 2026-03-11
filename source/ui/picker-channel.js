@@ -3,13 +3,13 @@
 //==================//
 class PickerChannel extends Atom {
 	hasBorder = true
-	width = UI.SQUARE_SIZE
-	y = (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2
-	height = UI.CHANNEL_HEIGHT
 	rightDraggable = true
 
-	constructor() {
+	constructor({width, y, height} = {}) {
 		super()
+		this.width = width
+		this.y = y
+		this.height = height
 		this.construct()
 	}
 
@@ -19,7 +19,11 @@ class PickerChannel extends Atom {
 	grab() { return this }
 
 	rightDrag() {
-		const clone = new PickerChannel()
+		const clone = new PickerChannel({
+			width: UI.SQUARE_SIZE,
+			y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
+			height: UI.CHANNEL_HEIGHT,
+		})
 		UI.atomRegistry.register(clone)
 		const {x, y} = this.getPosition()
 		UI.hand.offset.x -= this.x - x
@@ -85,14 +89,23 @@ class PickerChannel extends Atom {
 		this.dcolourId = 1
 		this.colourTicker = Infinity
 
-		this.selectionBack = UI.createChild(this, new ChannelSelectionSide())
+		this.selectionBack = UI.createChild(this, new ChannelSelectionSide({
+			width: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
+			height: UI.SQUARE_SIZE,
+		}))
 
-		const selectionTop = UI.createChild(this, new ChannelSelectionEnd())
+		const selectionEndLayout = {
+			width: UI.SQUARE_SIZE + UI.OPTION_MARGIN*2,
+			height: UI.OPTION_SPACING - UI.CHANNEL_HEIGHT,
+			x: -UI.OPTION_MARGIN,
+		}
+
+		const selectionTop = UI.createChild(this, new ChannelSelectionEnd(selectionEndLayout))
 		this.selectionTop = selectionTop
 		this.selectionTop.isTop = true
 		selectionTop.dragOnly = false
 
-		const selectionBottom = UI.createChild(this, new ChannelSelectionEnd())
+		const selectionBottom = UI.createChild(this, new ChannelSelectionEnd(selectionEndLayout))
 		this.selectionBottom = selectionBottom
 		this.selectionBottom.isTop = false
 		selectionBottom.dragOnly = false
@@ -511,7 +524,12 @@ class PickerChannel extends Atom {
 
 			const pityTop = i !== 9 - endId + 1
 			const pityBottom = i !== 9 - startId - 1
-			const option = UI.createChild(this, new PickerChannelOption({pityTop, pityBottom}))
+			const option = UI.createChild(this, new PickerChannelOption({
+				width: UI.SQUARE_SIZE,
+				height: UI.CHANNEL_HEIGHT,
+				pityTop,
+				pityBottom,
+			}))
 
 			if (oldOptions !== undefined) {
 				option.isGradient = oldOptions[i].isGradient

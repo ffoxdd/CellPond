@@ -2,10 +2,14 @@
 // HEXAGON BUTTON INNER //
 //======================//
 class HexagonButtonInner extends Atom {
-	size = UI.SQUARE_SIZE * 2/3
 	hasBorder = true
 	borderColour = Colour.Black
 	colour = Colour.Grey
+
+	constructor({size} = {}) {
+		super()
+		this.size = size
+	}
 
 	draw(ctx) { drawCircle(this, ctx) }
 	offscreen() { return rectangleOffscreen(this) }

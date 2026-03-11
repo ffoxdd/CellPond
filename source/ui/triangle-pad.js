@@ -3,19 +3,18 @@
 //===============//
 class TrianglePad extends Atom {
 	dragOnly = true
-	width = UI.SYMMETRY_CIRCLE_SIZE
-	x = UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN
-	height = (UI.SYMMETRY_CIRCLE_SIZE * 2) - UI.OPTION_MARGIN
-	y = -UI.SYMMETRY_CIRCLE_SIZE/2 + UI.OPTION_MARGIN/2
 	colour = Colour.Grey
+
+	constructor({x, y, width, height} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+	}
 
 	draw(ctx) { drawRectangle(this, ctx) }
 	offscreen() { return rectangleOffscreen(this) }
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 	grab() { return this.parent }
-
-	static get X() { return UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN }
-	static get WIDTH() { return UI.SYMMETRY_CIRCLE_SIZE }
-	static get Y() { return -UI.SYMMETRY_CIRCLE_SIZE/2 + UI.OPTION_MARGIN/2 }
-	static get HEIGHT() { return (UI.SYMMETRY_CIRCLE_SIZE * 2) - UI.OPTION_MARGIN }
 }

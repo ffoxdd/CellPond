@@ -2,12 +2,12 @@
 // HEXAGON BUTTON  //
 //=================//
 class HexagonButton extends Atom {
-	size = UI.SQUARE_SIZE
 	colour = Colour.Grey
 	behindChildren = true
 
-	constructor() {
+	constructor({size} = {}) {
 		super()
+		this.size = size
 		this.construct()
 	}
 
@@ -17,7 +17,8 @@ class HexagonButton extends Atom {
 	grab() { return this.parent }
 
 	construct() {
-		this.inner = UI.createChild(this, new HexagonButtonInner(), {bottom: false})
+		const innerSize = this.size * 2/3
+		this.inner = UI.createChild(this, new HexagonButtonInner({size: innerSize}), {bottom: false})
 		this.inner.x = this.width/2 - this.inner.width/2
 		this.inner.y = this.height/2 - this.inner.height/2
 	}

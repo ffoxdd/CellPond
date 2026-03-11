@@ -157,16 +157,23 @@ class Hexagon extends Atom {
 			return [sx + this.width/2, sy + this.height/2]
 		})
 
+			const handleW = HexagonHandle.WIDTH
+		const handleH = HexagonHandle.HEIGHT
+		const buttonSize = HexagonButton.SIZE
+
 		for (let i = 0; i < 6; i++) {
-			const handle = UI.createChild(this, new HexagonHandle())
+			const handle = UI.createChild(this, new HexagonHandle({
+				x: handlePositions[i][0] - handleW/2,
+				y: handlePositions[i][1],
+				width: handleW,
+				height: handleH,
+			}))
 			handle.rotation = i
-			handle.x = handlePositions[i][0] - HexagonHandle.WIDTH/2
-			handle.y = handlePositions[i][1]
 			this.handles.push(handle)
 
-			const button = UI.createChild(this, new HexagonButton())
-			button.x = buttonPositions[i][0] - HexagonButton.SIZE/2
-			button.y = buttonPositions[i][1] - HexagonButton.SIZE/2
+			const button = UI.createChild(this, new HexagonButton({size: buttonSize}))
+			button.x = buttonPositions[i][0] - buttonSize/2
+			button.y = buttonPositions[i][1] - buttonSize/2
 			this.buttons.push(button)
 			button.id = i
 

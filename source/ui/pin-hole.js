@@ -8,9 +8,13 @@ class PinHole extends Atom {
 	borderScale = 1/2
 	borderColour = Colour.Black
 	colour = Colour.Black
-	size = UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2
-	y = UI.OPTION_MARGIN/2/2
-	x = UI.OPTION_MARGIN/2/2
+
+	constructor({x, y, size} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.size = size
+	}
 
 	draw(ctx) {
 		return

@@ -3,8 +3,12 @@
 //==================//
 class OptionPadding extends Atom {
 	colour = Colour.Grey
-	width = UI.SQUARE_SIZE
-	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN - UI.CHANNEL_HEIGHT
+
+	constructor({width, height} = {}) {
+		super()
+		this.width = width
+		this.height = height
+	}
 
 	draw() {}
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }

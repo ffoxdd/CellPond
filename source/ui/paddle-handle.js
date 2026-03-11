@@ -6,9 +6,13 @@ class PaddleHandle extends Atom {
 	attached = true
 	behindChildren = true
 	colour = Colour.Grey
-	size = UI.PADDLE_X
-	x = -UI.PADDLE_X
-	y = UI.PADDLE_TOTAL_SIZE/2 - UI.PADDLE_X/2
+
+	constructor({x, y, size} = {}) {
+		super()
+		this.x = x
+		this.y = y
+		this.size = size
+	}
 
 	draw(ctx) { drawRectangle(this, ctx) }
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }

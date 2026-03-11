@@ -1,4 +1,35 @@
 //==================//
+// SYMMETRY LAYOUT  //
+//==================//
+function symmetryLayout() {
+	const S = UI.SYMMETRY_CIRCLE_SIZE
+	const M = UI.OPTION_MARGIN
+	const toggleSize = UI.SQUARE_SIZE - M
+
+	const pad = {
+		width: S,
+		x: S + M,
+		height: (S * 3) - M,
+		y: -(S * 3)/3 + M/2,
+	}
+
+	const toggleX = pad.x + pad.width/2 - toggleSize/2
+
+	return {
+		pad,
+		handle: {
+			width: S/2 + M,
+			x: S/2 + S/4,
+			height: S / 3,
+			y: S/2 - (S / 3)/2,
+		},
+		toggleX: { size: toggleSize, x: toggleX, y: pad.y + M/2 },
+		toggleY: { size: toggleSize, x: toggleX, y: M/2 },
+		toggleR: { size: toggleSize, x: toggleX, y: pad.y + pad.height - toggleSize - M/2 },
+	}
+}
+
+//==================//
 // SYMMETRY CIRCLE  //
 //==================//
 class SymmetryCircle extends Atom {
@@ -31,15 +62,15 @@ class SymmetryCircle extends Atom {
 	}
 
 	expand() {
-		this.pad = UI.createChild(this, new SymmetryPad())
-		this.handle = UI.createChild(this, new SymmetryHandle())
-		this.handle.width += UI.OPTION_MARGIN
+		const layout = symmetryLayout()
+		this.pad = UI.createChild(this, new SymmetryPad(layout.pad))
+		this.handle = UI.createChild(this, new SymmetryHandle(layout.handle))
 		this.expanded = true
 
 		const [x, y, r] = getRGB(this.value)
-		this.xToggle = UI.createChild(this, new SymmetryToggleX())
-		this.yToggle = UI.createChild(this, new SymmetryToggleY())
-		this.rToggle = UI.createChild(this, new SymmetryToggleR())
+		this.xToggle = UI.createChild(this, new SymmetryToggleX(layout.toggleX))
+		this.yToggle = UI.createChild(this, new SymmetryToggleY(layout.toggleY))
+		this.rToggle = UI.createChild(this, new SymmetryToggleR(layout.toggleR))
 
 		if (x > 0) this.xToggle.value = true
 		if (y > 0) this.yToggle.value = true
