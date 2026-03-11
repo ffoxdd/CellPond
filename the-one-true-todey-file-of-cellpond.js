@@ -1529,6 +1529,9 @@ on.load(() => {
 
 	UI.HAND = HAND
 	UI.DPR = DPR
+	UI.cellGrid = cellGrid
+	UI.overrideCells = overrideCells
+	UI.drawQueue = drawQueue
 
 	const atomRegistry = new AtomRegistry()
 	UI.atomRegistry = atomRegistry
@@ -1644,6 +1647,7 @@ on.load(() => {
 			squareTool.toolbarNeedsColourUpdate = true
 		}
 	}
+	UI.setBrushColour = setBrushColour
 	UI.on("brushColourChanged", setBrushColour)
 
 
@@ -2039,6 +2043,11 @@ on.load(() => {
 	}
 
 	UI.PADDLE_HANDLE_SIZE = UI.PADDLE_X
+	UI.createPaddle = createPaddle
+	UI.deletePaddle = deletePaddle
+	UI.updatePaddleSize = updatePaddleSize
+	UI.updatePaddleRule = updatePaddleRule
+	UI.positionPaddles = positionPaddles
 	UI.on("paddleRuleChanged", updatePaddleRule)
 	UI.on("paddleCreate", createPaddle)
 	UI.on("paddleDelete", deletePaddle)
@@ -2176,10 +2185,8 @@ on.load(() => {
 		if (unlock.unlocked) return
 		unlock.unlocked = true
 		unlock.grabbable = true
-
-		
-
 	}
+	UI.unlockMenuTool = unlockMenuTool
 
 	squareTool = addMenuTool(new ColourtodeSquare())
 	menuRight += BORDER_THICKNESS
@@ -2320,264 +2327,11 @@ on.load(() => {
 		unpackPaddles(p)
 	}, {passive: false})
 
-	const PADDLE_PACK = {}
-	const PADDLE_UNPACK = {}
-
-	PADDLE_PACK.cellAtoms = (paddle, value) => {
-		const cellAtoms = []
-		for (const atom of value) {
-			cellAtoms.push({
-				isLeftSlot: atom.isLeftSlot,
-				value: atom.value,
-				x: atom.x,
-				y: atom.y,
-				slotted: atom.slotted ? atom.slotted.value : undefined,
-			})
-		}
-		return cellAtoms
-	}
-
-	let loadedColour = false
-	PADDLE_UNPACK.cellAtoms = (paddle, value) => {
-		const atoms = []
-		for (const v of value) {
-			if (!loadedColour) {
-				if (!v.isLeftSlot) {
-					setBrushColour(v.value)
-				}
-				loadedColour = true
-			}
-			const square = v.isLeftSlot ? new Slot() : makeSquareFromValue(v.value)
-			square.isLeftSlot = v.isLeftSlot
-			atomRegistry.register(square)
-			giveChild(paddle, square)
-			square.attached = true
-			square.x = v.x
-			square.y = v.y
-			square.highlightedSide = "left"
-			atoms.push(square)
-
-			if (v.slotted !== undefined) {
-				const slotted = makeSquareFromValue(v.slotted)
-				atomRegistry.register(slotted)
-				giveChild(paddle, slotted)
-				slotted.attached = true
-				slotted.cellAtom = square
-				slotted.highlightedSide = "slot"
-				slotted.slottee = true
-				square.slotted = slotted
-			}
-		}
-		return atoms
-	}
-
-	PADDLE_PACK.symmetryCircle = (paddle, value) => {
-		if (value === undefined) return
-		return value.value
-	}
-
-	PADDLE_UNPACK.symmetryCircle = (paddle, value) => {
-		const circle = createChild(paddle, new SymmetryCircle())
-		circle.value = value
-		return circle
-	}
-
-	PADDLE_PACK.chance = (paddle, value) => {
-		if (value === undefined) return
-		return value.ons
-	}
-
-	PADDLE_UNPACK.chance = (paddle, value) => {
-		const hex = createChild(paddle, new Hexagon())
-		hex.ons = value
-		return hex
-	}
-
-	const keep = (paddle, value) => value
-	PADDLE_PACK.expanded = keep
-	PADDLE_PACK.x = keep
-	PADDLE_PACK.y = keep
-	PADDLE_PACK.width = keep
-	PADDLE_PACK.height = keep
-	PADDLE_PACK.hasSymmetry = keep
-
-	PADDLE_UNPACK.expanded = keep
-	PADDLE_UNPACK.x = keep
-	PADDLE_UNPACK.y = keep
-	PADDLE_UNPACK.width = keep
-	PADDLE_UNPACK.height = keep
-	PADDLE_UNPACK.hasSymmetry = keep
-
-	PADDLE_PACK.pinhole = (paddle, value) => {
-		return value.locked
-	}
-
-	PADDLE_UNPACK.pinhole = (paddle, value) => {
-		paddle.pinhole.locked = value
-		return paddle.pinhole
-	}
-
-	PADDLE_PACK.rightTriangle = (paddle, value) => {
-		return value !== undefined
-	}
-
-	PADDLE_UNPACK.rightTriangle = (paddle, value) => {
-		if (!value) return undefined
-		const arrow = createChild(paddle, new ColourtodeTriangle())
-		return arrow
-	}
-
-	window.packPaddles = () => {
-		const packedPaddles = []
-		for (const paddle of paddles) {
-			const packedPaddle = {}
-			for (const key in paddle) {
-				const packer = PADDLE_PACK[key]
-				if (packer === undefined) continue
-				const v = packer(paddle, paddle[key])
-				if (v !== undefined) {
-					packedPaddle[key] = v
-				}
-			}
-			packedPaddles.push(packedPaddle)
-		}
-		return JSON.stringify(packedPaddles)		
-	}
-
-	window.unpackPaddles = (pack) => {
-	    	if (middleClicked) {
-	        	middleClicked = false
-	        	return
-	    	}
-
-		loadedColour = false
-		unlockMenuTool("triangle")
-		unlockMenuTool("circle")
-		unlockMenuTool("hexagon")
-		// unlockMenuTool("wide_rectangle")
-		try {
-			while (paddles.length > 0) {
-				deletePaddle(paddles[paddles.length-1])
-			}
-			for (const packed of JSON.parse(pack)) {
-				const paddle = createPaddle()
-				for (const key in packed) {
-					const unpacker = PADDLE_UNPACK[key]
-					if (unpacker === undefined) continue
-					const v = unpacker(paddle, packed[key])
-					if (v !== undefined) {
-						paddle[key] = v
-					}
-				}
-				updatePaddleSize(paddle)
-				updatePaddleRule(paddle)
-			}
-			positionPaddles()
-		} catch(e) {
-			console.error(e)
-			alert("Error loading rules... Sorry! Please contact @todepond :)")
-		}
-	}
+	// Paddle serialization moved to source/paddle-serialization.js
 
 
-	const download = (content, fileName, contentType) => {
-		var a = document.createElement("a")
-		var file = new Blob([content], {type: contentType})
-		a.href = URL.createObjectURL(file)
-		a.download = fileName
-		a.click()
-	}
-	
-	const savePaddles = async () => {
-		const pack = packPaddles(paddles);
+	// File I/O functions moved to source/file-io.js
 
-		if (window.showSaveFilePicker) {
-			// Use the Native File System API if available
-			try {
-				const result = await showSaveFilePicker({
-					excludeAcceptAllOption: true,
-					suggestedName: 'spell',
-					startIn: 'downloads',
-					types: [{
-						description: 'JSON',
-						accept: {'application/json': [".json"]}
-					}],
-				})
-				const writable = await result.createWritable();
-				await writable.write(pack);
-				await writable.close();
-			} catch (err) {
-				console.error('Failed to save file:', err);
-			}
-		} else {
-			// Fallback to the Blob and link method
-			const blob = new Blob([pack], {type: 'application/json'});
-			const url = URL.createObjectURL(blob);
-
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = 'spell.json';
-			link.click();
-			URL.revokeObjectURL(url);
-		}
-	}
-
-	const openPaddles = () => {
-		const opener = document.createElement('input')
-		opener.type = "file"
-		opener.onchange = async e => {
-			const file = opener.files[0]
-			const pack = await file.text()
-			unpackPaddles(pack)
-			Keyboard.Control = false
-		}
-		opener.click()
-		Keyboard.Control = false
-	}
-
-	const copyPaddles = () => {
-		const pack = packPaddles(paddles)
-		print(pack)
-		navigator.clipboard.writeText(pack)
-	}
-
-	// store the state of the grid
-	window.packWorld = () => {
-		const cells = cellGrid.getAll().values()
-		const packedCells = cells.map(cell => {
-			// x=0, y=0, width=1, height=1, colour=112
-			const packedCell = {
-				x: cell.x,
-				y: cell.y,
-				w: cell.width,
-				h: cell.height,
-				c: cell.colour,
-			}
-			return packedCell
-		})
-		const packedString = JSON.stringify([...packedCells])
-
-		const compressedString = LZString.compress(packedString)
-		return compressedString
-	}
-
-	window.unpackWorld = (compressedString) => {
-		const packedString = LZString.decompress(compressedString)
-		const packedCells = JSON.parse(packedString)
-		// deleteAllCells()
-		const cells = packedCells.map(packedCell => {
-			const {x, y, w, h, c} = packedCell
-			const cell = new Cell({
-				x,
-				y,
-				width: w,
-				height: h,
-				colour: c,
-			})
-			return cell
-		})
-		overrideCells(cells)
-	}
 })
 
 //=============================================================
