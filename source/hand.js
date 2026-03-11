@@ -59,7 +59,7 @@ HAND.FREE = {
 	},
 
 	mousedown: (e) => {
-		if (!UI.state.worldBuilt) return
+		if (!world.built) return
 		hand.voidingStart = [e.clientX, e.clientY]
 		changeHandState(HAND.VOIDING)
 	},
@@ -102,8 +102,8 @@ HAND.VOIDING = {
 		}
 	},
 	mouseup: (e) => {
-		const oldWorldSize = WORLD_SIZE
-		setWorldSize(0)
+		const oldWorldSize = world.size
+		world.setSize(0)
 		if (voidingType) {
 			UI.brush(0.5, 0.5)
 		} else {
@@ -111,12 +111,12 @@ HAND.VOIDING = {
 			UI.state.brush.colour = oldWorldSize * 111
 			UI.brush(0.5, 0.5)
 			UI.state.brush.colour = oldBrushColour
-			UI.state.worldBuilt = false
+			world.built = false
 			UI.show.paused = false
 			UI.canvas.style["background-color"] = Colour.Void
 		}
 		voidingType = !voidingType
-		setWorldSize(oldWorldSize)
+		world.setSize(oldWorldSize)
 		changeHandState(HAND.FREE)
 	},
 }

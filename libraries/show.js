@@ -51,7 +51,7 @@ Show.start = ({tick = () => {}, speed = 1, paused = false, scale = 1.0, resize =
 
 	on.keydown(e => {
 		if (e.key === " ") {
-			if (!state.worldBuilt) return
+			if (!world.built) return
 			show.paused = !show.paused
 			canvas.style["background-color"] = show.paused ? Colour.Black : Colour.Void
 		}

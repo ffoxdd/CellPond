@@ -60,8 +60,8 @@ class ColourtodeSquare extends Atom {
 	}
 
 	draw(ctx) {
-		if (this.value.isDiagram) return
-		else drawRectangle(this, ctx)
+		if (this.value !== undefined && this.value.isDiagram) return
+		drawRectangle(this, ctx)
 	}
 
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }

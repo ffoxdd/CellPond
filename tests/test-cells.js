@@ -20,7 +20,7 @@ function assertArrayEqual(actual, expected) {
 }
 
 // Shorthand — the CellGrid instance and the Cell class
-const grid = () => cellpond.cellGrid
+const grid = () => cellpond.world.cellGrid
 const Cell = () => cellpond.Cell
 
 //======//
@@ -272,24 +272,24 @@ describe("CellGrid.getAll", () => {
 })
 
 //============//
-// WORLD_SIZE //
-//============//
+// WORLD //
+//=======//
 describe("world size constants", () => {
 
-	it("WORLD_SIZE is set", () => {
-		assert.notEqual(cellpond.WORLD_SIZE, undefined)
+	it("world.size is set", () => {
+		assert.notEqual(cellpond.world.size, undefined)
 	})
 
-	it("WORLD_CELL_COUNT is 2^(WORLD_SIZE*2)", () => {
-		assert.equal(cellpond.WORLD_CELL_COUNT, 2 ** (cellpond.WORLD_SIZE * 2))
+	it("world.cellCount is 2^(size*2)", () => {
+		assert.equal(cellpond.world.cellCount, 2 ** (cellpond.world.size * 2))
 	})
 
-	it("WORLD_DIMENSION is 2^WORLD_SIZE", () => {
-		assert.equal(cellpond.WORLD_DIMENSION, 2 ** cellpond.WORLD_SIZE)
+	it("world.dimension is 2^size", () => {
+		assert.equal(cellpond.world.dimension, 2 ** cellpond.world.size)
 	})
 
-	it("WORLD_CELL_SIZE is 1/WORLD_DIMENSION", () => {
-		assert.equal(cellpond.WORLD_CELL_SIZE, 1 / cellpond.WORLD_DIMENSION)
+	it("world.cellSize is 1/dimension", () => {
+		assert.equal(cellpond.world.cellSize, 1 / cellpond.world.dimension)
 	})
 
 })

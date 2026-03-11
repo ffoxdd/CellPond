@@ -565,7 +565,7 @@ const makeBehaveFunction = (rule) => {
 	}
 }
 
-// References at call time: cellGrid (top-level), edgeMode (top-level), oneIn (Habitat global)
+// References at call time: world.cellGrid (via World class), edgeMode (top-level), oneIn (Habitat global)
 const makeConditionFunction = (diagram, stampNames, chance = 6) => {
 	const conditions = diagram.left.map(cell => {
 		const splashes = cell.content.getSplashSet()
@@ -584,7 +584,7 @@ const makeConditionFunction = (diagram, stampNames, chance = 6) => {
 				while (y < 0) y += 1
 			}
 
-			const neighbour = cellGrid.pick(x + width / 2, y + height / 2)
+			const neighbour = world.cellGrid.pick(x + width / 2, y + height / 2)
 
 			if (neighbour === undefined) return [undefined, undefined]
 			if (neighbour.left + 8 !== x + 8) return [undefined, undefined]
@@ -742,7 +742,7 @@ DRAGON_INSTRUCTION.recolour.type = "RECOLOUR"
 DRAGON_INSTRUCTION.split = (cell) => {
 
 	const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
-		const children = cellGrid.split(target, cell.splitX, cell.splitY)
+		const children = world.cellGrid.split(target, cell.splitX, cell.splitY)
 		return {drawn: 0, bonusTargets: children.reverse()}
 	}
 	return instruction
@@ -756,7 +756,7 @@ DRAGON_INSTRUCTION.merge = (cell) => {
 
 	const instruction = (target, redraw, neighbours, neighbourId, stamps) => {
 		const children = neighbours.slice(neighbourId, neighbourId+childCount)
-		const merged = cellGrid.merge(children)
+		const merged = world.cellGrid.merge(children)
 		return {drawn: 0, skip: childCount-1, bonusTargets: [merged]}
 	}
 

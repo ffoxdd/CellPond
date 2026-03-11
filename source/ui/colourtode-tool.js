@@ -2,18 +2,20 @@
 // COLOURTODE TOOL    //
 //====================//
 class ColourtodeTool extends Atom {
-	element = new ColourtodeSquare()
+	constructor(element = {}) {
+		super(element)
+	}
 
 	draw(ctx) {
 		if ((this.previousBrushColour !== state.brush.colour) || this.toolbarNeedsColourUpdate) {
 			this.update()
 		}
 		if (this.unlocked) {
-			this.element.draw(ctx)
+			this.element.draw.call(this, ctx)
 		}
 	}
 
-	overlaps(x, y) { return this.element.overlaps(x, y) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 	grab() { return this }
 	cursor() { return "move" }
 
@@ -24,7 +26,10 @@ class ColourtodeTool extends Atom {
 			return newAtom
 		}
 
-		const newAtom = new Atom({...this.element, x: this.x, y: this.y})
+		const ElementClass = this.element.constructor
+		const newAtom = new ElementClass()
+		newAtom.x = this.x
+		newAtom.y = this.y
 		UI.atomRegistry.register(newAtom)
 
 		return newAtom

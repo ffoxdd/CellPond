@@ -19,7 +19,7 @@ const updateCursor = () => {
 
 const updateBrush = () => {
 
-	if (!state.worldBuilt) return
+	if (!world.built) return
 
 	if (!Mouse.Middle) {
 		pencilled = false
@@ -41,7 +41,7 @@ const updateBrush = () => {
 
 	let [px, py] = getCursorView(state.cursor.previous.x, state.cursor.previous.y)
 
-	const size = state.brush.size * WORLD_CELL_SIZE
+	const size = state.brush.size * world.cellSize
 
 	const dx = x - px
 	const dy = y - py
@@ -58,20 +58,20 @@ const updateBrush = () => {
 	let iy = 0
 
 	if (ax === biggest) {
-		iy = (WORLD_CELL_SIZE * sy) * (ay / ax)
-		ix = WORLD_CELL_SIZE * sx
+		iy = (world.cellSize * sy) * (ay / ax)
+		ix = world.cellSize * sx
 	} else {
-		ix = (WORLD_CELL_SIZE * sx) * (ax / ay)
-		iy = WORLD_CELL_SIZE * sy
+		ix = (world.cellSize * sx) * (ax / ay)
+		iy = world.cellSize * sy
 	}
 
 	const points = new Set()
 
-	const length = biggest / WORLD_CELL_SIZE
+	const length = biggest / world.cellSize
 
 	if (dx === 0 && dy === 0) {
-		for (let dx = -size/2; dx <= size/2; dx += WORLD_CELL_SIZE) {
-			for (let dy = -size/2; dy <= size/2; dy += WORLD_CELL_SIZE) {
+		for (let dx = -size/2; dx <= size/2; dx += world.cellSize) {
+			for (let dy = -size/2; dy <= size/2; dy += world.cellSize) {
 				points.add([x + dx, y + dy])
 			}
 		}
@@ -81,8 +81,8 @@ const updateBrush = () => {
 		const X = px + ix * i
 		const Y = py + iy * i
 
-		for (let dx = -size/2; dx <= size/2; dx += WORLD_CELL_SIZE) {
-			for (let dy = -size/2; dy <= size/2; dy += WORLD_CELL_SIZE) {
+		for (let dx = -size/2; dx <= size/2; dx += world.cellSize) {
+			for (let dy = -size/2; dy <= size/2; dy += world.cellSize) {
 				points.add([X + dx, Y + dy])
 			}
 		}
@@ -110,12 +110,12 @@ const getCursorView = (x, y) => {
 
 const brush = (x, y, {single = false} = {}) => {
 
-	let cell = cellGrid.pick(x, y)
+	let cell = world.cellGrid.pick(x, y)
 	if (cell === undefined) return
-	if (!single && (cell.width !== WORLD_CELL_SIZE || cell.height != WORLD_CELL_SIZE)) {
+	if (!single && (cell.width !== world.cellSize || cell.height != world.cellSize)) {
 		const worldCells = getWorldCellsSet(x, y)
 		if (worldCells !== undefined) {
-			const merged = cellGrid.merge([...worldCells])
+			const merged = world.cellGrid.merge([...worldCells])
 			cell = merged
 		}
 	}
@@ -150,18 +150,18 @@ const getWorldCellsSet = (x, y) => {
 }
 
 const getSectionsOfWorldCell = (x, y) => {
-	const snappedX = Math.floor(x*WORLD_DIMENSION) / WORLD_DIMENSION
-	const snappedY = Math.floor(y*WORLD_DIMENSION) / WORLD_DIMENSION
+	const snappedX = Math.floor(x*world.dimension) / world.dimension
+	const snappedY = Math.floor(y*world.dimension) / world.dimension
 
-	const sectionSizeScale = GRID_SIZE / WORLD_DIMENSION
+	const sectionSizeScale = world.gridSize / world.dimension
 
 	const sections = new Set()
 	for (let wx = 0; wx < sectionSizeScale; wx++) {
-		const gridX = Math.floor((snappedX + wx * WORLD_CELL_SIZE / sectionSizeScale) * GRID_SIZE)
+		const gridX = Math.floor((snappedX + wx * world.cellSize / sectionSizeScale) * world.gridSize)
 		for (let wy = 0; wy < sectionSizeScale; wy++) {
-			const gridY = Math.floor((snappedY + wy * WORLD_CELL_SIZE / sectionSizeScale) * GRID_SIZE)
-			const sectionId = gridX*GRID_SIZE + gridY
-			const section = cellGrid.sections[sectionId]
+			const gridY = Math.floor((snappedY + wy * world.cellSize / sectionSizeScale) * world.gridSize)
+			const sectionId = gridX*world.gridSize + gridY
+			const section = world.cellGrid.sections[sectionId]
 			sections.add(section)
 		}
 	}
@@ -191,7 +191,7 @@ const updatePan = () => {
 	const [x, y] = Mouse.position
 
 	if (hand.state === HAND.BRUSH || hand.state === HAND.BRUSHING || hand.state === HAND.PENCILLING) {
-		const cell = cellGrid.pick(...getCursorView(x, y))
+		const cell = world.cellGrid.pick(...getCursorView(x, y))
 		if (cell !== undefined)	state.brush.hoverColour = cell.colour
 	} else {
 		const atom = UI.atomRegistry.getAt(x / UI.CT_SCALE, y / UI.CT_SCALE)
@@ -295,9 +295,9 @@ const splitCellToDiagram = (cell, diagram) => {
 		children.push(child)
 	}
 
-	cellGrid.remove(cell)
+	world.cellGrid.remove(cell)
 	for (const child of children) {
-		cellGrid.add(child)
+		world.cellGrid.add(child)
 	}
 
 	return children

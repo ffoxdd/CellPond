@@ -14,14 +14,13 @@ try {
 
 	// Verify key globals exist after loading
 	const required = [
-		"Cell", "CellGrid", "cellGrid",
+		"Cell", "CellGrid",
 		"DragonNumber", "DragonArray", "DiagramCell", "Diagram", "Rule",
 		"RuleRegistry", "ruleRegistry",
 		"DRAGON_TRANSFORMATIONS", "CHANNEL_VARIABLES",
 		"state", "world",
 		"getRGB", "clamp", "wrap",
 		"sortByPosition",
-		"WORLD_SIZE", "WORLD_CELL_COUNT", "WORLD_DIMENSION", "WORLD_CELL_SIZE",
 	]
 
 	const missing = required.filter(name => context[name] === undefined)

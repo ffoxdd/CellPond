@@ -23,10 +23,13 @@ class Atom {
 	children = []
 	parent = UI.atomRegistry.baseParent
 
+	get width() { return this._width !== undefined ? this._width : this.size }
+	set width(v) { this._width = v }
+	get height() { return this._height !== undefined ? this._height : this.size }
+	set height(v) { this._height = v }
+
 	constructor(element) {
 		if (element !== undefined) Object.assign(this, element)
-		if (this.width === undefined) this.width = this.size
-		if (this.height === undefined) this.height = this.size
 	}
 
 	// === Interface methods (override in concrete types) ===

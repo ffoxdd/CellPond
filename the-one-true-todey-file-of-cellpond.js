@@ -102,7 +102,7 @@ let edgeMode = 0
 const pickRandomCell = () => {
 	const x = Random.Uint32 / 4294967295
 	const y = Random.Uint32 / 4294967295
-	const cell = cellGrid.pick(x, y)
+	const cell = world.cellGrid.pick(x, y)
 	return cell
 }
 
@@ -113,7 +113,7 @@ const pickRandomVisibleCell = () => {
 
 	const x = state.region.left + (Random.Uint32 / 4294967295) * state.region.width
 	const y = state.region.top + (Random.Uint32 / 4294967295) * state.region.height
-	const cell = cellGrid.pick(x, y)
+	const cell = world.cellGrid.pick(x, y)
 	return cell
 }
 
@@ -191,38 +191,17 @@ const state = {
 
 }
 
-let WORLD_SIZE = undefined
-let WORLD_CELL_COUNT = undefined
-let WORLD_DIMENSION = undefined
-let WORLD_CELL_SIZE = undefined
-const setWorldSize = (size) => {
-	WORLD_SIZE = size
-	WORLD_CELL_COUNT = 2 ** (WORLD_SIZE*2)
-	WORLD_DIMENSION = 2 ** WORLD_SIZE
-	WORLD_CELL_SIZE = 1 / WORLD_DIMENSION
-}
-setWorldSize(6)
-
-const GRID_SIZE = 128
-const cellGrid = new CellGrid(GRID_SIZE)
+const world = new World()
 var ruleRegistry
 var drawQueue
-
-const overrideCells = (cells) => {
-	cellGrid.clear()
-	for (const cell of cells) {
-		cellGrid.add(cell)
-	}
-	drawQueue.requestReset()
-}
 
 
 //=======//
 // SETUP //
 //=======//
 // Setup World
-const world = new Cell({colour: WORLD_SIZE * 111})
-cellGrid.add(world)
+const worldCell = new Cell({colour: world.size * 111})
+world.cellGrid.add(worldCell)
 
 on.load(() => {
 
@@ -235,7 +214,7 @@ on.load(() => {
 	canvas.style["position"] = "absolute"
 
 	// DrawQueue class defined in source/draw-queue.js
-	drawQueue = new DrawQueue(state, canvas, cellGrid)
+	drawQueue = new DrawQueue(state, canvas, world.cellGrid)
 
 	//===============//
 	// IMAGE + SIZES //
@@ -373,16 +352,16 @@ on.load(() => {
 	KEYDOWN.a = () => state.camera.dxTarget += state.camera.dsControl
 	KEYDOWN['d'] = () => state.camera.dxTarget -= state.camera.dsControl
 
-	KEYDOWN[0] = () => setWorldSize(0)
-	KEYDOWN[1] = () => setWorldSize(1)
-	KEYDOWN[2] = () => setWorldSize(2)
-	KEYDOWN[3] = () => setWorldSize(3)
-	KEYDOWN[4] = () => setWorldSize(4)
-	KEYDOWN[5] = () => setWorldSize(5)
-	KEYDOWN[6] = () => setWorldSize(6)
-	KEYDOWN[7] = () => setWorldSize(7)
-	KEYDOWN[8] = () => setWorldSize(8)
-	KEYDOWN[9] = () => setWorldSize(9)
+	KEYDOWN[0] = () => world.setSize(0)
+	KEYDOWN[1] = () => world.setSize(1)
+	KEYDOWN[2] = () => world.setSize(2)
+	KEYDOWN[3] = () => world.setSize(3)
+	KEYDOWN[4] = () => world.setSize(4)
+	KEYDOWN[5] = () => world.setSize(5)
+	KEYDOWN[6] = () => world.setSize(6)
+	KEYDOWN[7] = () => world.setSize(7)
+	KEYDOWN[8] = () => world.setSize(8)
+	KEYDOWN[9] = () => world.setSize(9)
 
 	KEYDOWN.r = () => {
 		state.camera.mscaleTarget = 1.0
@@ -406,6 +385,8 @@ on.load(() => {
 	//======//
 	// TICK //
 	//======//
+	const gameTick = createGameTick({world, state, drawQueue, ruleRegistry, pickRandomCell})
+
 	drawQueue.drawAll()
 	show.tick = () => {
 
@@ -418,8 +399,8 @@ on.load(() => {
 			drawQueue.needsReset = false
 		}
 
-		if (!show.paused) fireRandomSpotEvents()
-		else fireRandomSpotDrawEvents()
+		if (!show.paused) gameTick.fireRandomSpotEvents()
+		else gameTick.fireRandomSpotDrawEvents()
 
 		context.putImageData(state.image.data, 0, 0)
 
@@ -477,8 +458,9 @@ on.load(() => {
 	//===============//
 	UI.HAND = HAND
 	UI.DPR = DPR
-	UI.cellGrid = cellGrid
-	UI.overrideCells = overrideCells
+	UI.world = world
+	UI.cellGrid = world.cellGrid
+	UI.overrideCells = (cells) => world.overrideCells(cells, drawQueue)
 	UI.drawQueue = drawQueue
 	UI.colourTodeCanvas = colourTodeCanvas
 	UI.colourTodeContext = colourTodeContext

@@ -155,6 +155,9 @@ function loadCellPond() {
 		readScript("source/gradient.js"),
 		readScript("source/draw-queue.js"),
 		readScript("source/cell.js"),
+		readScript("source/world.js"),
+		readScript("source/brush.js"),
+		readScript("source/viewport.js"),
 		coreSource,
 		readScript("source/dragon.js"),
 		// Initialize ruleRegistry — normally done inside on.load which is truncated for tests
@@ -167,11 +170,9 @@ function loadCellPond() {
 	// Use var to re-export the bindings we need for testing.
 	const exportBlock = `
 		var __cellpond_exports__ = {
-			Cell, CellGrid, cellGrid,
+			Cell, CellGrid,
 			getRGB, clamp, wrap,
 			state, world,
-			WORLD_SIZE, WORLD_CELL_COUNT, WORLD_DIMENSION, WORLD_CELL_SIZE,
-			setWorldSize,
 			fits, aligns, isFit,
 			DragonNumber, DragonArray, DiagramCell, Diagram, Rule,
 			RuleRegistry, ruleRegistry,
