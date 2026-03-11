@@ -1,17 +1,16 @@
-const { describe, it, run } = require("./runner")
+const { describe, it } = require("node:test")
 const assert = require("node:assert/strict")
 const { loadCellPond } = require("./setup")
 
 const { context: cellpond } = loadCellPond()
 
-// Helper: approximate equality for floating point
-assert.closeTo = (actual, expected, tolerance, message) => {
+// Helpers
+function closeTo(actual, expected, tolerance, message) {
 	if (Math.abs(actual - expected) > tolerance) {
 		throw new Error(message || `Expected ${actual} to be within ${tolerance} of ${expected}`)
 	}
 }
 
-// Helper: compare arrays by value (avoids cross-realm deepStrictEqual issues)
 function assertArrayEqual(actual, expected) {
 	assert.equal(actual.length, expected.length, `length: ${actual.length} !== ${expected.length}`)
 	for (let i = 0; i < expected.length; i++) {
@@ -19,7 +18,6 @@ function assertArrayEqual(actual, expected) {
 	}
 }
 
-// Shorthand — the CellGrid instance and the Cell class
 const grid = () => cellpond.world.cellGrid
 const Cell = () => cellpond.Cell
 
@@ -229,9 +227,12 @@ describe("CellGrid.pick", () => {
 		assert.ok(found !== undefined)
 	})
 
-	it("returns the world cell when only world exists", () => {
+	it("returns the full-size cell when only one exists", () => {
 		const found = grid().pick(0.5, 0.5)
-		assert.equal(found, cellpond.world)
+		assert.equal(found.x, 0)
+		assert.equal(found.y, 0)
+		assert.equal(found.width, 1)
+		assert.equal(found.height, 1)
 	})
 
 })
@@ -327,7 +328,7 @@ describe("CellGrid.split", () => {
 		assert.equal(children.length, 3)
 		for (const child of children) {
 			assert.equal(child.width, 0.3)
-			assert.closeTo(child.height, 0.1, 1e-10)
+			closeTo(child.height, 0.1, 1e-10)
 			grid().remove(child)
 		}
 	})
@@ -348,8 +349,8 @@ describe("CellGrid.merge", () => {
 		assert.equal(grid().cellCount, countBefore - 1)
 		assert.equal(merged.x, 0.2)
 		assert.equal(merged.y, 0.2)
-		assert.closeTo(merged.width, 0.2, 1e-9)
-		assert.closeTo(merged.height, 0.1, 1e-9)
+		closeTo(merged.width, 0.2, 1e-9)
+		closeTo(merged.height, 0.1, 1e-9)
 		assert.equal(merged.colour, 333)
 		assert.equal(a.isDeleted, true)
 		assert.equal(b.isDeleted, true)
@@ -416,5 +417,3 @@ describe("fits", () => {
 	})
 
 })
-
-run()

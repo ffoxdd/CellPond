@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/test-smoke.js && node tests/test-cells.js && node tests/test-dragon.js && node tests/test-browser.js"
+    "test": "node --test tests/test-smoke.js tests/test-cells.js tests/test-dragon.js tests/test-browser.js"
   },
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-const { describe, it, run } = require("./runner")
+const { describe, it } = require("node:test")
 const assert = require("node:assert/strict")
 const { loadCellPond } = require("./setup")
 
@@ -11,7 +11,6 @@ const Diagram = () => cellpond.Diagram
 const Rule = () => cellpond.Rule
 const RuleRegistry = () => cellpond.RuleRegistry
 
-// Helper: compare arrays by value (avoids cross-realm deepStrictEqual issues)
 function assertArrayEqual(actual, expected) {
 	assert.equal(actual.length, expected.length, `length: ${actual.length} !== ${expected.length}`)
 	for (let i = 0; i < expected.length; i++) {
@@ -324,5 +323,3 @@ describe("CHANNEL_VARIABLES", () => {
 	})
 
 })
-
-run()
