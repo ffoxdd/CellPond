@@ -20,4 +20,5 @@ const UI = {
 	MAGIC_NUMBER: 0.8660254,
 	get MINUS_MAGIC_NUMBER() { return 1 - this.MAGIC_NUMBER },
 	get HIGHLIGHT_THICKNESS() { return this.BORDER_THICKNESS },
+	DPR: 1,
 }
