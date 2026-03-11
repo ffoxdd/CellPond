@@ -31,7 +31,7 @@ class Atom {
 		this.size = 40
 		this.colour = Colour.splash(999)
 		this.children = []
-		this.parent = atomRegistry.baseParent
+		this.parent = UI.atomRegistry.baseParent
 		this.hasInner = true
 		this.construct = () => {}
 

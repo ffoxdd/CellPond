@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/test-smoke.js && node tests/test-cells.js && node tests/test-dragon.js"
+    "test": "node tests/test-smoke.js && node tests/test-cells.js && node tests/test-dragon.js && node tests/test-browser.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/TodePond/CellPond#readme",
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "jsdom": "^28.1.0"
   }
 }

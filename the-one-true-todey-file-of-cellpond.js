@@ -787,6 +787,7 @@ on.load(() => {
 		else if (e.ctrlKey || e.metaKey) {
 			if (CT_SCALE - dy * 0.1 > 0.05)
 				CT_SCALE -= dy * 0.1
+			UI.CT_SCALE = CT_SCALE
 			const allAtoms = getAllAtoms()
 			for (const atom of allAtoms) {
 				atom.needsColoursUpdate = true
@@ -1789,6 +1790,7 @@ on.load(() => {
 	}
 
 	const atomRegistry = new AtomRegistry()
+	UI.atomRegistry = atomRegistry
 
 
 	const grabAtom = (atom, x, y) => {
@@ -1890,141 +1892,11 @@ on.load(() => {
 	const toolBorderColours = borderColours.clone
 	toolBorderColours[999] = Colour.splash(999)
 
-	const COLOURTODE_RECTANGLE = {
-		draw: (atom, ctx) => {
-			let {x, y} = atom.getPosition()
-
-			let X = Math.round(x)
-			let Y = Math.round(y)
-			let W = Math.round(atom.width)
-			let H = Math.round(atom.height)
-			let R = Math.round(atom.width/2)
-
-			if (atom.hasBorder) {
-
-				if (atom.hasInner) {
-
-					let border = BORDER_THICKNESS
-					if (atom.borderColour === undefined) {
-						ctx.fillStyle = Colour.splash(atom.colour.splash)
-						if (atom.isTool) {
-							ctx.fillStyle = Colour.splash(atom.colour.splash)
-							border *= 1.5
-						} else if (atom.width === atom.height) {
-							border *= 1.5
-						}
-					}
-					else {
-						ctx.fillStyle = atom.borderColour
-					}
-
-					ctx.beginPath()
-					ctx.rect(X, Y, W, H)
-					if (atom.stamp !== undefined) {
-						ctx.arc(X+R, Y+R, Math.round((PADDLE_HANDLE.size - OPTION_MARGIN/2)/2), 0, 2*Math.PI)
-					}
-
-
-					if (atom.isGradient) {
-						ctx.putImageData(atom.gradient, X * CT_SCALE, Y * CT_SCALE)
-					} else {
-
-						ctx.fill("evenodd")
-
-						ctx.beginPath()
-						ctx.fillStyle = atom.colour
-						ctx.rect(X+border, Y+border, W-border*2, H-border*2)
-						if (atom.stamp !== undefined) {
-							ctx.arc(X+R, Y+R, Math.round((PADDLE_HANDLE.size - OPTION_MARGIN/2)/2)+border, 0, 2*Math.PI)
-						}
-						ctx.fill("evenodd")
-					}
-				}
-
-				else {
-					if (atom.borderColour === undefined) {
-						ctx.strokeStyle = borderColours[atom.colour.splash]
-					}
-					else {
-						ctx.strokeStyle = atom.borderColour
-					}
-
-					X = Math.round(x + 0.5) - 0.5
-					Y = Math.round(y + 0.5) - 0.5
-
-					ctx.lineWidth = BORDER_THICKNESS
-					ctx.strokeRect(X, Y, W, H)
-				}
-			}
-
-			else {
-				ctx.fillStyle = atom.colour
-				ctx.fillRect(X, Y, W, H)
-			}
-
-		},
-		offscreen: (atom) => {
-			const {x, y} = atom.getPosition()
-			const left = x
-			const right = x + atom.width
-			const top = y
-			const bottom = y + atom.height
-			if (right < 0) return true
-			if (bottom < 0) return true
-			if (left > canvas.width) return true
-			if (top > canvas.height) return true
-			return false
-		},
-		overlaps: (atom, mx, my) => {
-			const {x, y} = atom.getPosition()
-			let border = BORDER_THICKNESS
-			if (atom.isTool || atom.isSquare || atom.isTallRectangle) {
-				border *= 1.5
-			}
-			const left = x
-			const right = x + atom.width
-			const top = y
-			const bottom = y + atom.height
-
-			if (mx < left) return false
-			if (my < top) return false
-			if (mx > right) return false
-			if (my > bottom) return false
-			
-			return true
-		},
-	}
-
-	const CIRCLE = {
-		draw: (atom, ctx) => {
-			const {x, y} = atom.getPosition()
-
-			const X = x + atom.width/2
-			const Y = y + atom.height/2
-			let R = (atom.width/2)
-
-			if (atom.hasBorder) {
-				if (atom.isTool) {
-					atom.borderColour = toolBorderColours[atom.colour.splash]
-				}
-				ctx.fillStyle = atom.borderColour !== undefined? atom.borderColour : Colour.Void
-				ctx.beginPath()
-				ctx.arc(X, Y, R, 0, 2*Math.PI)
-				ctx.fill()
-				let borderScale = atom.borderScale !== undefined? atom.borderScale : 1.0
-				R = (atom.width/2 - BORDER_THICKNESS*1.5 * borderScale)
-			}
-
-			ctx.fillStyle = atom.colour
-			ctx.beginPath()
-			ctx.arc(X, Y, R, 0, 2*Math.PI)
-			ctx.fill()
-
-		},
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		
-	}
+	// Populate UI config for extracted atom types
+	UI.borderColours = borderColours
+	UI.toolBorderColours = toolBorderColours
+	UI.canvas = canvas
+	UI.CT_SCALE = CT_SCALE
 
 	const isCellAtomSpotFilled = (paddle, [sx, sy], slotted = false) => {
 		for (let cellAtom of paddle.cellAtoms) {
@@ -2067,10 +1939,10 @@ on.load(() => {
 		hasBorder: true,
 		draw: (atom, ctx) => {
 			if (atom.value.isDiagram) return
-			else COLOURTODE_RECTANGLE.draw(atom, ctx)
+			else Rectangle.drawFn(atom, ctx)
 		},
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		touch: (atom) => {
 			setBrushColour(atom.value)
 			return atom
@@ -3243,321 +3115,22 @@ on.load(() => {
 		return gradient
 	}
 
-	const TRIANGLE_RIGHT = {
-		size: COLOURTODE_SQUARE.size,
-		width: COLOURTODE_SQUARE.size * Math.sqrt(3)/2, //the only reason width is set is for the menu spacing
-		draw: (atom, ctx) => {
-
-			const {x, y} = atom.getPosition()
-
-			let size = atom.size
-			if (atom.isTool) size -= BORDER_THICKNESS*2.5
-			if (!atom.isTool) size -= 2 
-
-			const height = size
-			const width = size * Math.sqrt(3)/2
-
-			const left = x
-			const right = left + width
-			let top = y + 1
-			if (atom.isTool) top += BORDER_THICKNESS*1.25
-			const bottom = top + height
-			const middleY = top + height/2
-
-			ctx.fillStyle = atom.colour
-			const path = new Path2D()
-
-			path.moveTo(left, top)
-			path.lineTo(right, middleY)
-			path.lineTo(left, bottom)
-			path.closePath()
-			ctx.fillStyle = atom.colour
-			ctx.fill(path)
-			if (atom.hasBorder) {
-				ctx.lineWidth = BORDER_THICKNESS*1.5
-				ctx.strokeStyle = atom.borderColour
-
-				if (atom.isTool) {
-					ctx.strokeStyle = toolBorderColours[atom.colour.splash]
-				}
-				ctx.stroke(path)
-			}
-		},
-		overlaps: (atom, x, y) => {
-			
-			const {x: ax, y: ay} = atom.getPosition()
-
-			const height = atom.size
-			const width = atom.size * Math.sqrt(3)/2
-			
-			const left = ax
-			const right = left + width
-			const top = ay
-			const bottom = top + height
-
-			if (x < left) return false
-			if (y < top) return false
-			if (x > right) return false
-			if (y > bottom) return false
-
-			return true
-		},
-		offscreen: (atom) => {
-
-			const {x, y} = atom.getPosition()
-
-			const height = atom.size
-			const width = atom.size * Math.sqrt(3)/2
-			
-			const left = x
-			const right = left + width
-			const top = y
-			const bottom = top + height
-
-			if (right < 0) return true
-			if (bottom < 0) return true
-			if (left > canvas.width) return true
-			if (top > canvas.height) return true
-			return false
-		},
-	}
-
-	const TRIANGLE_UP = {
-		size: COLOURTODE_SQUARE.size,
-		draw: (atom, ctx) => {
-
-			const {x, y} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			const diff = atom.size - height
-
-			const left = x
-			const right = left + width
-			const top = y + diff/2
-			const bottom = top + height
-			const middleX = left + width/2
-
-			ctx.fillStyle = atom.colour
-			const path = new Path2D()
-
-			path.moveTo(left, bottom)
-			path.lineTo(middleX, top)
-			path.lineTo(right, bottom)
-			path.closePath()
-			ctx.fillStyle = atom.colour
-			ctx.fill(path)
-			if (atom.hasBorder) {
-				ctx.lineWidth = BORDER_THICKNESS*1.5
-				ctx.strokeStyle = atom.borderColour
-				ctx.stroke(path)
-			}
-		},
-		overlaps: (atom, x, y) => {
-			
-			const {x: ax, y: ay} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			
-			const left = ax
-			const right = left + width
-			const top = ay
-			const bottom = top + height
-
-			if (x < left) return false
-			if (y < top) return false
-			if (x > right) return false
-			if (y > bottom) return false
-
-			return true
-		},
-		offscreen: (atom) => {
-
-			const {x, y} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			
-			const left = x
-			const right = left + width
-			const top = y
-			const bottom = top + height
-
-			if (right < 0) return true
-			if (bottom < 0) return true
-			if (left > canvas.width) return true
-			if (top > canvas.height) return true
-			return false
-		},
-	}
-
-	const TRIANGLE_DOWN = {
-		size: COLOURTODE_SQUARE.size,
-		draw: (atom, ctx) => {
-
-			const {x, y} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			const diff = atom.size - height
-
-			const left = x
-			const right = left + width
-			const top = y + diff/2
-			const bottom = top + height
-			const middleX = left + width/2
-
-			ctx.fillStyle = atom.colour
-			const path = new Path2D()
-
-			path.moveTo(left, top)
-			path.lineTo(middleX, bottom)
-			path.lineTo(right, top)
-			path.closePath()
-			ctx.fillStyle = atom.colour
-			ctx.fill(path)
-			if (atom.hasBorder) {
-				ctx.lineWidth = BORDER_THICKNESS*1.5
-				ctx.strokeStyle = atom.borderColour
-				ctx.stroke(path)
-			}
-		},
-		overlaps: (atom, x, y) => {
-			
-			const {x: ax, y: ay} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			
-			const left = ax
-			const right = left + width
-			const top = ay
-			const bottom = top + height
-
-			if (x < left) return false
-			if (y < top) return false
-			if (x > right) return false
-			if (y > bottom) return false
-
-			return true
-		},
-		offscreen: (atom) => {
-
-			const {x, y} = atom.getPosition()
-
-			const width = atom.size
-			const height = atom.size * Math.sqrt(3)/2
-			
-			const left = x
-			const right = left + width
-			const top = y
-			const bottom = top + height
-
-			if (right < 0) return true
-			if (bottom < 0) return true
-			if (left > canvas.width) return true
-			if (top > canvas.height) return true
-			return false
-		},
-	}
-
-
-	const TRIANGLE_LEFT = {
-		size: COLOURTODE_SQUARE.size,
-		width: COLOURTODE_SQUARE.size * Math.sqrt(3)/2, //the only reason width is set is for the menu spacing
-		draw: (atom, ctx) => {
-
-			const {x, y} = atom.getPosition()
-
-			let size = atom.size
-			if (atom.isTool) size -= BORDER_THICKNESS*2.5
-			if (!atom.isTool) size -= 2 
-
-			const height = size
-			const width = size * Math.sqrt(3)/2
-			
-			const left = x
-			const right = left + width
-			let top = y + 1
-			if (atom.isTool) top += BORDER_THICKNESS*1.25
-			const bottom = top + height
-			const middleY = top + height/2
-
-			ctx.fillStyle = atom.colour
-			const path = new Path2D()
-
-			path.moveTo(right, top)
-			path.lineTo(left, middleY)
-			path.lineTo(right, bottom)
-			path.closePath()
-			ctx.fillStyle = atom.colour
-			ctx.fill(path)
-			if (atom.hasBorder) {
-				ctx.lineWidth = BORDER_THICKNESS*1.5
-				ctx.strokeStyle = atom.borderColour
-
-				if (atom.isTool) {
-					ctx.strokeStyle = toolBorderColours[atom.colour.splash]
-				}
-				ctx.stroke(path)
-			}
-		},
-		overlaps: (atom, x, y) => {
-			
-			const {x: ax, y: ay} = atom.getPosition()
-
-			const height = atom.size
-			const width = atom.size * Math.sqrt(3)/2
-			
-			const left = ax
-			const right = left + width
-			const top = ay
-			const bottom = top + height
-
-			if (x < left) return false
-			if (y < top) return false
-			if (x > right) return false
-			if (y > bottom) return false
-
-			return true
-		},
-		offscreen: (atom) => {
-
-			const {x, y} = atom.getPosition()
-
-			const height = atom.size
-			const width = atom.size * Math.sqrt(3)/2
-			
-			const left = x
-			const right = left + width
-			const top = y
-			const bottom = top + height
-
-			if (right < 0) return true
-			if (bottom < 0) return true
-			if (left > canvas.width) return true
-			if (top > canvas.height) return true
-			return false
-		},
-	}
-
 	// Ctrl+F: trdef
 	const COLOURTODE_TRIANGLE = {
 		behindOtherChildren: true,
 		expanded: false,
 		draw: (atom, ctx) => {
-			if (atom.direction === "right") TRIANGLE_RIGHT.draw(atom, ctx)
-			else if (atom.direction === "down") TRIANGLE_DOWN.draw(atom, ctx)
-			else if (atom.direction === "up") TRIANGLE_UP.draw(atom, ctx)
-			else if (atom.direction === "left") TRIANGLE_LEFT.draw(atom, ctx)
-			else TRIANGLE_RIGHT.draw(atom, ctx)
+			if (atom.direction === "right") TriangleRight.drawFn(atom, ctx)
+			else if (atom.direction === "down") TriangleDown.drawFn(atom, ctx)
+			else if (atom.direction === "up") TriangleUp.drawFn(atom, ctx)
+			else if (atom.direction === "left") TriangleLeft.drawFn(atom, ctx)
+			else TriangleRight.drawFn(atom, ctx)
 		},
 		colour: Colour.splash(999),
-		overlaps: TRIANGLE_RIGHT.overlaps,
-		offscreen: TRIANGLE_RIGHT.offscreen,
+		overlaps: triangleOverlaps,
+		offscreen: triangleOffscreen,
 		size: COLOURTODE_SQUARE.size,
-		width: TRIANGLE_RIGHT.width,
+		width: TriangleRight.DEFAULT_WIDTH,
 		direction: "right",
 		click: (atom) => {
 			
@@ -3889,9 +3462,9 @@ on.load(() => {
 
 	const COLOURTODE_PICKER_PAD_MARGIN = OPTION_MARGIN
 	const COLOURTODE_PICKER_PAD = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		draw: Rectangle.drawFn,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		grab: (atom) => atom.parent,
 		colour: Colour.Grey,
 		width: COLOURTODE_PICKER_PAD_MARGIN + 3*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN),
@@ -3919,9 +3492,9 @@ on.load(() => {
 		
 		//behindChildren: true,
 		hasBorder: true,
-		draw: COLOURTODE_RECTANGLE.draw,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		draw: Rectangle.drawFn,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		width: COLOURTODE_SQUARE.size,
 		y: (COLOURTODE_SQUARE.size - CHANNEL_HEIGHT)/2,
 		height: CHANNEL_HEIGHT,
@@ -4484,8 +4057,8 @@ on.load(() => {
 		borderColour: Colour.Grey,
 		width: COLOURTODE_PICKER_CHANNEL.width,
 		height: COLOURTODE_PICKER_CHANNEL.width,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		draw: (atom, ctx) => {
 			const {x, y} = atom.getPosition()
 			const {width, height} = atom
@@ -4773,13 +4346,13 @@ on.load(() => {
 
 	const HEXAGON_BUTTON = {
 		size: COLOURTODE_SQUARE.size,
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		colour: Colour.Grey,
 		grab: (atom) => atom.parent,
 		behindChildren: true,
 		draw: (atom, ctx) => {
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 		},
 		construct: (atom) => {
 			atom.inner = createChild(atom, HEXAGON_BUTTON_INNER, {bottom: false})
@@ -4814,22 +4387,22 @@ on.load(() => {
 
 	const HEXAGON_BUTTON_INNER = {
 		size: COLOURTODE_SQUARE.size * 2/3,
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		grab: (atom) => atom.parent,
 		touch: (atom) => atom.parent,
-		draw: CIRCLE.draw,
+		draw: Circle.drawFn,
 		hasBorder: true,
 		borderColour: Colour.Black,
 		colour: Colour.Grey,
 	}
 
 	const HEXAGON_HANDLE = {
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		offscreen: Rectangle.offscreenFn,
 		overlaps: (atom, x, y) => {
 			atom.y -= atom.height/2
 			atom.height *= 2
-			const result = COLOURTODE_RECTANGLE.overlaps(atom, x, y)
+			const result = Rectangle.overlapsFn(atom, x, y)
 			atom.height /= 2
 			atom.y += atom.height/2
 			return result
@@ -4887,8 +4460,8 @@ on.load(() => {
 			ctx.fillRect(X, Y, W, H)
 			
 		},
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		height: OPTION_SPACING - CHANNEL_HEIGHT,
 		width: COLOURTODE_SQUARE.size + OPTION_MARGIN*2,
 		x: - OPTION_MARGIN,
@@ -4947,22 +4520,22 @@ on.load(() => {
 	}
 
 	const COLOURTODE_CHANNEL_SELECTION_SIDE = {
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		width: (COLOURTODE_SQUARE.size - CHANNEL_HEIGHT)/2,
 		height: COLOURTODE_SQUARE.size,
 		//grabbable: false,
 		grab: (atom) => atom.parent,
 		touch: (atom) => atom.parent,
 		dragLockX: true,
-		draw: COLOURTODE_RECTANGLE.draw,
+		draw: Rectangle.drawFn,
 		colour: Colour.Grey,
 	}
 
 	const COLOURTODE_PICKER_CHANNEL_OPTION = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		draw: Rectangle.drawFn,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		height: CHANNEL_HEIGHT,
 		width: COLOURTODE_SQUARE.size,
 		grab: (atom) => atom.parent,
@@ -5264,8 +4837,8 @@ on.load(() => {
 				ctx.stroke(path)
 			}
 		},
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		hasBorder: true,
 		isTallRectangle: true,
 		size: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
@@ -5466,8 +5039,8 @@ on.load(() => {
 		draw: (atom, ctx) => {
 			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
 		},
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		hasBorder: true,
 		size: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
 		height: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
@@ -5508,8 +5081,8 @@ on.load(() => {
 		draw: (atom, ctx) => {
 			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
 		},
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		hasBorder: true,
 		size: (CHANNEL_HEIGHT + OPTION_MARGIN/3*2) / 2,
 		height: (CHANNEL_HEIGHT + OPTION_MARGIN/3*2) / 2,
@@ -5520,8 +5093,8 @@ on.load(() => {
 	
 	const COLOURTODE_OPTION_PADDING = {
 		draw: () => {},
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		grab: (atom) => atom.parent.parent,
 		touch: (atom) => atom.parent,
 		colour: Colour.Grey,
@@ -5542,9 +5115,9 @@ on.load(() => {
 		noDampen: true,
 		isPaddle: true,
 		behindChildren: true,
-		draw: COLOURTODE_RECTANGLE.draw,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		draw: Rectangle.drawFn,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		colour: Colour.Grey,
 		size: COLOURTODE_SQUARE.size + OPTION_MARGIN*4, //for legacy
 		width: COLOURTODE_SQUARE.size + OPTION_MARGIN*4,
@@ -5708,32 +5281,9 @@ on.load(() => {
 		visible: true,
 		isSlot: true,
 		behindChildren: true,
-		//hasBorder: true,
-		draw: (atom, ctx) => {
-
-			if (!atom.visible) return
-			
-			const {x, y} = atom.getPosition()
-
-			const left = x
-			const right = x + atom.width
-			const top = y
-			const bottom = y + atom.height
-
-			
-
-			ctx.fillStyle = atom.colour
-			
-
-			const w = atom.width/3
-			const h = atom.width/3
-			const X = x + atom.width/2 - w/2
-			const Y = y + atom.height/2 - h/2
-			ctx.fillRect(...[X, Y, w, h].map(n => Math.round(n)))
-
-		},
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Slot.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		colour: Colour.Black,
 		size: COLOURTODE_SQUARE.size,
 		grab: (atom) => atom.parent,
@@ -6411,9 +5961,9 @@ on.load(() => {
 		isPaddleHandle: true,
 		attached: true,
 		behindChildren: true,
-		draw: COLOURTODE_RECTANGLE.draw,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
+		draw: Rectangle.drawFn,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		colour: Colour.Grey,
 		size: PADDLE.x,
 		x: -PADDLE.x,
@@ -6423,6 +5973,8 @@ on.load(() => {
 			return atom.parent.pinhole
 		},
 	}
+
+	UI.PADDLE_HANDLE_SIZE = PADDLE_HANDLE.size
 
 	const PIN_HOLE = {
 		isPinhole: true,
@@ -6440,10 +5992,10 @@ on.load(() => {
 				atom.hasBorder = false
 				atom.colour = Colour.Black
 			}
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 		},
-		overlaps: CIRCLE.overlaps,
-		offscreen: CIRCLE.offscreen,
+		overlaps: Rectangle.overlapsFn,
+		offscreen: Rectangle.offscreenFn,
 		colour: Colour.Black,
 		size: PADDLE_HANDLE.size - OPTION_MARGIN/2,
 		y: OPTION_MARGIN/2/2,
@@ -6510,15 +6062,15 @@ on.load(() => {
 	const SYMMETRY_CIRCLE = {
 		hasBorder: true,
 		draw: (atom, ctx) => {
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 			if (atom.value === undefined) return
 			const [x, y, r] = getXYR(atom.value)
 			if (x > 0) SYMMETRY_TOGGLE_X.drawX(atom, ctx)
 			if (y > 0) SYMMETRY_TOGGLE_Y.drawY(atom, ctx)
 			if (r > 0) SYMMETRY_TOGGLE_R.drawR(atom, ctx)
 		},
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		//behindChildren: true,
 		expanded: false,
 		borderColour: Colour.Grey,
@@ -6660,9 +6212,9 @@ on.load(() => {
 	const HIGHLIGHT_THICKNESS = BORDER_THICKNESS
 	const HIGHLIGHT = {
 		behindParent: true,
-		draw: COLOURTODE_RECTANGLE.draw,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Rectangle.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		draggable: false,
 		grabbable: false,
 		justVisual: true,
@@ -6673,9 +6225,9 @@ on.load(() => {
 	}
 
 	const TRIANGLE_PAD = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Rectangle.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		dragOnly: true,
 		width: SYMMETRY_CIRCLE.size,
 		x: SYMMETRY_CIRCLE.size*Math.sqrt(3)/2 + OPTION_MARGIN,
@@ -6686,9 +6238,9 @@ on.load(() => {
 	}
 
 	const TRIANGLE_HANDLE = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Rectangle.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		dragOnly: true,
 		width: SYMMETRY_CIRCLE.size/2 + OPTION_MARGIN,
 		x: SYMMETRY_CIRCLE.size/2,
@@ -6699,9 +6251,9 @@ on.load(() => {
 	}
 
 	const SYMMETRY_PAD = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Rectangle.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		dragOnly: true,
 		width: SYMMETRY_CIRCLE.size,
 		x: SYMMETRY_CIRCLE.size + OPTION_MARGIN,
@@ -6712,9 +6264,9 @@ on.load(() => {
 	}
 
 	const SYMMETRY_HANDLE = {
-		draw: COLOURTODE_RECTANGLE.draw,
-		offscreen: COLOURTODE_RECTANGLE.offscreen,
-		overlaps: COLOURTODE_RECTANGLE.overlaps,
+		draw: Rectangle.drawFn,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		dragOnly: true,
 		//touch: (atom) => atom.parent,
 		width: SYMMETRY_CIRCLE.size/2,
@@ -6742,7 +6294,7 @@ on.load(() => {
 		colour: Colour.Black,
 		borderColour: Colour.Black,
 		draw: (atom, ctx) => {
-			TRIANGLE_UP.draw(atom, ctx)
+			TriangleUp.drawFn(atom, ctx)
 		},
 		touch: (atom) => {
 			atom.colour = Colour.Silver
@@ -6765,8 +6317,8 @@ on.load(() => {
 				parent.receiveNumber(parent, triangle.value, triangle.channelId, {expanded: triangle.expanded, numberAtom: triangle})
 			}
 		},
-		offscreen: TRIANGLE_UP.offscreen,
-		overlaps: TRIANGLE_UP.overlaps,
+		offscreen: triangleOffscreen,
+		overlaps: triangleOverlaps,
 		
 		value: false,
 		size: COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5,
@@ -6780,7 +6332,7 @@ on.load(() => {
 		colour: Colour.Black,
 		borderColour: Colour.Black,
 		draw: (atom, ctx) => {
-			TRIANGLE_DOWN.draw(atom, ctx)
+			TriangleDown.drawFn(atom, ctx)
 		},
 		touch: (atom) => {
 			atom.colour = Colour.Silver
@@ -6805,8 +6357,8 @@ on.load(() => {
 			}
 
 		},
-		offscreen: TRIANGLE_DOWN.offscreen,
-		overlaps: TRIANGLE_DOWN.overlaps,
+		offscreen: triangleOffscreen,
+		overlaps: triangleOverlaps,
 		
 		value: false,
 		size: COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5,
@@ -6821,7 +6373,7 @@ on.load(() => {
 		colour: Colour.Grey,
 		draw: (atom, ctx) => {
 			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 			atom.drawX(atom, ctx)
 		},
 		drawX: (atom, ctx) => {
@@ -6835,8 +6387,8 @@ on.load(() => {
 			ctx.fillStyle = atom.borderColour
 			ctx.fillRect(X, Y, W, H)
 		},
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		expanded: false,
 		click: (atom) => {
 			atom.value = !atom.value
@@ -6862,7 +6414,7 @@ on.load(() => {
 		colour: Colour.Grey,
 		draw: (atom, ctx) => {
 			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 			atom.drawY(atom, ctx)
 		},
 		drawY: (atom, ctx, height = atom.size, offset = 0) => {
@@ -6876,8 +6428,8 @@ on.load(() => {
 			ctx.fillStyle = atom.borderColour
 			ctx.fillRect(X, Y, W, H)
 		},
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		expanded: false,
 		click: (atom) => {
 			atom.value = !atom.value
@@ -6903,7 +6455,7 @@ on.load(() => {
 		colour: Colour.Grey,
 		draw: (atom, ctx) => {
 			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			CIRCLE.draw(atom, ctx)
+			Circle.drawFn(atom, ctx)
 			atom.drawR(atom, ctx)
 		},
 		drawR: (atom, ctx) => {
@@ -6924,8 +6476,8 @@ on.load(() => {
 			ctx.arc(X, Y, R, 0, 2*Math.PI)
 			ctx.fill()
 		},
-		offscreen: CIRCLE.offscreen,
-		overlaps: CIRCLE.overlaps,
+		offscreen: Rectangle.offscreenFn,
+		overlaps: Rectangle.overlapsFn,
 		expanded: false,
 		click: (atom) => {
 			atom.value = !atom.value
@@ -7239,7 +6791,7 @@ on.load(() => {
 				}
 				loadedColour = true
 			}
-			const square = v.isLeftSlot ? new Atom(SLOT) : makeSquareFromValue(v.value)
+			const square = v.isLeftSlot ? new Slot() : makeSquareFromValue(v.value)
 			square.isLeftSlot = v.isLeftSlot
 			atomRegistry.register(square)
 			giveChild(paddle, square)
