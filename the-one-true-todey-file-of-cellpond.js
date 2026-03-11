@@ -66,7 +66,6 @@ const urlParams = new URLSearchParams(window.location.search)
 const NO_SECRET_MODE = urlParams.has("nosecret")
 const NO_FOOLS_MODE = urlParams.has("nofools")
 const UNLOCK_MODE = true
-// const UNLOCK_MODE = urlParams.has("unlock")
 const SCALE = urlParams.get("scale") ?? 1
 const DPR = urlParams.get("dpr") ?? devicePixelRatio
 print('DPR:', DPR)
@@ -127,19 +126,9 @@ const state = {
 	time: 0,
 	maxTime: 9999999,
 
-	/*speed: {
-		count: 100,
-		dynamic: false,
-		aer: 2.0,
-		redraw: 300.0,
-		redrawRepeatScore: 1.0,
-		redrawRepeatPenalty: 0.0,
-	},*/
-
 	speed: {
 		count: 4096 * 0.4,
 		dynamic: false,
-		//aer: 1.0,
 		redraw: 2.5,
 		redrawRepeatScore: 0.5,
 		redrawRepeatPenalty: 0.0,
@@ -477,8 +466,6 @@ on.load(() => {
 		state.region.width = state.region.right - state.region.left
 		state.region.height = state.region.bottom - state.region.top
 
-		//state.image.data = context.getImageData(0, 0, state.image.size.iwidth, state.image.size.iheight)
-
 		drawQueue.requestReset()
 	}
 
@@ -506,19 +493,6 @@ on.load(() => {
 	}
 
 	const stampScale = (scale) => {
-
-		//context.fillStyle = Colour.Void
-		//context.fillRect(0, 0, canvas.width, canvas.height)
-		//context.drawImage(canvas, 0, 0, canvas.width * scale, canvas.height * scale)
-
-
-		/*if (scale < 1.0) {
-			const growthX = canvas.width - canvas.width * scale
-			const growthY = canvas.height - canvas.height * scale
-			//context.fillRect(canvas.width - growthX, 0, growthX, canvas.height)
-			//context.fillRect(0, canvas.height - growthY, canvas.width, growthY)
-		}*/
-
 		updateImageSize()
 	}
 
@@ -690,22 +664,10 @@ on.load(() => {
 	}
 
 	const getWorldCellsFromSections = (sections, x, y) => {
-
-		/*const wleft = x
-		const wtop = y
-		const wright = x + 1/256
-		const wbottom = y + 1/256*/
-
 		const worldCells = new Set()
 
 		// Check if any cells in these sections overlap with an outer section
 		for (const section of sections.values()) {
-
-			/*if (section.left >= wleft && section.right <= wright && section.top >= wtop && section.bottom <= wbottom) {
-				worldCells.add(section)
-				continue
-			}*/
-
 			for (const cell of section.values()) {
 				if (worldCells.has(cell)) continue
 				for (const cellSection of cell.sections) {
@@ -931,8 +893,6 @@ on.load(() => {
 		else fireRandomSpotDrawEvents()
 
 		context.putImageData(state.image.data, 0, 0)
-		//context.filter = "grayscale(100%)"
-		//context.drawImage(context.canvas, 0, 0, context.canvas.width, context.canvas.height)
 
 		// Draw void
 		context.clearRect(0, 0, state.view.left, state.view.bottom)
@@ -1007,7 +967,6 @@ on.load(() => {
 		for (const behave of ruleRegistry.behaveFunctions) {
 			const result = behave(cell, redraw)
 			if (result === undefined) continue
-			//if (result === 0) continue
 			return result
 		}
 		return 0
@@ -1092,7 +1051,6 @@ on.load(() => {
 	const colourTodeCanvas = document.createElement("canvas")
 	const colourTodeContext = colourTodeCanvas.getContext("2d")
 	
-	//colourTodeCanvas.style["image-rendering"] = "pixelated"
 	colourTodeCanvas.style["position"] = "absolute"
 	colourTodeCanvas.style["top"] = "0px"
 	
@@ -1214,9 +1172,6 @@ on.load(() => {
 
 	const colourTodeDraw = () => {
 		colourTodeContext.clearRect(0, 0, colourTodeCanvas.width, colourTodeCanvas.height)
-		/*if (!NO_FOOLS_MODE) {
-			colourTodeContext.filter = "grayscale(100%)"
-		}*/
 		colourTodeContext.scale(CT_SCALE, CT_SCALE)
 		for (const atom of atomRegistry.atoms) {
 			drawAtom(atom, colourTodeContext)
@@ -1256,7 +1211,6 @@ on.load(() => {
 							hand.pityStartY = e.clientY
 							hand.pityStartT = Date.now()
 							changeHandState(HAND.TOUCHING)
-							//hand.content = hand.content.drag(hand.content, x, y)
 							HAND.TOUCHING.mousemove(e)
 						}
 					}
@@ -1573,9 +1527,6 @@ on.load(() => {
 				hand.content.x = clamp(hand.content.x, hand.content.minX, hand.content.maxX)
 				hand.content.y = clamp(hand.content.y, hand.content.minY, hand.content.maxY)
 
-				/*hand.offset.x = hand.content.x - e.clientX / CT_SCALE
-				hand.offset.y = hand.content.y - e.clientY / CT_SCALE*/
-
 				HAND.DRAGGING.mousemove(e)
 				return
 			} else if (hand.touchButton === 2 && hand.content.rightDraggable) {
@@ -1590,9 +1541,6 @@ on.load(() => {
 
 				hand.content.x = clamp(hand.content.x, hand.content.minX, hand.content.maxX)
 				hand.content.y = clamp(hand.content.y, hand.content.minY, hand.content.maxY)
-
-				/*hand.offset.x = hand.content.x - e.clientX / CT_SCALE
-				hand.offset.y = hand.content.y - e.clientY / CT_SCALE*/
 
 				HAND.DRAGGING.mousemove(e)
 				return
@@ -1690,9 +1638,6 @@ on.load(() => {
 			const dx = hand.content.x - oldX
 			const dy = hand.content.y - oldY
 			hand.content.move(hand.content, dx, dy)
-
-			//hand.content.dx = hand.velocity.x
-			//hand.content.dy = hand.velocity.y
 		},
 		mouseup: (e) => {
 			if (hand.touchButton !== 0) return
@@ -2023,38 +1968,14 @@ on.load(() => {
 
 	const getColourCycleLength = (atom) => {
 		let length = Math.max(COLOUR_CYCLE_LENGTH / atom.colours.length, COLOUR_CYCLE_SPEED)
-		/*if (atom.joins !== undefined && atom.joins.length > 0) {
-			length *= 3
-		}*/
-		//if (atom.joins !== undefined && atom.joins.length > 0 && atom.joinExpanded !== false) return Infinity
 		return length
 	}
 
 	// prepare border colours
 	borderColours = PREBUILT_BORDER_COLOURS
-	/*for (let i = 0; i < 1000; i++) {
-		const colour = Colour.splash(i)
-		let borderColour = undefined
-		//let borderColour = Colour.add(colour, {lightness: -20})
-		const darkness = 70 - colour.lightness
-		borderColour = Colour.add(colour, {lightness: -20})
-		borderColours.push(borderColour)
-	}*/
 
 	const toolBorderColours = borderColours.clone
 	toolBorderColours[999] = Colour.splash(999)
-
-	/*const toolBorderColours = []
-	
-	for (let i = 0; i < 1000; i++) {
-		const colour = Colour.splash(i)
-		let borderColour = Colour.add(colour, {lightness: -20})
-		if (colour.lightness <= 35) {
-			borderColour = Colour.add(colour, {lightness: 15})
-		}
-		toolBorderColours.push(borderColour)
-	}
-	toolBorderColours[000] = Colour.Grey*/
 
 	const COLOURTODE_RECTANGLE = {
 		draw: (atom, ctx) => {
@@ -2197,7 +2118,6 @@ on.load(() => {
 			if (slotted) cellAtom = cellAtom.slot
 			const {x, y} = getAtomPosition(cellAtom)
 			if (x === sx && y === sy) {
-				//if (cellAtom.isLeftSlot) continue
 				return true
 			}
 		}
@@ -2306,7 +2226,6 @@ on.load(() => {
 					blue.x += COLOURTODE_PICKER_PAD_MARGIN + 3 * (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
 					blue.value = atom.value.channels[2]
 					blue.needsColoursUpdate = true
-					//blue.grab = () => atom
 					atom.blue = blue
 					blue.deletedOptions = atom.deletedBlueOptions
 					if (atom.blueExpanded) atom.blue.click(atom.blue)
@@ -2333,7 +2252,6 @@ on.load(() => {
 					green.x += COLOURTODE_PICKER_PAD_MARGIN + 2 * (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
 					green.value = atom.value.channels[1]
 					green.needsColoursUpdate = true
-					//green.grab = () => atom
 					atom.green = green
 					green.deletedOptions = atom.deletedGreenOptions
 					if (atom.greenExpanded) atom.green.click(atom.green)
@@ -2360,7 +2278,6 @@ on.load(() => {
 					red.x += COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN
 					red.value = atom.value.channels[0]
 					red.needsColoursUpdate = true
-					//red.grab = () => atom
 					atom.red = red
 					red.deletedOptions = atom.deletedRedOptions
 					if (atom.redExpanded) atom.red.click(atom.red)
@@ -2424,9 +2341,6 @@ on.load(() => {
 			atom.needsColoursUpdate = true
 			atom.colourTicker = Infinity
 
-			/*const diagramCell = new DiagramCell({content: atom.value})
-			state.brush.colour = new Diagram({left: [diagramCell]})*/
-
 			if (atom.parent !== atomRegistry.baseParent) {
 				const paddle = atom.parent
 				updatePaddleRule(paddle)
@@ -2445,15 +2359,6 @@ on.load(() => {
 
 		construct: (atom) => {
 			atom.needsColoursUpdate = true
-			/*const r = Random.Uint8 % 10
-			const g = Random.Uint8 % 10
-			const b = Random.Uint8 % 10*/
-			/*const r = Random.Uint8 % 10
-			const g = Random.Uint8 % 10
-			const b = Random.Uint8 % 10*/
-			//atom.value = DragonArray.fromSplash(r*100 + g*10 + b)
-			//atom.value = DragonArray.fromSplash(555)
-			//const splash = TODEPOND_COLOURS[Random.Uint8 % TODEPOND_COLOURS.length]
 			if (typeof state.brush.colour === "number") {
 				atom.value = DragonArray.fromSplash(state.brush.colour)
 			} else {
@@ -2757,36 +2662,6 @@ on.load(() => {
 
 					}
 
-					/*
-					else if (paddle.rightTriangle !== undefined && left > pleft + paddle.rightTriangle.x) {
-						let winningDistance = Infinity
-						let winningSlot = undefined
-						for (const cellAtom of paddle.cellAtoms) {
-							if (cellAtom.slotted !== undefined) continue
-							const {x: cx, y: cy} = getAtomPosition(cellAtom.slot)
-							
-							const distance = Math.hypot(x - cx, y - cy)
-							if (distance < winningDistance) {
-								winningDistance = distance
-								winningSlot = cellAtom.slot
-							}
-
-						}
-
-						if (winningSlot === undefined) break
-
-						const {x: cx, y: cy} = getAtomPosition(winningSlot)
-						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
-						atom.highlight.x = cx
-						atom.highlight.y = cy
-						atom.highlight.hasBorder = true
-						atom.highlight.colour = Colour.Grey
-						atom.highlightedAtom = winningSlot
-
-						break
-					}
-					*/
-					
 					else {
 						let winningDistance = Infinity
 						let winningSide = undefined
@@ -2980,7 +2855,6 @@ on.load(() => {
 
 					const dummy = createChild(paddle, SLOT, {bottom: true})
 					dummy.isLeftSlot = true
-					//giveChild(paddle, dummy)
 					paddle.cellAtoms.push(dummy)
 					dummy.isSlot = false
 					dummy.slotted = atom
@@ -3123,7 +2997,6 @@ on.load(() => {
 				joiner.dy = 0
 				joiner.isJoiner = true
 				joiner.touch = (atom) => atom.parent
-				//joiner.grab = (atom) => atom.parent
 			}
 			
 			atom.needsColoursUpdate = true
@@ -3206,7 +3079,6 @@ on.load(() => {
 					atom.attached = false
 					atom.slottee = false
 					freeChild(paddle, atom)
-					//atom.cellAtom.slot.colour = Colour.Black
 					atom.cellAtom.slotted = undefined
 					if (atom.cellAtom.isLeftSlot) {
 						deleteChild(paddle, atom.cellAtom)
@@ -3231,14 +3103,12 @@ on.load(() => {
 					dummy.x = x
 					dummy.y = y
 					dummy.isLeftSlot = true
-					//giveChild(paddle, dummy)
 					paddle.cellAtoms.push(dummy)
 					dummy.isSlot = false
 					dummy.slotted = atom.slotted
 					dummy.slotted.cellAtom = dummy
 					atom.slotted = undefined
 				}
-				//atom.slotted = undefined
 				updatePaddleSize(paddle)
 
 			}
@@ -3255,11 +3125,7 @@ on.load(() => {
 		const maxWidth = 1.0
 		const maxHeight = 1.0
 
-		/*
-		const max = Math.max(width, height)
-		const maxWidth = max / width
-		const maxHeight = max / height
-		*/
+		
 		
 		const midWidth = maxWidth/2
 		const midHeight = maxHeight/2
@@ -3286,7 +3152,6 @@ on.load(() => {
 	const getGradientPointScoresFromDistances = (distances) => {
 		const scores = []
 		for (const distance of distances) {
-			//if (distance === min) scores.push(distance**2)
 			//else scores.push(0.0)
 			scores.push(distance**2)
 		}
@@ -3321,8 +3186,7 @@ on.load(() => {
 		if (count === 2) offset -= Math.PI/4
 		const limits = gradients.map((gradient, i) => {
 			let angle = i*step+step
-			/*while (angle < 0) angle += 2*Math.PI
-			while (angle > 2*Math.PI) angle -= 2*Math.PI*/
+			
 			return angle
 		})
 		
@@ -3389,7 +3253,6 @@ on.load(() => {
 	const getGradientImageFromColours = ({colours, width, height, gradient = new ImageData(width, height), stamp}) => {
 		
 		;[width, height] = [width, height].map(dimension => Math.round(dimension))
-		//const size = Math.max(width, height)
 		//width = height = size
 		const newLength = width * height * 4
 		if (gradient.data.length !== newLength) {
@@ -3414,7 +3277,6 @@ on.load(() => {
 
 
 		const makeGradientColour = (red, green, blue) => {
-			//return Colour.splash(maxRed + maxGreen + maxBlue)
 			return Colour.splash(((red === 1? maxRed : minRed) + (green === 1? maxGreen : minGreen) + (blue === 1? maxBlue : minBlue)))
 		}
 
@@ -3432,19 +3294,7 @@ on.load(() => {
 			makeGradientColour(0, 1, 0),
 			makeGradientColour(1, 0, 0),
 			
-			/*
-			makeGradientColour(0, 1, 0),
-			makeGradientColour(0, 1, 1),
-			makeGradientColour(0, 0, 1),
 			
-			makeGradientColour(1, 1, 0),
-			makeGradientColour(1, 1, 1),
-			makeGradientColour(1, 0, 1),
-			
-			makeGradientColour(1, 0, 0),
-			makeGradientColour(0, 0, 0),
-			makeGradientColour(0, 0, 1),
-			*/
 
 		]
 
@@ -3464,11 +3314,7 @@ on.load(() => {
 				}
 				const values = sumValues.map(value => value / sumScore)
 				if (stamp === "circle" && x >= width/4 && x < width*3/4 && y >= height/4 && y < height*3/4) {
-					/*
-					gradient.data[i] = values[0] / 3*2
-					gradient.data[i+1] = values[1] / 3*2
-					gradient.data[i+2] = values[2] / 3*2
-					*/
+					
 					gradient.data[i+3] = 0
 				} else {
 					gradient.data[i] = values[0]
@@ -3519,7 +3365,6 @@ on.load(() => {
 				ctx.strokeStyle = atom.borderColour
 
 				if (atom.isTool) {
-					//ctx.lineWidth = BORDER_THICKNESS*1.0
 					ctx.strokeStyle = toolBorderColours[atom.colour.splash]
 				}
 				ctx.stroke(path)
@@ -3740,7 +3585,6 @@ on.load(() => {
 				ctx.strokeStyle = atom.borderColour
 
 				if (atom.isTool) {
-					//ctx.lineWidth = BORDER_THICKNESS*1.0
 					ctx.strokeStyle = toolBorderColours[atom.colour.splash]
 				}
 				ctx.stroke(path)
@@ -3827,7 +3671,6 @@ on.load(() => {
 			atom.downPick = createChild(atom, TRIANGLE_PICK_DOWN)
 			
 			if (atom.direction === "up") atom.upPick.value = true
-			// if (atom.direction === "right") atom.rightPick.value = true
 			if (atom.direction === "down") atom.downPick.value = true
 		},
 
@@ -3835,7 +3678,6 @@ on.load(() => {
 			deleteChild(atom, atom.pad)
 			deleteChild(atom, atom.handle)
 			deleteChild(atom, atom.upPick)
-			// deleteChild(atom, atom.rightPick)
 			deleteChild(atom, atom.downPick)
 			atom.expanded = false
 		},
@@ -4093,16 +3935,9 @@ on.load(() => {
 
 			if (!atom.parent.isPaddle) return atom
 			const paddle = atom.parent
-			// if (false && paddle.pinhole.locked) {
-			// 	const clone = makeAtom(COLOURTODE_TRIANGLE)
 			// 	clone.direction = atom.direction
-			// 	const {x, y} = getAtomPosition(atom)
-			// 	hand.offset.x -= atom.x - x
-			// 	hand.offset.y -= atom.y - y
 			// 	clone.x = x
 			// 	clone.y = y
-			// 	atomRegistry.register(clone)
-			// 	return clone
 			// }
 
 			atom.attached = false
@@ -4118,7 +3953,6 @@ on.load(() => {
 					cellAtom.slotted.x = x
 					cellAtom.slotted.y = y
 					cellAtom.slotted.slottee = false
-					//atomRegistry.delete(cellAtom.slotted)
 					cellAtom.slotted = undefined
 				}
 			}
@@ -4180,7 +4014,6 @@ on.load(() => {
 		height: CHANNEL_HEIGHT,
 		
 		grab: (atom) => {
-			//if (atom.parent.isSquare) return atom.parent
 			return atom
 		},
 
@@ -4275,15 +4108,12 @@ on.load(() => {
 			if (!atom.expanded) {
 
 				atom.selectionTop.y = -atom.selectionTop.height
-				//atom.selectionTop.x = -atom.selectionTop.height
 				
 				atom.selectionBottom.y = atom.height
-				//atom.selectionBottom.x = -atom.selectionBottom.height
 
 			}
 			
 			else {
-				//const optionSpacing = (atom.height + (COLOURTODE_SQUARE.size - CHANNEL_HEIGHT)/2)
 				const optionSpacing = OPTION_SPACING
 
 				atom.selectionTop.y = end - atom.selectionTop.height
@@ -4498,33 +4328,7 @@ on.load(() => {
 					atom.highlight.height = atom.highlightedAtom.height
 				} else {
 
-					/*
-					left -= OPTION_MARGIN
-					right += OPTION_MARGIN
-					top -= OPTION_MARGIN
-					bottom += OPTION_MARGIN
 					
-					for (const paddle of paddles) {
-						const {x: px, y: py} = getAtomPosition(paddle)
-						const pright = px + paddle.width
-						const ptop = py
-						const pbottom = py + paddle.height
-
-						if (paddle.chance === undefined && paddle.expanded && left <= pright && right >= pright && ((top < pbottom && top > ptop) || (bottom > ptop && bottom < pbottom))) {
-							if (atom.highlightPaddle !== undefined) {
-								deleteChild(atom, atom.highlightPaddle)
-							}
-		
-							atom.highlightPaddle = createChild(atom, HIGHLIGHT, {bottom: true})
-							atom.highlightPaddle.width = HIGHLIGHT_THICKNESS
-							atom.highlightPaddle.height = paddle.height
-							atom.highlightPaddle.y = ptop
-							atom.highlightPaddle.x = pright - HIGHLIGHT_THICKNESS/2
-							atom.highlightedPaddle = paddle
-							return
-						}
-					}
-					*/
 				}
 
 			}
@@ -4534,13 +4338,7 @@ on.load(() => {
 				atom.highlight = undefined
 			}
 			
-			/*
-			if (atom.highlightPaddle !== undefined) {
-				deleteChild(atom, atom.highlightPaddle)
-				atom.highlightPaddle = undefined
-				atom.highlightedPaddle = undefined
-			}
-			*/
+			
 
 		},
 
@@ -4551,17 +4349,11 @@ on.load(() => {
 					const square = atom.highlightedAtom
 					const slotId = CHANNEL_IDS[atom.highlightedSlot]
 					atom.value.channel = slotId
-					/*giveChild(square, atom)
-					atom.dx = 0
-					atom.dy = 0
-					square[atom.highlightedSlot] = atom
-					atom.y = OPTION_MARGIN
-					atom.x = square.size + OPTION_MARGIN*2 + slotId*(OPTION_MARGIN*square.size)*/
+					
 					square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded})
 					atomRegistry.delete(atom)
 				} else {
 					const diamond = atom.highlightedAtom.parent
-					//diamond.unexpand(diamond)
 					
 					const operationName = atom.highlightedSlot === "padTop"? "add" : "subtract"
 					diamond.value[operationName] = atom.value
@@ -4571,7 +4363,6 @@ on.load(() => {
 					atom.dx = 0
 					atom.dy = 0
 					giveChild(diamond, atom)
-					//diamond.expand(diamond)
 
 					atom.attached = true
 
@@ -4728,10 +4519,8 @@ on.load(() => {
 			}
 	
 			if (startId === undefined) throw new Error("[ColourTode] Number cannot be NOTHING. Please let @TodePond know if you see this error!")
-			//const centerOptionId = 9 - Math.floor((endId + startId) / 2)
 			const centerOptionId = atom.getCenterId(atom)
 			
-			//const optionSpacing = (atom.height + (COLOURTODE_SQUARE.size - CHANNEL_HEIGHT)/2)
 			const optionSpacing = OPTION_SPACING
 			let top = (centerOptionId - 9) * optionSpacing
 			let bottom = centerOptionId*optionSpacing
@@ -4743,8 +4532,6 @@ on.load(() => {
 			for (let i = 0; i < 10; i++) {
 				if (centerOptionId === 9-i) {
 					if (oldOptions !== undefined) {
-						//atom.isGradient = true
-						//atom.gradient = oldOptions[i].gradient
 					}
 					atom.options.push(atom)
 					continue
@@ -4761,7 +4548,6 @@ on.load(() => {
 
 				option.y = top + i * optionSpacing
 				option.value = 9 - i
-				//option.colourTicker = Infinity
 				//option.needsColoursUpdate = true
 				option.needsColoursUpdateCountdown = i
 				option.needsColoursUpdate = true
@@ -4989,59 +4775,22 @@ on.load(() => {
 				}
 			}
 			
-			// let winningDistance = Infinity
-			// let winningSquare = undefined
-			// let winningSlot = undefined
 
-			// const atoms = getAllBaseAtoms()
-			// for (const other of atoms) {
-			// 	if (other === atom) continue
-			// 	if (!other.isSquare) continue
-			// 	if (!other.expanded) continue
 
-			// 	const {x: px, y: py} = getAtomPosition(other.pickerPad)
-			// 	const pleft = px
-			// 	const pright = px + other.pickerPad.width
-			// 	const ptop = py
-			// 	const pbottom = py + other.pickerPad.height
 
-			// 	if (left > pright) continue
-			// 	if (right < pleft) continue
-			// 	if (bottom < ptop) continue
-			// 	if (top > pbottom) continue
 
-			// 	const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
-			// 	if (slots.length === 0) continue
-			// 	const {x: ax, y: ay} = getAtomPosition(other)
 
-			// 	for (const slot of slots) {
-			// 		const slotId = CHANNEL_IDS[slot]
-			// 		const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
-			// 		const sy = ay + OPTION_MARGIN
-			// 		const distance = Math.hypot(x - sx, y - sy)
-			// 		if (distance < winningDistance) {
 			// 			winningDistance = distance
 			// 			winningSlot = slot
 			// 			winningSquare = other
 			// 		}
 			// 	}
 
-			// 	if (winningSquare !== undefined) {
 
-			// 		const {x: ax, y: ay} = getAtomPosition(winningSquare)
-			// 		const slotId = CHANNEL_IDS[winningSlot]
 
-			// 		atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
-			// 		atom.highlight.hasBorder = true
-			// 		atom.highlight.x = ax + winningSquare.size + OPTION_MARGIN + slotId*(OPTION_MARGIN+winningSquare.size)
-			// 		atom.highlight.y = ay
-			// 		atom.highlight.width = OPTION_MARGIN*2+winningSquare.size
-			// 		atom.highlightedAtom = winningSquare
-			// 		atom.highlightedSlot = winningSlot
 			// 	}
 			// }
 
-			// return winningSquare
 		},
 		place: (atom, paddle) => {
 			if (paddle.isPaddle) {
@@ -5055,14 +4804,7 @@ on.load(() => {
 				atom.dy = 0
 			} 
 			// else if (paddle.isSquare) {
-			// 	const square = paddle
-			// 	atom.variable = atom.highlightedSlot
-			// 	atom.updateValue(atom)
-			// 	const slotId = CHANNEL_IDS[atom.highlightedSlot]
 			// 	square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded, numberAtom: atom})
-			// 	atomRegistry.delete(atom)
-			// 	atom.dx = 0
-			// 	atom.dy = 0
 			// }
 		},
 		drag: (atom) => {
@@ -5219,28 +4961,9 @@ on.load(() => {
 		draw: (atom, ctx) => {
 			const {x, y} = getAtomPosition(atom)
 
-			/*let colour = "pink"
-			if (atom.parent !== atomRegistry.baseParent) {
-				if (atom.parent.parent !== atomRegistry.baseParent) {
-					const colours = atom.parent.parent.value.getSplashes()
-					colour = colours[Random.Uint32 % colours.length]
-				}
-			}*/
+			
 
-			/*ctx.fillStyle = "#000000"
-			ctx.globalCompositeOperation = "lighten"
-			ctx.fillRect(x, y, atom.width, atom.height)
-			ctx.globalCompositeOperation = "source-over"
-
-			ctx.filter = "invert(1) saturate(0%) brightness(67.5%) contrast(10000%)"
-
-			const X = Math.round(x)
-			const Y = Math.round(y)
-			const W = Math.round(atom.width)
-			const H = Math.round(atom.height)
-
-			ctx.drawImage(colourTodeCanvas, X, Y, W, H, X, Y, W, H)
-			ctx.filter = "none"*/
+			
 
 			const X = Math.round(x)
 			const Y = Math.round(y)
@@ -5570,7 +5293,6 @@ on.load(() => {
 
 			if (!highlightedAtom.isSquare) {
 				const diamond = highlightedAtom.parent
-				//diamond.unexpand(diamond)
 				
 				const operationName = atom.highlightedSlot === "padTop"? "add" : "subtract"
 				diamond.value[operationName] = atom.value
@@ -5578,7 +5300,6 @@ on.load(() => {
 				atom.x = 0
 				atom.y = highlightedAtom.y + highlightedAtom.height/2 - atom.height/2
 				giveChild(diamond, atom)
-				//diamond.expand(diamond)
 
 				if (atom.expanded) {
 					atom.unexpand(atom)
@@ -5597,7 +5318,6 @@ on.load(() => {
 			const {x, y} = getAtomPosition(atom)
 
 			let size = atom.size
-			//if (atom.isTool) size -= BORDER_THICKNESS*2.5
 
 			const height = size
 			const width = size
@@ -5605,7 +5325,6 @@ on.load(() => {
 			const left = (x)
 			let right = left + (width)
 			let top = (y)
-			//if (atom.isTool) top += BORDER_THICKNESS*1.25
 			let bottom = top + (height)
 			const middleY = top + (height/2)
 			const middleX = left + (width/2)
@@ -5760,16 +5479,7 @@ on.load(() => {
 			atom.padRight.y = atom.height/2 - atom.padRight.height/2
 			atom.padRight.x = atom.width/2 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN*2)/2 + OPTION_MARGIN
 			
-			/*atom.handleLeft = createChild(atom, SYMMETRY_HANDLE)
-			atom.handleLeft.y = atom.height/2 - atom.handleLeft.height/2
-			atom.handleLeft.x = -atom.width/2 - atom.handleLeft.width
-			atom.handleLeft.width *= 2
-
-			atom.padLeft = createChild(atom, SYMMETRY_PAD)
-			atom.padLeft.height = COLOURTODE_PICKER_PAD.height
-			atom.padLeft.width = OPTION_MARGIN + (atom.width+OPTION_MARGIN/1.5)*3
-			atom.padLeft.y = atom.height/2 - atom.padRight.height/2
-			atom.padLeft.x = -atom.padLeft.width - OPTION_MARGIN*/
+			
 
 			atom.red = createChild(atom, DIAMOND_CHOICE)
 			atom.red.x = atom.padRight.x + OPTION_MARGIN/Math.SQRT2
@@ -5832,15 +5542,9 @@ on.load(() => {
 				deleteChild(atom, atom.handleBottom, {quiet: true})
 			}
 			
-			/*deleteChild(atom, atom.padLeft)
-			deleteChild(atom, atom.handleLeft)*/
+			
 
-			/*for (const opera
-				tion of ["padTop", "padBottom"]) {
-				const operationAtom = atom.operationAtoms[operation]
-				if (operationAtom === undefined) continue
-				deleteChild(atom, operationAtom)
-			}*/
+			
 
 		}
 	}
@@ -6021,9 +5725,6 @@ on.load(() => {
 			let cellAtoms = paddle.cellAtoms
 			if (cellAtoms.length === 0) {
 				
-				//const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-				//const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-				//const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
 				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
 				return leftClone
 
@@ -6043,9 +5744,6 @@ on.load(() => {
 				const square = makeAtom(COLOURTODE_SQUARE)
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
-				//const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
-				//const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
-				//const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
 				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
 				setBrushColour(leftClone)
 				atomRegistry.register(square)
@@ -6098,10 +5796,7 @@ on.load(() => {
 		isSlot: true,
 		behindChildren: true,
 		//hasBorder: true,
-		//borderColour: Colour.Silver,
 		draw: (atom, ctx) => {
-			//atom.colour = borderColours[atom.cellAtom.colour.splash]
-			//COLOURTODE_RECTANGLE.draw(atom)
 
 			if (!atom.visible) return
 			
@@ -6112,50 +5807,10 @@ on.load(() => {
 			const top = y
 			const bottom = y + atom.height
 
-			/*const swidth = atom.width/10
-			const sheight = atom.height/10
-
-			const stripes = [
-				[
-					[left, top],
-					[left + swidth*1, top],
-					[left, top + sheight*1],
-				],
-				[
-					[left + swidth*4, top],
-					[left + swidth*6, top],
-					[left, top + swidth*6],
-					[left, top + swidth*4],
-				],
-				[
-					[left + swidth*9, top],
-					[right, top],
-					[right, top + sheight],
-					[left + swidth, bottom],
-					[left, bottom],
-					[left, top + swidth*9],
-				],
-				[
-					[left + swidth*9, bottom],
-					[right, top + sheight * 9],
-					[right, bottom],
-				],
-				[
-					[left + swidth*4, bottom],
-					[left + swidth*6, bottom],
-					[right, top + sheight * 6],
-					[right, top + sheight * 4],
-				],
-			]
-
-			for (const stripe of stripes) {
-				fillPoints(Colour.Black, stripe)
-			}*/
+			
 
 			ctx.fillStyle = atom.colour
-			/*ctx.beginPath()
-			ctx.arc(x + atom.width/2, y+atom.height/2, atom.width / 5, 0, 2*Math.PI)
-			ctx.fill()*/
+			
 
 			const w = atom.width/3
 			const h = atom.width/3
@@ -6819,7 +6474,6 @@ on.load(() => {
 
 			paddle.y = previous.y + previous.height + PADDLE_MARGIN
 			previous = paddle
-			//atomRegistry.bringToBack(paddle) //causes bug where circle tool disappears but really shouldn't :(
 		}
 	}
 
@@ -6853,7 +6507,6 @@ on.load(() => {
 		y: PADDLE.size/2 - PADDLE.x/2,
 		touch: (atom) => atom.parent.pinhole,
 		grab: (atom) => {
-			//if (atom.parent.pinhole.locked) return 
 			return atom.parent.pinhole
 		},
 	}
@@ -6889,20 +6542,15 @@ on.load(() => {
 			if (atom.locked) {
 				atom.locked = false
 				paddle.grabbable = true
-				//handle.grabbable = true
 				handle.draggable = true
 				paddle.draggable = true
 				atom.draggable = true
-				//paddle.dragOnly = true
 				updatePaddleRule(paddle)
 			} 
 
 			else {
 				atom.locked = true
-				//paddle.grabbable = false
-				//handle.grabbable = false
 				handle.draggable = false
-				//paddle.draggable = false
 				atom.draggable = false
 
 				for (const cellAtom of paddle.cellAtoms) {
@@ -6920,17 +6568,12 @@ on.load(() => {
 					}
 				}
 
-				/*if (paddle.hasSymmetry) {
-					if (paddle.symmetryCircle.expanded) {
-						paddle.symmetryCircle.unexpand(paddle.symmetryCircle)
-					}
-				}*/
+				
 
 				if (paddle.cellAtoms.length === 0) {
 					paddle.grabbable = false
 					paddle.draggable = false
 				}
-				//paddle.dragOnly = false
 				updatePaddleRule(paddle)
 			}
 		},
@@ -7023,7 +6666,6 @@ on.load(() => {
 				const ptop = py
 				const pbottom = py + paddle.height
 
-				//if (paddle.pinhole.locked) continue
 
 				if (!paddle.hasSymmetry && paddle.expanded && id > pid && left <= pright && right >= pright && ((top < pbottom && top > ptop) || (bottom > ptop && bottom < pbottom))) {
 					if (atom.highlightPaddle !== undefined) {
@@ -7062,12 +6704,9 @@ on.load(() => {
 					atom.dx = 0
 					atom.dy = 0
 					
-					/*atom.x = paddle.width -atom.width/2
-					atom.y = paddle.height/2 - atom.height/2*/
+					
 
-					/*if (paddle.pinhole.locked && atom.expanded) {
-						atom.unexpand(atom)
-					}*/
+					
 
 				}
 			}
@@ -7079,17 +6718,7 @@ on.load(() => {
 			if (atom.attached) {
 				const paddle = atom.parent
 
-				/*if (paddle.pinhole.locked) {
-					const clone = makeAtom(SYMMETRY_CIRCLE)
-					clone.value = atom.value
-					const {x, y} = getAtomPosition(atom)
-					hand.offset.x -= atom.x - x
-					hand.offset.y -= atom.y - y
-					clone.x = x
-					clone.y = y
-					atomRegistry.register(clone)
-					return clone
-				}*/
+				
 
 				atom.attached = false
 				freeChild(paddle, atom)
@@ -7200,8 +6829,6 @@ on.load(() => {
 		colour: Colour.Black,
 		borderColour: Colour.Black,
 		draw: (atom, ctx) => {
-			// atom.colour = atom.value? Colour.Silver : Colour.Black
-			// atom.colour = Colour.Black
 			TRIANGLE_UP.draw(atom, ctx)
 		},
 		touch: (atom) => {
@@ -7240,8 +6867,6 @@ on.load(() => {
 		colour: Colour.Black,
 		borderColour: Colour.Black,
 		draw: (atom, ctx) => {
-			// atom.colour = atom.value? Colour.Silver : Colour.Black
-			// atom.colour = Colour.Black
 			TRIANGLE_DOWN.draw(atom, ctx)
 		},
 		touch: (atom) => {
@@ -7448,10 +7073,8 @@ on.load(() => {
 	
 				triangle.updateValue(triangle)
 
-				// const hexagon = makeAtom(COLOURTODE_HEXAGON)
 				// newAtom.variableAtoms[i] = hexagon
 				// hexagon.variable = channel.variable
-				// const {add, subtract} = channel
 				// hexagon.ons = [add.values[2], add.values[1], subtract.values[1], subtract.values[2], subtract.values[3], add.values[3]]
 				// hexagon.updateValue(hexagon)
 			}
@@ -7493,15 +7116,7 @@ on.load(() => {
 			atomRegistry.register(newAtom)
 
 			if (newAtom.value !== undefined) {
-				/*
-				if (newAtom.value.joins !== undefined) {
-					for (const j of newAtom.value.joins) {
-						const joinAtom = makeAtom(COLOURTODE_SQUARE)
-						joinAtom.value = j
-						newAtom.joins.push(joinAtom)
-					}
-				}
-				*/
+				
 			}
 
 			return newAtom
@@ -7553,9 +7168,7 @@ on.load(() => {
 		unlock.unlocked = true
 		unlock.grabbable = true
 
-		/*atomRegistry.register(unlock)
-		menuRight += unlock.width
-		menuRight += OPTION_MARGIN*/
+		
 
 	}
 
@@ -7567,7 +7180,6 @@ on.load(() => {
 	menuRight -= BORDER_THICKNESS
 	const circleTool = addMenuTool(SYMMETRY_CIRCLE, "circle")
 	const hexagonTool = addMenuTool(COLOURTODE_HEXAGON, "hexagon")
-	// const wideRectangleTool = addMenuTool(COLOURTODE_PICKER_CHANNEL, "wide_rectangle")
 	//menuRight += BORDER_THICKNESS
 	const tallRectangleTool = {} //addMenuTool(COLOURTODE_TALL_RECTANGLE, "tall_rectangle")
 	createPaddle()
@@ -7583,16 +7195,7 @@ on.load(() => {
 			atom.joinDrawTimer = 0
 		}
 
-		/*
-		if (typeof state.brush.colour === "number") {
-			atom.value = DragonArray.fromSplash(state.brush.colour)
-		} else {
-			const content = state.brush.colour.left[0].content
-			//atom.value = DragonArray.cloneContent(content)
-			if (atom === squareTool) {
-				atom.stamp = atom.value.stamp
-			}
-		}*/
+		
 
 		if (atom.value !== undefined && atom === squareTool) {
 
@@ -7632,7 +7235,6 @@ on.load(() => {
 		if (atom.colourId >= atom.colours.length) {
 			atom.colourId = 0
 		}
-		//atom.colour = Colour.splash(atom.colours[atom.colourId])
 		if (atom.toolbarNeedsColourUpdate && atom === squareTool) {
 			atom.toolbarNeedsColourUpdate = false
 			atom.isGradient = true
