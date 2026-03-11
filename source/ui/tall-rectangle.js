@@ -203,7 +203,7 @@ class TallRectangle extends Atom {
 
 					if (atom.operationAtoms.padtop === undefined) {
 						if (atom.value.add.variable === undefined) {
-							const operationAtom = UI.createChild(atom, UI.COLOURTODE_PICKER_CHANNEL)
+							const operationAtom = UI.createChild(atom, new PickerChannel())
 							operationAtom.value = atom.value.add
 							atom.operationAtoms.padTop = operationAtom
 							operationAtom.x = atom.padTop.x + UI.OPTION_MARGIN
@@ -227,7 +227,7 @@ class TallRectangle extends Atom {
 
 					if (atom.operationAtoms.padBottom === undefined) {
 						if (atom.value.subtract.variable === undefined) {
-							const operationAtom = UI.createChild(atom, UI.COLOURTODE_PICKER_CHANNEL)
+							const operationAtom = UI.createChild(atom, new PickerChannel())
 							operationAtom.value = atom.value.subtract
 							atom.operationAtoms.padBottom = operationAtom
 							operationAtom.x = atom.padBottom.x + UI.OPTION_MARGIN

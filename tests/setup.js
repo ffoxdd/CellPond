@@ -130,6 +130,7 @@ function loadCellPond() {
 		readScript("source/ui/symmetry-handle.js"),
 		readScript("source/ui/paddle-handle.js"),
 		readScript("source/ui/option-padding.js"),
+		readScript("source/ui/picker-channel.js"),
 		readScript("source/ui/tall-rectangle.js"),
 		readScript("source/ui/diamond-pin.js"),
 		readScript("source/ui/pin-hole.js"),
