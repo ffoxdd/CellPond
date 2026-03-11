@@ -2,19 +2,14 @@
 // SYMMETRY TOGGLE X  //
 //====================//
 class SymmetryToggleX extends Atom {
-	constructor(element = {}) {
-		super({
-			hasBorder: true,
-			borderColour: Colour.Black,
-			colour: Colour.Grey,
-			expanded: false,
-			value: false,
-			size: UI.SQUARE_SIZE - UI.OPTION_MARGIN,
-			x: SymmetryPad.X + SymmetryPad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN)/2,
-			y: SymmetryPad.Y + UI.OPTION_MARGIN/2,
-			...element,
-		})
-	}
+	hasBorder = true
+	borderColour = Colour.Black
+	colour = Colour.Grey
+	expanded = false
+	value = false
+	size = UI.SQUARE_SIZE - UI.OPTION_MARGIN
+	x = SymmetryPad.X + SymmetryPad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN)/2
+	y = SymmetryPad.Y + UI.OPTION_MARGIN/2
 
 	draw(atom, ctx) {
 		this.colour = this.value ? Colour.Silver : Colour.Grey

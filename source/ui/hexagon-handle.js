@@ -2,16 +2,11 @@
 // HEXAGON HANDLE  //
 //=================//
 class HexagonHandle extends Atom {
-	constructor(element = {}) {
-		super({
-			colour: Colour.Grey,
-			rotation: 0,
-			x: 50,
-			width: UI.SQUARE_SIZE/2 + UI.SQUARE_SIZE/4,
-			height: UI.SQUARE_SIZE / 3,
-			...element,
-		})
-	}
+	colour = Colour.Grey
+	rotation = 0
+	x = 50
+	width = UI.SQUARE_SIZE/2 + UI.SQUARE_SIZE/4
+	height = UI.SQUARE_SIZE / 3
 
 	offscreen(atom) { return Rectangle.offscreenFn(this) }
 	touch(atom) { return this.parent }

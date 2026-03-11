@@ -2,14 +2,9 @@
 // RECTANGLE   //
 //=============//
 class Rectangle extends Atom {
-	constructor(element = {}) {
-		super({
-			draw: Rectangle.drawFn,
-			overlaps: Rectangle.overlapsFn,
-			offscreen: Rectangle.offscreenFn,
-			...element,
-		})
-	}
+	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
 
 	static drawFn(atom, ctx) {
 		let {x, y} = atom.getPosition()

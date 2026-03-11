@@ -2,18 +2,13 @@
 // SYMMETRY CIRCLE  //
 //==================//
 class SymmetryCircle extends Atom {
-	constructor(element = {}) {
-		super({
-			hasBorder: true,
-			expanded: false,
-			borderColour: Colour.Grey,
-			colour: Colour.Black,
-			value: 0,
-			size: UI.SQUARE_SIZE,
-			rightDraggable: true,
-			...element,
-		})
-	}
+	hasBorder = true
+	expanded = false
+	borderColour = Colour.Grey
+	colour = Colour.Black
+	value = 0
+	size = UI.SQUARE_SIZE
+	rightDraggable = true
 
 	draw(atom, ctx) {
 		Circle.drawFn(this, ctx)

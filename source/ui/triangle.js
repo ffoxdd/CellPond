@@ -36,16 +36,12 @@ function triangleOffscreen(atom) {
 class TriangleRight extends Atom {
 	static get DEFAULT_WIDTH() { return UI.SQUARE_SIZE * Math.sqrt(3)/2 }
 
-	constructor(element = {}) {
-		super({
-			size: UI.SQUARE_SIZE,
-			width: UI.SQUARE_SIZE * Math.sqrt(3)/2,
-			draw: TriangleRight.drawFn,
-			overlaps: triangleOverlaps,
-			offscreen: triangleOffscreen,
-			...element,
-		})
-	}
+	size = UI.SQUARE_SIZE
+	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
+
+	draw(atom, ctx) { TriangleRight.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
+	offscreen(atom) { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -86,15 +82,11 @@ class TriangleRight extends Atom {
 }
 
 class TriangleUp extends Atom {
-	constructor(element = {}) {
-		super({
-			size: UI.SQUARE_SIZE,
-			draw: TriangleUp.drawFn,
-			overlaps: triangleOverlaps,
-			offscreen: triangleOffscreen,
-			...element,
-		})
-	}
+	size = UI.SQUARE_SIZE
+
+	draw(atom, ctx) { TriangleUp.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
+	offscreen(atom) { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -127,15 +119,11 @@ class TriangleUp extends Atom {
 }
 
 class TriangleDown extends Atom {
-	constructor(element = {}) {
-		super({
-			size: UI.SQUARE_SIZE,
-			draw: TriangleDown.drawFn,
-			overlaps: triangleOverlaps,
-			offscreen: triangleOffscreen,
-			...element,
-		})
-	}
+	size = UI.SQUARE_SIZE
+
+	draw(atom, ctx) { TriangleDown.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
+	offscreen(atom) { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -168,16 +156,12 @@ class TriangleDown extends Atom {
 }
 
 class TriangleLeft extends Atom {
-	constructor(element = {}) {
-		super({
-			size: UI.SQUARE_SIZE,
-			width: UI.SQUARE_SIZE * Math.sqrt(3)/2,
-			draw: TriangleLeft.drawFn,
-			overlaps: triangleOverlaps,
-			offscreen: triangleOffscreen,
-			...element,
-		})
-	}
+	size = UI.SQUARE_SIZE
+	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
+
+	draw(atom, ctx) { TriangleLeft.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
+	offscreen(atom) { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()

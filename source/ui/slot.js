@@ -2,17 +2,12 @@
 // SLOT   //
 //========//
 class Slot extends Atom {
-	constructor(element = {}) {
-		super({
-			visible: true,
-			isSlot: true,
-			behindChildren: true,
-			colour: Colour.Black,
-			size: UI.SQUARE_SIZE,
-			dragOnly: true,
-			...element,
-		})
-	}
+	visible = true
+	isSlot = true
+	behindChildren = true
+	colour = Colour.Black
+	size = UI.SQUARE_SIZE
+	dragOnly = true
 
 	draw(atom, ctx) { Slot.drawFn(this, ctx) }
 	offscreen(atom) { return Rectangle.offscreenFn(this) }

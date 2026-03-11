@@ -2,17 +2,12 @@
 // SYMMETRY HANDLE  //
 //==================//
 class SymmetryHandle extends Atom {
-	constructor(element = {}) {
-		super({
-			dragOnly: true,
-			width: UI.SYMMETRY_CIRCLE_SIZE/2,
-			x: UI.SYMMETRY_CIRCLE_SIZE/2 + UI.SYMMETRY_CIRCLE_SIZE/4,
-			height: UI.SYMMETRY_CIRCLE_SIZE / 3,
-			y: UI.SYMMETRY_CIRCLE_SIZE/2 - (UI.SYMMETRY_CIRCLE_SIZE / 3)/2,
-			colour: Colour.Grey,
-			...element,
-		})
-	}
+	dragOnly = true
+	width = UI.SYMMETRY_CIRCLE_SIZE/2
+	x = UI.SYMMETRY_CIRCLE_SIZE/2 + UI.SYMMETRY_CIRCLE_SIZE/4
+	height = UI.SYMMETRY_CIRCLE_SIZE / 3
+	y = UI.SYMMETRY_CIRCLE_SIZE/2 - (UI.SYMMETRY_CIRCLE_SIZE / 3)/2
+	colour = Colour.Grey
 
 	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
 	offscreen(atom) { return Rectangle.offscreenFn(this) }

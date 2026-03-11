@@ -2,377 +2,385 @@
 // TALL RECTANGLE   //
 //==================//
 class TallRectangle extends Atom {
-	constructor(element = {}) {
-		super({
-			behindChildren: true,
-			highlighter: true,
-			rightDraggable: true,
-			rightDrag: (atom) => {
-				const clone = new TallRectangle()
-				UI.atomRegistry.register(clone)
-				const {x, y} = atom.getPosition()
-				UI.hand.offset.x -= atom.x - x
-				UI.hand.offset.y -= atom.y - y
-				clone.variable = atom.variable
-				if (atom.expanded) {
-					clone.expand(clone)
-				}
-				clone.updateAppearance(clone)
-				return clone
-			},
-			drag: (atom) => {
-				if (atom.parent.isSquare) {
-					const square = atom.parent
-					square[atom.channelSlot] = undefined
-					const channelId = UI.CHANNEL_IDS[atom.channelSlot]
-					square.receiveNumber(square, undefined, channelId)
-					UI.freeChild(square, atom)
-					atom.updateAppearance(atom)
-					atom.attached = false
-				} else if (atom.parent.isTallRectangle) {
-					const diamond = atom.parent
-					UI.freeChild(diamond, atom)
-					diamond.operationAtoms[atom.highlightedSlot] = undefined
-					const operationName = atom.highlightedSlot === "padTop"? "add" : "subtract"
-					diamond.value[operationName] = undefined
-					if (atom.expanded) {
-						atom.unexpand(atom)
-						atom.expand(atom)
-					}
-					atom.attached = false
-					if (diamond.expanded) {
-						diamond.unexpand(diamond)
-						diamond.expand(diamond)
-					} else {
-						const handle = atom.highlightedSlot === "padTop"? "handleTop" : "handleBottom"
-						UI.deleteChild(diamond, diamond[handle], {quiet: true})
-						UI.deleteChild(diamond, diamond[atom.highlightedSlot], {quiet: true})
-						diamond.expand(diamond)
-						diamond.unexpand(diamond)
-					}
-				}
-				return atom
-			},
-			hover: (atom) => {
+	behindChildren = true
+	highlighter = true
+	rightDraggable = true
+	hasBorder = true
+	isTallRectangle = true
+	size = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	expanded = false
 
-				const {x, y} = atom.getPosition()
-				const left = x
-				const top = y
-				const right = x + atom.width
-				const bottom = y + atom.height
+	constructor() {
+		super()
+		this.construct(this)
+	}
 
-				let winningDistance = Infinity
-				let winningSquare = undefined
-				let winningSlot = undefined
+	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
 
-				const atoms = UI.getAllBaseAtoms()
-				for (const other of atoms) {
-					if (other === atom) continue
+	rightDrag(atom) {
+		const clone = new TallRectangle()
+		UI.atomRegistry.register(clone)
+		const {x, y} = this.getPosition()
+		UI.hand.offset.x -= this.x - x
+		UI.hand.offset.y -= this.y - y
+		clone.variable = this.variable
+		if (this.expanded) {
+			clone.expand(clone)
+		}
+		clone.updateAppearance(clone)
+		return clone
+	}
 
-					if (other.isTallRectangle) {
-						if (!other.expanded) continue
-						const slotNames = ["padTop", "padBottom"]
-						for (const slotName of slotNames) {
+	drag(atom) {
+		if (this.parent.isSquare) {
+			const square = this.parent
+			square[this.channelSlot] = undefined
+			const channelId = UI.CHANNEL_IDS[this.channelSlot]
+			square.receiveNumber(square, undefined, channelId)
+			UI.freeChild(square, this)
+			this.updateAppearance(this)
+			this.attached = false
+		} else if (this.parent.isTallRectangle) {
+			const diamond = this.parent
+			UI.freeChild(diamond, this)
+			diamond.operationAtoms[this.highlightedSlot] = undefined
+			const operationName = this.highlightedSlot === "padTop"? "add" : "subtract"
+			diamond.value[operationName] = undefined
+			if (this.expanded) {
+				this.unexpand(this)
+				this.expand(this)
+			}
+			this.attached = false
+			if (diamond.expanded) {
+				diamond.unexpand(diamond)
+				diamond.expand(diamond)
+			} else {
+				const handle = this.highlightedSlot === "padTop"? "handleTop" : "handleBottom"
+				UI.deleteChild(diamond, diamond[handle], {quiet: true})
+				UI.deleteChild(diamond, diamond[this.highlightedSlot], {quiet: true})
+				diamond.expand(diamond)
+				diamond.unexpand(diamond)
+			}
+		}
+		return this
+	}
 
-							let endAtom = other
+	hover(atom) {
 
-							while (endAtom.isTallRectangle && endAtom.operationAtoms[slotName] !== undefined) {
-								endAtom = endAtom.operationAtoms[slotName]
-							}
+		const {x, y} = this.getPosition()
+		const left = x
+		const top = y
+		const right = x + this.width
+		const bottom = y + this.height
 
-							if (!endAtom.isTallRectangle) continue
-							if (!endAtom.expanded) continue
+		let winningDistance = Infinity
+		let winningSquare = undefined
+		let winningSlot = undefined
 
-							const slot = endAtom[slotName]
-							const {x: px, y: py} = slot.getPosition()
-							const pleft = px
-							const pright = px + slot.width
-							const ptop = py
-							const pbottom = py + slot.height
+		const atoms = UI.getAllBaseAtoms()
+		for (const other of atoms) {
+			if (other === this) continue
 
-							if (left > pright) continue
-							if (right < pleft) continue
-							if (bottom < ptop) continue
-							if (top > pbottom) continue
+			if (other.isTallRectangle) {
+				if (!other.expanded) continue
+				const slotNames = ["padTop", "padBottom"]
+				for (const slotName of slotNames) {
 
-							atom.highlightedSlot = slotName
-							return slot
+					let endAtom = other
 
-						}
-						continue
+					while (endAtom.isTallRectangle && endAtom.operationAtoms[slotName] !== undefined) {
+						endAtom = endAtom.operationAtoms[slotName]
 					}
 
-					if (!other.isSquare) continue
-					if (!other.expanded) continue
+					if (!endAtom.isTallRectangle) continue
+					if (!endAtom.expanded) continue
 
-					const {x: px, y: py} = other.pickerPad.getPosition()
+					const slot = endAtom[slotName]
+					const {x: px, y: py} = slot.getPosition()
 					const pleft = px
-					const pright = px + other.pickerPad.width
+					const pright = px + slot.width
 					const ptop = py
-					const pbottom = py + other.pickerPad.height
+					const pbottom = py + slot.height
 
 					if (left > pright) continue
 					if (right < pleft) continue
 					if (bottom < ptop) continue
 					if (top > pbottom) continue
 
-					const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
-					if (slots.length === 0) continue
-					const {x: ax, y: ay} = other.getPosition()
+					this.highlightedSlot = slotName
+					return slot
 
-					for (const slot of slots) {
-						const slotId = UI.CHANNEL_IDS[slot]
-						const sx = ax + other.size + UI.OPTION_MARGIN*2 + slotId*(UI.SQUARE_SIZE + UI.OPTION_MARGIN)
-						const sy = ay + UI.OPTION_MARGIN
-						const distance = Math.hypot(x - sx, y - sy)
-						if (distance < winningDistance) {
-							winningDistance = distance
-							winningSlot = slot
-							winningSquare = other
-						}
-					}
-
-					if (winningSquare !== undefined) {
-
-						const {x: ax, y: ay} = winningSquare.getPosition()
-						const slotId = UI.CHANNEL_IDS[winningSlot]
-
-						atom.highlight = UI.createChild(atom, new Highlight(), {bottom: true})
-						atom.highlight.hasBorder = true
-						atom.highlight.x = ax + winningSquare.size + UI.OPTION_MARGIN + slotId*(UI.OPTION_MARGIN+winningSquare.size)
-						atom.highlight.y = ay
-						atom.highlight.width = UI.OPTION_MARGIN*2+winningSquare.size
-						atom.highlightedAtom = winningSquare
-						atom.highlightedSlot = winningSlot
-					}
-
-					return
 				}
-			},
-			place: (atom, highlightedAtom) => {
+				continue
+			}
 
-				atom.attached = true
-				atom.dx = 0
-				atom.dy = 0
+			if (!other.isSquare) continue
+			if (!other.expanded) continue
 
-				if (!highlightedAtom.isSquare) {
-					const diamond = highlightedAtom.parent
+			const {x: px, y: py} = other.pickerPad.getPosition()
+			const pleft = px
+			const pright = px + other.pickerPad.width
+			const ptop = py
+			const pbottom = py + other.pickerPad.height
 
-					const operationName = atom.highlightedSlot === "padTop"? "add" : "subtract"
-					diamond.value[operationName] = atom.value
-					diamond.operationAtoms[atom.highlightedSlot] = atom
-					atom.x = 0
-					atom.y = highlightedAtom.y + highlightedAtom.height/2 - atom.height/2
-					UI.giveChild(diamond, atom)
+			if (left > pright) continue
+			if (right < pleft) continue
+			if (bottom < ptop) continue
+			if (top > pbottom) continue
 
-					if (atom.expanded) {
-						atom.unexpand(atom)
-						atom.expand(atom)
-					}
+			const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
+			if (slots.length === 0) continue
+			const {x: ax, y: ay} = other.getPosition()
 
-					return
+			for (const slot of slots) {
+				const slotId = UI.CHANNEL_IDS[slot]
+				const sx = ax + other.size + UI.OPTION_MARGIN*2 + slotId*(UI.SQUARE_SIZE + UI.OPTION_MARGIN)
+				const sy = ay + UI.OPTION_MARGIN
+				const distance = Math.hypot(x - sx, y - sy)
+				if (distance < winningDistance) {
+					winningDistance = distance
+					winningSlot = slot
+					winningSquare = other
 				}
+			}
 
-				const square = atom.highlightedAtom
-				const slotId = UI.CHANNEL_IDS[atom.highlightedSlot]
-				square.receiveNumber(square, atom.value, slotId, {expanded: atom.expanded, numberAtom: atom})
-				UI.atomRegistry.delete(atom)
-			},
-			draw: TallRectangle.drawFn,
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
-			hasBorder: true,
-			isTallRectangle: true,
-			size: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			height: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			width: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			construct: (atom) => {
-				atom.variable = CHANNEL_VARIABLES[Random.Uint8 % 3]
-				atom.value = new DragonNumber({variable: atom.variable})
-				atom.updateAppearance(atom)
-				if (!atom.isTool) {
-					atom.width += UI.BORDER_THICKNESS/2
-					atom.height += UI.BORDER_THICKNESS/2
-					atom.size += UI.BORDER_THICKNESS/2
-				}
-				atom.operationAtoms = {padTop: undefined, padBottom: undefined}
+			if (winningSquare !== undefined) {
 
-			},
-			makeOperationAtoms: (atom) => {
-				if (atom.value.add !== undefined) {
+				const {x: ax, y: ay} = winningSquare.getPosition()
+				const slotId = UI.CHANNEL_IDS[winningSlot]
 
-					if (atom.operationAtoms.padtop === undefined) {
-						if (atom.value.add.variable === undefined) {
-							const operationAtom = UI.createChild(atom, new PickerChannel())
-							operationAtom.value = atom.value.add
-							atom.operationAtoms.padTop = operationAtom
-							operationAtom.x = atom.padTop.x + UI.OPTION_MARGIN
-							operationAtom.y = atom.padTop.y + atom.padTop.height/2 - operationAtom.height/2
-							operationAtom.highlightedSlot = "padTop"
-						} else {
-							const operationAtom = UI.createChild(atom, new TallRectangle())
-							operationAtom.value = atom.value.add
-							operationAtom.variable = atom.value.add.variable
-							operationAtom.makeOperationAtoms(operationAtom)
-							operationAtom.highlightedSlot = "padTop"
-							operationAtom.x = 0
-							operationAtom.y = atom.padTop.y + atom.padTop.height/2 - operationAtom.height/2
-							operationAtom.updateAppearance(operationAtom)
-							atom.operationAtoms.padTop = operationAtom
-						}
-					}
-				}
+				this.highlight = UI.createChild(this, new Highlight(), {bottom: true})
+				this.highlight.hasBorder = true
+				this.highlight.x = ax + winningSquare.size + UI.OPTION_MARGIN + slotId*(UI.OPTION_MARGIN+winningSquare.size)
+				this.highlight.y = ay
+				this.highlight.width = UI.OPTION_MARGIN*2+winningSquare.size
+				this.highlightedAtom = winningSquare
+				this.highlightedSlot = winningSlot
+			}
 
-				if (atom.value.subtract !== undefined) {
+			return
+		}
+	}
 
-					if (atom.operationAtoms.padBottom === undefined) {
-						if (atom.value.subtract.variable === undefined) {
-							const operationAtom = UI.createChild(atom, new PickerChannel())
-							operationAtom.value = atom.value.subtract
-							atom.operationAtoms.padBottom = operationAtom
-							operationAtom.x = atom.padBottom.x + UI.OPTION_MARGIN
-							operationAtom.y = atom.padBottom.y + atom.padBottom.height/2 - operationAtom.height/2
-							operationAtom.highlightedSlot = "padBottom"
-						} else {
+	place(atom, highlightedAtom) {
 
-						}
-					}
-				}
-			},
-			updateAppearance: (atom) => {
-				if (atom.variable === "red") {
-					atom.colour = Colour.Red
-				} else if (atom.variable === "green") {
-					atom.colour = Colour.Green
-				} else if (atom.variable === "blue") {
-					atom.colour = Colour.Blue
-				}
+		this.attached = true
+		this.dx = 0
+		this.dy = 0
 
-				atom.borderColour = UI.borderColours[atom.colour.splash]
-			},
-			expanded: false,
-			click: (atom) => {
-				if (!atom.expanded) {
-					atom.expand(atom)
+		if (!highlightedAtom.isSquare) {
+			const diamond = highlightedAtom.parent
+
+			const operationName = this.highlightedSlot === "padTop"? "add" : "subtract"
+			diamond.value[operationName] = this.value
+			diamond.operationAtoms[this.highlightedSlot] = this
+			this.x = 0
+			this.y = highlightedAtom.y + highlightedAtom.height/2 - this.height/2
+			UI.giveChild(diamond, this)
+
+			if (this.expanded) {
+				this.unexpand(this)
+				this.expand(this)
+			}
+
+			return
+		}
+
+		const square = this.highlightedAtom
+		const slotId = UI.CHANNEL_IDS[this.highlightedSlot]
+		square.receiveNumber(square, this.value, slotId, {expanded: this.expanded, numberAtom: this})
+		UI.atomRegistry.delete(this)
+	}
+
+	click(atom) {
+		if (!this.expanded) {
+			this.expand(this)
+		} else {
+			this.unexpand(this)
+		}
+	}
+
+	construct(atom) {
+		this.variable = CHANNEL_VARIABLES[Random.Uint8 % 3]
+		this.value = new DragonNumber({variable: this.variable})
+		this.updateAppearance(this)
+		if (!this.isTool) {
+			this.width += UI.BORDER_THICKNESS/2
+			this.height += UI.BORDER_THICKNESS/2
+			this.size += UI.BORDER_THICKNESS/2
+		}
+		this.operationAtoms = {padTop: undefined, padBottom: undefined}
+	}
+
+	makeOperationAtoms(atom) {
+		if (this.value.add !== undefined) {
+
+			if (this.operationAtoms.padtop === undefined) {
+				if (this.value.add.variable === undefined) {
+					const operationAtom = UI.createChild(this, new PickerChannel())
+					operationAtom.value = this.value.add
+					this.operationAtoms.padTop = operationAtom
+					operationAtom.x = this.padTop.x + UI.OPTION_MARGIN
+					operationAtom.y = this.padTop.y + this.padTop.height/2 - operationAtom.height/2
+					operationAtom.highlightedSlot = "padTop"
 				} else {
-					atom.unexpand(atom)
+					const operationAtom = UI.createChild(this, new TallRectangle())
+					operationAtom.value = this.value.add
+					operationAtom.variable = this.value.add.variable
+					operationAtom.makeOperationAtoms(operationAtom)
+					operationAtom.highlightedSlot = "padTop"
+					operationAtom.x = 0
+					operationAtom.y = this.padTop.y + this.padTop.height/2 - operationAtom.height/2
+					operationAtom.updateAppearance(operationAtom)
+					this.operationAtoms.padTop = operationAtom
 				}
-			},
-			expand: (atom) => {
-				atom.expanded = true
+			}
+		}
 
-				if (atom.value.add === undefined) {
-					if (atom.y < 0 || !(atom.parent.isTallRectangle && atom.parent.operationAtoms.padBottom === atom)) {
-						atom.handleTop = UI.createChild(atom, new SymmetryHandle())
-						atom.handleTop.width = atom.handleTop.height
-						atom.handleTop.height *= 2
-						atom.handleTop.y = atom.height/2 - atom.handleTop.height
-						atom.handleTop.x = atom.width/2 - atom.handleTop.width/2
-						atom.handleTop.behindParent = true
+		if (this.value.subtract !== undefined) {
 
-						atom.padTop = UI.createChild(atom, new SymmetryPad())
-						atom.padTop.height = PickerPad.HEIGHT
-						atom.padTop.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
-						atom.padTop.x = atom.width/2 - atom.padTop.width/2
-						atom.padTop.y = -atom.padTop.height - UI.OPTION_MARGIN
-					}
+			if (this.operationAtoms.padBottom === undefined) {
+				if (this.value.subtract.variable === undefined) {
+					const operationAtom = UI.createChild(this, new PickerChannel())
+					operationAtom.value = this.value.subtract
+					this.operationAtoms.padBottom = operationAtom
+					operationAtom.x = this.padBottom.x + UI.OPTION_MARGIN
+					operationAtom.y = this.padBottom.y + this.padBottom.height/2 - operationAtom.height/2
+					operationAtom.highlightedSlot = "padBottom"
+				} else {
+
 				}
+			}
+		}
+	}
 
-				if (atom.value.subtract === undefined) {
-					if (atom.y > 0 || !(atom.parent.isTallRectangle && atom.parent.operationAtoms.padTop === atom)) {
-						atom.handleBottom = UI.createChild(atom, new SymmetryHandle())
-						atom.handleBottom.width = atom.handleBottom.height
-						atom.handleBottom.height *= 2
-						atom.handleBottom.y = atom.height/2
-						atom.handleBottom.x = atom.width/2 - atom.handleBottom.width/2
-						atom.handleBottom.behindParent = true
+	updateAppearance(atom) {
+		if (this.variable === "red") {
+			this.colour = Colour.Red
+		} else if (this.variable === "green") {
+			this.colour = Colour.Green
+		} else if (this.variable === "blue") {
+			this.colour = Colour.Blue
+		}
 
-						atom.padBottom = UI.createChild(atom, new SymmetryPad())
-						atom.padBottom.height = PickerPad.HEIGHT
-						atom.padBottom.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
-						atom.padBottom.x = atom.width/2 - atom.padBottom.width/2
-						atom.padBottom.y = atom.height + UI.OPTION_MARGIN
-					}
-				}
+		this.borderColour = UI.borderColours[this.colour.splash]
+	}
 
-				atom.handleRight = UI.createChild(atom, new SymmetryHandle())
-				atom.handleRight.y = atom.height/2 - atom.handleRight.height/2
-				atom.handleRight.x = atom.width/2
-				atom.handleRight.width *= 2.5
-				atom.handleRight.behindParent = true
+	expand(atom) {
+		this.expanded = true
 
-				atom.padRight = UI.createChild(atom, new SymmetryPad())
-				atom.padRight.height = PickerPad.HEIGHT
-				atom.padRight.width = UI.OPTION_MARGIN + (atom.width+UI.OPTION_MARGIN/1.5)*3
-				atom.padRight.y = atom.height/2 - atom.padRight.height/2
-				atom.padRight.x = atom.width/2 + (UI.SQUARE_SIZE + UI.OPTION_MARGIN*2)/2 + UI.OPTION_MARGIN
+		if (this.value.add === undefined) {
+			if (this.y < 0 || !(this.parent.isTallRectangle && this.parent.operationAtoms.padBottom === this)) {
+				this.handleTop = UI.createChild(this, new SymmetryHandle())
+				this.handleTop.width = this.handleTop.height
+				this.handleTop.height *= 2
+				this.handleTop.y = this.height/2 - this.handleTop.height
+				this.handleTop.x = this.width/2 - this.handleTop.width/2
+				this.handleTop.behindParent = true
+
+				this.padTop = UI.createChild(this, new SymmetryPad())
+				this.padTop.height = PickerPad.HEIGHT
+				this.padTop.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
+				this.padTop.x = this.width/2 - this.padTop.width/2
+				this.padTop.y = -this.padTop.height - UI.OPTION_MARGIN
+			}
+		}
+
+		if (this.value.subtract === undefined) {
+			if (this.y > 0 || !(this.parent.isTallRectangle && this.parent.operationAtoms.padTop === this)) {
+				this.handleBottom = UI.createChild(this, new SymmetryHandle())
+				this.handleBottom.width = this.handleBottom.height
+				this.handleBottom.height *= 2
+				this.handleBottom.y = this.height/2
+				this.handleBottom.x = this.width/2 - this.handleBottom.width/2
+				this.handleBottom.behindParent = true
+
+				this.padBottom = UI.createChild(this, new SymmetryPad())
+				this.padBottom.height = PickerPad.HEIGHT
+				this.padBottom.width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
+				this.padBottom.x = this.width/2 - this.padBottom.width/2
+				this.padBottom.y = this.height + UI.OPTION_MARGIN
+			}
+		}
+
+		this.handleRight = UI.createChild(this, new SymmetryHandle())
+		this.handleRight.y = this.height/2 - this.handleRight.height/2
+		this.handleRight.x = this.width/2
+		this.handleRight.width *= 2.5
+		this.handleRight.behindParent = true
+
+		this.padRight = UI.createChild(this, new SymmetryPad())
+		this.padRight.height = PickerPad.HEIGHT
+		this.padRight.width = UI.OPTION_MARGIN + (this.width+UI.OPTION_MARGIN/1.5)*3
+		this.padRight.y = this.height/2 - this.padRight.height/2
+		this.padRight.x = this.width/2 + (UI.SQUARE_SIZE + UI.OPTION_MARGIN*2)/2 + UI.OPTION_MARGIN
 
 
 
-				atom.red = UI.createChild(atom, new DiamondChoice())
-				atom.red.x = atom.padRight.x + UI.OPTION_MARGIN/Math.SQRT2
-				atom.red.borderColour = Colour.Red
-				atom.red.colour = Colour.Black
-				atom.red.value = "red"
+		this.red = UI.createChild(this, new DiamondChoice())
+		this.red.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2
+		this.red.borderColour = Colour.Red
+		this.red.colour = Colour.Black
+		this.red.value = "red"
 
-				atom.green = UI.createChild(atom, new DiamondChoice())
-				atom.green.x = atom.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (atom.green.width+UI.OPTION_MARGIN)*1
-				atom.green.borderColour = Colour.Green
-				atom.green.colour = Colour.Black
-				atom.green.value = "green"
+		this.green = UI.createChild(this, new DiamondChoice())
+		this.green.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (this.green.width+UI.OPTION_MARGIN)*1
+		this.green.borderColour = Colour.Green
+		this.green.colour = Colour.Black
+		this.green.value = "green"
 
-				atom.blue = UI.createChild(atom, new DiamondChoice())
-				atom.blue.x = atom.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (atom.blue.width+UI.OPTION_MARGIN)*2
-				atom.blue.borderColour = Colour.Blue
-				atom.blue.colour = Colour.Black
-				atom.blue.value = "blue"
+		this.blue = UI.createChild(this, new DiamondChoice())
+		this.blue.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (this.blue.width+UI.OPTION_MARGIN)*2
+		this.blue.borderColour = Colour.Blue
+		this.blue.colour = Colour.Black
+		this.blue.value = "blue"
 
-				atom.winnerPin = UI.createChild(atom, new DiamondPin())
-				atom.winnerPin.x = atom[atom.variable].x + atom.winnerPin.width/2
-				atom.winnerPin.y = atom.winnerPin.height/2
-				atom.winnerPin.colour = atom[atom.variable].borderColour
-				atom.winnerPin.borderColour = atom.winnerPin.colour
+		this.winnerPin = UI.createChild(this, new DiamondPin())
+		this.winnerPin.x = this[this.variable].x + this.winnerPin.width/2
+		this.winnerPin.y = this.winnerPin.height/2
+		this.winnerPin.colour = this[this.variable].borderColour
+		this.winnerPin.borderColour = this.winnerPin.colour
 
-				for (const operation of ["padTop", "padBottom"]) {
-					const operationAtom = atom.operationAtoms[operation]
-					if (operationAtom === undefined) continue
-					UI.atomRegistry.register(operationAtom)
-					UI.giveChild(atom, operationAtom)
-				}
+		for (const operation of ["padTop", "padBottom"]) {
+			const operationAtom = this.operationAtoms[operation]
+			if (operationAtom === undefined) continue
+			UI.atomRegistry.register(operationAtom)
+			UI.giveChild(this, operationAtom)
+		}
 
-				for (const child of atom.children) {
-					if (!child.isTallRectangle) continue
-					if (child.expanded) {
-						child.unexpand(child)
-						child.expand(child)
-					}
-				}
+		for (const child of this.children) {
+			if (!child.isTallRectangle) continue
+			if (child.expanded) {
+				child.unexpand(child)
+				child.expand(child)
+			}
+		}
+	}
 
-			},
-			unexpand: (atom) => {
-				atom.expanded = false
+	unexpand(atom) {
+		this.expanded = false
 
-				UI.deleteChild(atom, atom.red)
-				UI.deleteChild(atom, atom.green)
-				UI.deleteChild(atom, atom.blue)
+		UI.deleteChild(this, this.red)
+		UI.deleteChild(this, this.green)
+		UI.deleteChild(this, this.blue)
 
-				UI.deleteChild(atom, atom.padRight)
-				UI.deleteChild(atom, atom.handleRight)
-				UI.deleteChild(atom, atom.winnerPin)
+		UI.deleteChild(this, this.padRight)
+		UI.deleteChild(this, this.handleRight)
+		UI.deleteChild(this, this.winnerPin)
 
-				if (atom.value.add === undefined) {
-					UI.deleteChild(atom, atom.padTop, {quiet: true})
-					UI.deleteChild(atom, atom.handleTop, {quiet: true})
-				}
+		if (this.value.add === undefined) {
+			UI.deleteChild(this, this.padTop, {quiet: true})
+			UI.deleteChild(this, this.handleTop, {quiet: true})
+		}
 
-				if (atom.value.subtract === undefined) {
-					UI.deleteChild(atom, atom.padBottom, {quiet: true})
-					UI.deleteChild(atom, atom.handleBottom, {quiet: true})
-				}
-
-			},
-			...element,
-		})
+		if (this.value.subtract === undefined) {
+			UI.deleteChild(this, this.padBottom, {quiet: true})
+			UI.deleteChild(this, this.handleBottom, {quiet: true})
+		}
 	}
 
 	static drawFn(atom, ctx) {

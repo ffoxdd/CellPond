@@ -2,15 +2,10 @@
 // DIAMOND CHOICE //
 //================//
 class DiamondChoice extends Atom {
-	constructor(element = {}) {
-		super({
-			hasBorder: true,
-			size: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			height: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			width: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2,
-			...element,
-		})
-	}
+	hasBorder = true
+	size = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 
 	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
 	offscreen(atom) { return Rectangle.offscreenFn(this) }

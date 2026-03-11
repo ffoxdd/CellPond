@@ -2,16 +2,11 @@
 // CHANNEL SELECTION END  //
 //========================//
 class ChannelSelectionEnd extends Atom {
-	constructor(element = {}) {
-		super({
-			height: UI.OPTION_SPACING - UI.CHANNEL_HEIGHT,
-			width: UI.SQUARE_SIZE + UI.OPTION_MARGIN*2,
-			x: -UI.OPTION_MARGIN,
-			dragOnly: true,
-			dragLockX: true,
-			...element,
-		})
-	}
+	height = UI.OPTION_SPACING - UI.CHANNEL_HEIGHT
+	width = UI.SQUARE_SIZE + UI.OPTION_MARGIN*2
+	x = -UI.OPTION_MARGIN
+	dragOnly = true
+	dragLockX = true
 
 	draw(atom, ctx) {
 		const {x, y} = this.getPosition()

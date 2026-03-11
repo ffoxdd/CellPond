@@ -2,19 +2,14 @@
 // COLOURTODE TRIANGLE  //
 //======================//
 class ColourtodeTriangle extends Atom {
-	constructor(element = {}) {
-		super({
-			behindOtherChildren: true,
-			expanded: false,
-			colour: Colour.splash(999),
-			size: UI.SQUARE_SIZE,
-			width: TriangleRight.DEFAULT_WIDTH,
-			direction: "right",
-			highlighter: true,
-			rightDraggable: true,
-			...element,
-		})
-	}
+	behindOtherChildren = true
+	expanded = false
+	colour = Colour.splash(999)
+	size = UI.SQUARE_SIZE
+	width = TriangleRight.DEFAULT_WIDTH
+	direction = "right"
+	highlighter = true
+	rightDraggable = true
 
 	draw(atom, ctx) {
 		if (this.direction === "right") TriangleRight.drawFn(this, ctx)

@@ -48,15 +48,15 @@ class ColourtodeSquare extends Atom {
 		}
 	}
 
-	constructor(element = {}) {
-		super({
-			isSquare: true,
-			hasBorder: true,
-			size: 40,
-			expanded: false,
-			rightDraggable: true,
-			...element,
-		})
+	isSquare = true
+	hasBorder = true
+	size = 40
+	expanded = false
+	rightDraggable = true
+
+	constructor() {
+		super()
+		this.construct(this)
 	}
 
 	draw(atom, ctx) {

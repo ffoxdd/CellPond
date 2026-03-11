@@ -2,16 +2,10 @@
 // DIAMOND PIN  //
 //==============//
 class DiamondPin extends Atom {
-	constructor(element = {}) {
-		const pinSize = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
-		super({
-			hasBorder: true,
-			size: pinSize,
-			height: pinSize,
-			width: pinSize,
-			...element,
-		})
-	}
+	hasBorder = true
+	size = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
+	height = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
+	width = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
 
 	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
 	offscreen(atom) { return Rectangle.offscreenFn(this) }

@@ -2,16 +2,16 @@
 // HEXAGON   //
 //===========//
 class Hexagon extends Atom {
-	constructor(element = {}) {
-		super({
-			colour: Colour.Black,
-			hasBorder: true,
-			borderColour: Colour.Grey,
-			width: UI.SQUARE_SIZE,
-			height: UI.SQUARE_SIZE,
-			rightDraggable: true,
-			...element,
-		})
+	colour = Colour.Black
+	hasBorder = true
+	borderColour = Colour.Grey
+	width = UI.SQUARE_SIZE
+	height = UI.SQUARE_SIZE
+	rightDraggable = true
+
+	constructor() {
+		super()
+		this.construct(this)
 	}
 
 	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }

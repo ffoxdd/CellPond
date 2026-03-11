@@ -19,21 +19,14 @@ class Atom {
 	maxY = Infinity
 	minY = -Infinity
 	size = 40
+	colour = Colour.splash(999)
+	children = []
+	parent = UI.atomRegistry.baseParent
 
-	constructor(element = {}) {
-		// Per-instance state (must not be shared across instances)
-		this.colour = Colour.splash(999)
-		this.children = []
-		this.parent = UI.atomRegistry.baseParent
-
-		// Apply element overrides
-		Object.assign(this, element)
-
-		// width/height default to size if not explicitly provided
-		if (element.width === undefined) this.width = this.size
-		if (element.height === undefined) this.height = this.size
-
-		this.construct(this)
+	constructor(element) {
+		if (element !== undefined) Object.assign(this, element)
+		if (this.width === undefined) this.width = this.size
+		if (this.height === undefined) this.height = this.size
 	}
 
 	// === Interface methods (override in concrete types) ===

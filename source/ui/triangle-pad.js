@@ -2,17 +2,12 @@
 // TRIANGLE PAD  //
 //===============//
 class TrianglePad extends Atom {
-	constructor(element = {}) {
-		super({
-			dragOnly: true,
-			width: UI.SYMMETRY_CIRCLE_SIZE,
-			x: UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN,
-			height: (UI.SYMMETRY_CIRCLE_SIZE * 2) - UI.OPTION_MARGIN,
-			y: -UI.SYMMETRY_CIRCLE_SIZE/2 + UI.OPTION_MARGIN/2,
-			colour: Colour.Grey,
-			...element,
-		})
-	}
+	dragOnly = true
+	width = UI.SYMMETRY_CIRCLE_SIZE
+	x = UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN
+	height = (UI.SYMMETRY_CIRCLE_SIZE * 2) - UI.OPTION_MARGIN
+	y = -UI.SYMMETRY_CIRCLE_SIZE/2 + UI.OPTION_MARGIN/2
+	colour = Colour.Grey
 
 	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
 	offscreen(atom) { return Rectangle.offscreenFn(this) }

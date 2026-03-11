@@ -2,13 +2,13 @@
 // HEXAGON BUTTON  //
 //=================//
 class HexagonButton extends Atom {
-	constructor(element = {}) {
-		super({
-			size: UI.SQUARE_SIZE,
-			colour: Colour.Grey,
-			behindChildren: true,
-			...element,
-		})
+	size = UI.SQUARE_SIZE
+	colour = Colour.Grey
+	behindChildren = true
+
+	constructor() {
+		super()
+		this.construct(this)
 	}
 
 	draw(atom, ctx) { Circle.drawFn(this, ctx) }

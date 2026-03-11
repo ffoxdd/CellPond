@@ -2,12 +2,7 @@
 // COLOURTODE TOOL    //
 //====================//
 class ColourtodeTool extends Atom {
-	constructor(element = {}) {
-		super({
-			element: new ColourtodeSquare(),
-			...element,
-		})
-	}
+	element = new ColourtodeSquare()
 
 	draw(atom, ctx) {
 		if ((this.previousBrushColour !== state.brush.colour) || this.toolbarNeedsColourUpdate) {

@@ -2,16 +2,15 @@
 // PICKER CHANNEL   //
 //==================//
 class PickerChannel extends Atom {
-	constructor(element = {}) {
-		super({
-			//behindChildren: true,
-			hasBorder: true,
-			width: UI.SQUARE_SIZE,
-			y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
-			height: UI.CHANNEL_HEIGHT,
-			rightDraggable: true,
-			...element,
-		})
+	hasBorder = true
+	width = UI.SQUARE_SIZE
+	y = (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2
+	height = UI.CHANNEL_HEIGHT
+	rightDraggable = true
+
+	constructor() {
+		super()
+		this.construct(this)
 	}
 
 	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }

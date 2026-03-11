@@ -2,26 +2,26 @@
 // PADDLE  //
 //=========//
 class Paddle extends Atom {
-	constructor(element = {}) {
-		super({
-			stayAtBack: true,
-			attached: true,
-			noDampen: true,
-			isPaddle: true,
-			behindChildren: true,
-			colour: Colour.Grey,
-			size: UI.PADDLE_TOTAL_SIZE, //for legacy
-			width: UI.PADDLE_TOTAL_SIZE,
-			height: UI.PADDLE_TOTAL_SIZE,
-			dragOnly: true,
-			dragLockY: true,
-			scroll: 0,
-			rightTriangle: undefined,
-			x: Math.round(Paddle.MARGIN), //needed for handle creation
-			y: UI.SQUARE_SIZE + UI.OPTION_MARGIN + Paddle.MARGIN,
-			rightDraggable: true,
-			...element,
-		})
+	stayAtBack = true
+	attached = true
+	noDampen = true
+	isPaddle = true
+	behindChildren = true
+	colour = Colour.Grey
+	size = UI.PADDLE_TOTAL_SIZE
+	width = UI.PADDLE_TOTAL_SIZE
+	height = UI.PADDLE_TOTAL_SIZE
+	dragOnly = true
+	dragLockY = true
+	scroll = 0
+	rightTriangle = undefined
+	x = Math.round(Paddle.MARGIN)
+	y = UI.SQUARE_SIZE + UI.OPTION_MARGIN + Paddle.MARGIN
+	rightDraggable = true
+
+	constructor() {
+		super()
+		this.construct(this)
 	}
 
 	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }

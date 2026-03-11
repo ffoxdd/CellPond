@@ -2,18 +2,13 @@
 // TRIANGLE PICK DOWN  //
 //=====================//
 class TrianglePickDown extends Atom {
-	constructor(element = {}) {
-		super({
-			hasBorder: true,
-			colour: Colour.Black,
-			borderColour: Colour.Black,
-			value: false,
-			size: UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5,
-			x: TrianglePad.X + TrianglePad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5)/2,
-			y: TrianglePad.Y + TrianglePad.HEIGHT - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5) - UI.OPTION_MARGIN/2,
-			...element,
-		})
-	}
+	hasBorder = true
+	colour = Colour.Black
+	borderColour = Colour.Black
+	value = false
+	size = UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5
+	x = TrianglePad.X + TrianglePad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5)/2
+	y = TrianglePad.Y + TrianglePad.HEIGHT - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5) - UI.OPTION_MARGIN/2
 
 	draw(atom, ctx) { TriangleDown.drawFn(this, ctx) }
 	offscreen(atom) { return triangleOffscreen(this) }

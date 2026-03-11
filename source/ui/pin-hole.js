@@ -2,20 +2,15 @@
 // PIN HOLE //
 //==========//
 class PinHole extends Atom {
-	constructor(element = {}) {
-		super({
-			isPinhole: true,
-			attached: true,
-			locked: false,
-			borderScale: 1/2,
-			borderColour: Colour.Black,
-			colour: Colour.Black,
-			size: UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2,
-			y: UI.OPTION_MARGIN/2/2,
-			x: UI.OPTION_MARGIN/2/2,
-			...element,
-		})
-	}
+	isPinhole = true
+	attached = true
+	locked = false
+	borderScale = 1/2
+	borderColour = Colour.Black
+	colour = Colour.Black
+	size = UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2
+	y = UI.OPTION_MARGIN/2/2
+	x = UI.OPTION_MARGIN/2/2
 
 	draw(atom, ctx) {
 		return

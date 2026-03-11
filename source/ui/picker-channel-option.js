@@ -2,17 +2,18 @@
 // PICKER CHANNEL OPTION   //
 //=========================//
 class PickerChannelOption extends Atom {
+	height = UI.CHANNEL_HEIGHT
+	width = UI.SQUARE_SIZE
+	hasBorder = true
+	colourTicker = Infinity
+	colours = [999]
+	colourId = 0
+	dcolourId = 1
+
 	constructor(element = {}) {
-		super({
-			height: UI.CHANNEL_HEIGHT,
-			width: UI.SQUARE_SIZE,
-			hasBorder: true,
-			colourTicker: Infinity,
-			colours: [999],
-			colourId: 0,
-			dcolourId: 1,
-			...element,
-		})
+		super()
+		Object.assign(this, element)
+		this.construct(this)
 	}
 
 	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
