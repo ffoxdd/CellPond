@@ -114,6 +114,7 @@ function loadCellPond() {
 		readScript("libraries/lz-string.js"),
 		readScript("source/colour.js"),
 		readScript("source/camera.js"),
+		readScript("source/atom.js"),
 		readScript("source/cell.js"),
 		coreSource,
 		readScript("source/dragon.js"),

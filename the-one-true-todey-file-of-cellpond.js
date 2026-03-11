@@ -1128,7 +1128,7 @@ on.load(() => {
 		atom.dx *= COLOURTODE_FRICTION
 		atom.dy *= COLOURTODE_FRICTION
 
-		if (checkOffscreen && isAtomOffscreen(atom)) {
+		if (checkOffscreen && atom.isOffscreen()) {
 			atomRegistry.delete(atom)
 			return
 		}
@@ -1159,7 +1159,7 @@ on.load(() => {
 			const highlight = createChild(atom, HIGHLIGHT, {bottom: true})
 			highlight.hasBorder = true
 			highlight.colour = Colour.Grey
-			const {x, y} = getAtomPosition(highlightedAtom)
+			const {x, y} = highlightedAtom.getPosition()
 			highlight.x = x
 			highlight.y = y
 			highlight.width = highlightedAtom.width
@@ -1174,7 +1174,7 @@ on.load(() => {
 		colourTodeContext.clearRect(0, 0, colourTodeCanvas.width, colourTodeCanvas.height)
 		colourTodeContext.scale(CT_SCALE, CT_SCALE)
 		for (const atom of atomRegistry.atoms) {
-			drawAtom(atom, colourTodeContext)
+			atom.drawTree(colourTodeContext)
 		}
 		colourTodeContext.scale(1/CT_SCALE, 1/CT_SCALE)
 	}
@@ -1238,7 +1238,7 @@ on.load(() => {
 
 		atommove: (atom, mx, my) => {
 			if (!atom.grabbable) return
-			if (!isAtomOverlapping(atom, mx, my)) return
+			if (!atom.hitTest(mx, my)) return
 			if (Mouse.Left) {
 				grabAtom(atom, mx, my)
 				changeHandState(HAND.DRAGGING)
@@ -1322,7 +1322,7 @@ on.load(() => {
 			changeHandState(HAND.PENCILLING)
 		},
 		atommove: (atom, mx, my) => {
-			if (!isAtomOverlapping(atom, mx, my)) return
+			if (!atom.hitTest(mx, my)) return
 			if (atom.grabbable) changeHandState(HAND.HOVER)
 			else changeHandState(HAND.FREE)
 		},
@@ -1432,7 +1432,7 @@ on.load(() => {
 		},
 
 		atommove: (atom, x, y) => {
-			if (isAtomOverlapping(atom, x, y)) return
+			if (atom.hitTest(x, y)) return
 			const newAtom = atomRegistry.getAt(x, y)
 			if (newAtom !== undefined) {
 				return
@@ -1732,6 +1732,7 @@ on.load(() => {
 			this.baseParent = {
 				x: 0,
 				y: 0,
+				getPosition() { return {x: this.x, y: this.y} },
 				grab: (atom, x, y, child = atom) => child,
 				touch: (atom, child = atom) => child,
 			}
@@ -1752,7 +1753,7 @@ on.load(() => {
 			for (let i = this.atoms.length-1; i >= 0; i--) {
 				const atom = this.atoms[i]
 				if (atom.justVisual) continue
-				const result = isAtomOverlapping(atom, x, y)
+				const result = atom.hitTest(x, y)
 				if (result !== undefined) return result
 			}
 		}
@@ -1789,87 +1790,6 @@ on.load(() => {
 
 	const atomRegistry = new AtomRegistry()
 
-	const makeAtom = ({
-			grabbable = true,
-			draggable = true,
-			click = () => {}, // Fires when you mouseup a click on the atom
-			rightClick = () => {},
-			drag = (a) => a, // Fires when you start dragging the atom
-			rightDrag = (a) => a,
-			move = () => {}, // Fires when you start or continue dragging the atom
-			drop = () => {}, // Fires when you let go of the atom after a drag
-			draw = () => {},
-			update = () => {},
-			offscreen = () => false,
-			overlaps = () => false,
-			grab = (a) => a, // Fires when you start a clock on the atom - returns atom that gets dragged
-			touch = (a) => a, // Fires when you start a click on the atom - returns atom that handles the click
-			highlighter = false,
-			hover = () => {},
-			place = () => {},
-			x = 0,
-			y = 0,
-			dx = 0,
-			dy = 0,
-			maxX = Infinity,
-			minX = -Infinity,
-			maxY = Infinity,
-			minY = -Infinity,
-			size = 40,
-			colour = Colour.splash(999),
-			children = [],
-			parent = atomRegistry.baseParent,
-			width = size,
-			height = size,
-			construct = () => {},
-			hasInner = true,
-			...properties
-		} = {}, ...args) => {
-		const atom = {highlighter, place, hover, hasInner, move, drop, maxX, minX, maxY, minY, update, construct, draggable, width, height, touch, parent, children, draw, grabbable, click, drag, overlaps, offscreen, grab, x, y, dx, dy, size, colour, rightClick, rightDrag, ...properties}
-		atom.construct(atom, ...args)
-		return atom
-	}
-
-	const drawAtom = (atom, ctx) => {
-		for (const child of atom.children) {
-			if (child.behindParent) drawAtom(child, ctx)
-		}
-		if (atom.behindChildren) atom.draw(atom, ctx)
-		for (const child of atom.children) {
-			if (!child.behindParent) drawAtom(child, ctx)
-		}
-		if (!atom.behindChildren) atom.draw(atom, ctx)
-	}
-
-	// including children
-	const isAtomOffscreen = (atom) => {
-		for (const child of atom.children) {
-			if (!isAtomOffscreen(child)) return false
-		}
-		return atom.offscreen(atom)
-	}
-
-	// including children
-	const isAtomOverlapping = (atom, x, y) => {
-
-		if (!atom.behindChildren && atom.overlaps(atom, x, y)) return atom
-
-		for (let i = atom.children.length-1; i >= 0; i--) {
-			const child = atom.children[i]
-			if (child.behindParent) continue
-			const result = isAtomOverlapping(child, x, y)
-			if (result) return result
-		}
-
-		if (atom.behindChildren && atom.overlaps(atom, x, y)) return atom
-
-		for (let i = atom.children.length-1; i >= 0; i--) {
-			const child = atom.children[i]
-			if (!child.behindParent) continue
-			const result = isAtomOverlapping(child, x, y)
-			if (result) return result
-		}
-	}
 
 	const grabAtom = (atom, x, y) => {
 
@@ -1894,7 +1814,7 @@ on.load(() => {
 		}
 
 		hand.content = grabbed
-		const {x: grabbedX, y: grabbedY} = getAtomPosition(grabbed, {forceAbsolute: true})
+		const {x: grabbedX, y: grabbedY} = grabbed.getPosition({forceAbsolute: true})
 		hand.offset.x = grabbedX - x * DPR
 		hand.offset.y = grabbedY - y * DPR
 		grabbed.dx = 0
@@ -1906,20 +1826,13 @@ on.load(() => {
 		return grabbed
 	}
 
-	const getAtomPosition = (atom, {forceAbsolute = false} = {}) => {
-		const {x, y} = atom
-		if (forceAbsolute) return {x, y}
-		if (atom.parent === undefined) return {x, y}
-		if (atom.hasAbsolutePosition) return {x, y}
-		const {x: px, y: py} = getAtomPosition(atom.parent)
-		return {x: x+px, y: y+py}
-	}
+
 
 	//=======================//
 	// COLOURTODE - CHILDREN //
 	//=======================//
 	const createChild = (parent, element, {bottom = false} = {}) => {
-		const child = makeAtom(element)
+		const child = new Atom(element)
 		if (!bottom) parent.children.push(child)
 		else parent.children.unshift(child)
 		child.parent = parent
@@ -1951,7 +1864,7 @@ on.load(() => {
 
 	const freeChild = (parent, child) => {
 		if (hand.content === child) {
-			const {x, y} = getAtomPosition(parent)
+			const {x, y} = parent.getPosition()
 			hand.offset.x += x
 			hand.offset.y += y
 		}
@@ -1979,7 +1892,7 @@ on.load(() => {
 
 	const COLOURTODE_RECTANGLE = {
 		draw: (atom, ctx) => {
-			let {x, y} = getAtomPosition(atom)
+			let {x, y} = atom.getPosition()
 
 			let X = Math.round(x)
 			let Y = Math.round(y)
@@ -2051,7 +1964,7 @@ on.load(() => {
 
 		},
 		offscreen: (atom) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			const left = x
 			const right = x + atom.width
 			const top = y
@@ -2063,7 +1976,7 @@ on.load(() => {
 			return false
 		},
 		overlaps: (atom, mx, my) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			let border = BORDER_THICKNESS
 			if (atom.isTool || atom.isSquare || atom.isTallRectangle) {
 				border *= 1.5
@@ -2084,7 +1997,7 @@ on.load(() => {
 
 	const CIRCLE = {
 		draw: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const X = x + atom.width/2
 			const Y = y + atom.height/2
@@ -2116,7 +2029,7 @@ on.load(() => {
 	const isCellAtomSpotFilled = (paddle, [sx, sy], slotted = false) => {
 		for (let cellAtom of paddle.cellAtoms) {
 			if (slotted) cellAtom = cellAtom.slot
-			const {x, y} = getAtomPosition(cellAtom)
+			const {x, y} = cellAtom.getPosition()
 			if (x === sx && y === sy) {
 				return true
 			}
@@ -2127,7 +2040,7 @@ on.load(() => {
 	const isCellAtomSlotFree = (paddle, [sx, sy], slotted = false) => {
 		for (let cellAtom of paddle.cellAtoms) {
 			if (slotted) cellAtom = cellAtom.slot
-			const {x, y} = getAtomPosition(cellAtom)
+			const {x, y} = cellAtom.getPosition()
 			if (x === sx && y === sy) {
 				if (cellAtom.isLeftSlot || cellAtom.isSlot) return true
 			}
@@ -2448,7 +2361,7 @@ on.load(() => {
 				}
 			}
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			atom.highlightedAtom = undefined
 
@@ -2473,7 +2386,7 @@ on.load(() => {
 							other = other.pickerPad
 						}
 						
-						const {x: ox, y: oy} = getAtomPosition(other)
+						const {x: ox, y: oy} = other.getPosition()
 						const oleft = ox
 						const oright = ox + other.width
 						const otop = oy
@@ -2508,7 +2421,7 @@ on.load(() => {
 
 					if (!paddle.expanded) continue
 
-					const {x: px, y: py} = getAtomPosition(paddle)
+					const {x: px, y: py} = paddle.getPosition()
 					const pleft = px
 					const pright = px + paddle.width
 					const ptop = py
@@ -2521,8 +2434,8 @@ on.load(() => {
 
 					if (paddle.cellAtoms.length === 0) {
 
-						const {x: dummyLeftX, y: dummyLeftY} = getAtomPosition(paddle.dummyLeft)
-						const {x: dummyRightX, y: dummyRightY} = getAtomPosition(paddle.dummyRight)
+						const {x: dummyLeftX, y: dummyLeftY} = paddle.dummyLeft.getPosition()
+						const {x: dummyRightX, y: dummyRightY} = paddle.dummyRight.getPosition()
 
 						if (paddle.rightTriangle === undefined) {
 							atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
@@ -2568,7 +2481,7 @@ on.load(() => {
 
 						for (const catom of paddle.cellAtoms) {
 							const cellAtom = catom.slot
-							const {x: cx, y: cy} = getAtomPosition(cellAtom)
+							const {x: cx, y: cy} = cellAtom.getPosition()
 							const cleft = cx
 							const cright = cx + cellAtom.width
 							const ctop = cy
@@ -2616,7 +2529,7 @@ on.load(() => {
 							}
 						}
 
-						const {x: cx, y: cy} = getAtomPosition(winningCellAtom)
+						const {x: cx, y: cy} = winningCellAtom.getPosition()
 
 						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
 						if (winningSide === "left" || winningSide === "right") {
@@ -2648,7 +2561,7 @@ on.load(() => {
 						if (winningSide === "slot") {
 							atom.highlight.width = COLOURTODE_SQUARE.size
 							atom.highlight.height = COLOURTODE_SQUARE.size
-							const {x: cx, y: cy} = getAtomPosition(winningCellAtom)
+							const {x: cx, y: cy} = winningCellAtom.getPosition()
 							atom.highlight.x = cx
 							atom.highlight.y = cy
 							atom.highlight.hasBorder = true
@@ -2668,7 +2581,7 @@ on.load(() => {
 						let winningCellAtom = undefined
 
 						for (const cellAtom of paddle.cellAtoms) {
-							const {x: cx, y: cy} = getAtomPosition(cellAtom)
+							const {x: cx, y: cy} = cellAtom.getPosition()
 							const cleft = cx
 							const cright = cx + cellAtom.width
 							const ctop = cy
@@ -2716,7 +2629,7 @@ on.load(() => {
 							}
 						}
 
-						const {x: cx, y: cy} = getAtomPosition(winningCellAtom)
+						const {x: cx, y: cy} = winningCellAtom.getPosition()
 
 						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
 						if (winningSide === "left" || winningSide === "right") {
@@ -2748,7 +2661,7 @@ on.load(() => {
 						if (winningSide === "slot") {
 							atom.highlight.width = COLOURTODE_SQUARE.size
 							atom.highlight.height = COLOURTODE_SQUARE.size
-							const {x: cx, y: cy} = getAtomPosition(winningCellAtom)
+							const {x: cx, y: cy} = winningCellAtom.getPosition()
 							atom.highlight.x = cx
 							atom.highlight.y = cy
 							atom.highlight.hasBorder = true
@@ -3031,7 +2944,7 @@ on.load(() => {
 		clone: (atom) => {
 			const newAtom = makeSquareFromValue(atom.value)
 			
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			newAtom.x = x
 			newAtom.y = y
 
@@ -3335,7 +3248,7 @@ on.load(() => {
 		width: COLOURTODE_SQUARE.size * Math.sqrt(3)/2, //the only reason width is set is for the menu spacing
 		draw: (atom, ctx) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			let size = atom.size
 			if (atom.isTool) size -= BORDER_THICKNESS*2.5
@@ -3372,7 +3285,7 @@ on.load(() => {
 		},
 		overlaps: (atom, x, y) => {
 			
-			const {x: ax, y: ay} = getAtomPosition(atom)
+			const {x: ax, y: ay} = atom.getPosition()
 
 			const height = atom.size
 			const width = atom.size * Math.sqrt(3)/2
@@ -3391,7 +3304,7 @@ on.load(() => {
 		},
 		offscreen: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const height = atom.size
 			const width = atom.size * Math.sqrt(3)/2
@@ -3413,7 +3326,7 @@ on.load(() => {
 		size: COLOURTODE_SQUARE.size,
 		draw: (atom, ctx) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3442,7 +3355,7 @@ on.load(() => {
 		},
 		overlaps: (atom, x, y) => {
 			
-			const {x: ax, y: ay} = getAtomPosition(atom)
+			const {x: ax, y: ay} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3461,7 +3374,7 @@ on.load(() => {
 		},
 		offscreen: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3483,7 +3396,7 @@ on.load(() => {
 		size: COLOURTODE_SQUARE.size,
 		draw: (atom, ctx) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3512,7 +3425,7 @@ on.load(() => {
 		},
 		overlaps: (atom, x, y) => {
 			
-			const {x: ax, y: ay} = getAtomPosition(atom)
+			const {x: ax, y: ay} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3531,7 +3444,7 @@ on.load(() => {
 		},
 		offscreen: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const width = atom.size
 			const height = atom.size * Math.sqrt(3)/2
@@ -3555,7 +3468,7 @@ on.load(() => {
 		width: COLOURTODE_SQUARE.size * Math.sqrt(3)/2, //the only reason width is set is for the menu spacing
 		draw: (atom, ctx) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			let size = atom.size
 			if (atom.isTool) size -= BORDER_THICKNESS*2.5
@@ -3592,7 +3505,7 @@ on.load(() => {
 		},
 		overlaps: (atom, x, y) => {
 			
-			const {x: ax, y: ay} = getAtomPosition(atom)
+			const {x: ax, y: ay} = atom.getPosition()
 
 			const height = atom.size
 			const width = atom.size * Math.sqrt(3)/2
@@ -3611,7 +3524,7 @@ on.load(() => {
 		},
 		offscreen: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const height = atom.size
 			const width = atom.size * Math.sqrt(3)/2
@@ -3693,7 +3606,7 @@ on.load(() => {
 			if (atom.direction === "right") {
 
 				// Get my bounds
-				const {x, y} = getAtomPosition(atom)
+				const {x, y} = atom.getPosition()
 				const left = x
 				const top = y
 				const right = x + atom.width
@@ -3707,7 +3620,7 @@ on.load(() => {
 					if (paddle.rightTriangle !== undefined) continue
 
 					// Get paddle bounds
-					const {x: px, y: py} = getAtomPosition(paddle)
+					const {x: px, y: py} = paddle.getPosition()
 					const pleft = px
 					const pright = px + paddle.width
 					const ptop = py
@@ -3727,7 +3640,7 @@ on.load(() => {
 			// FIND A SQUARE TO STAMP????
 			if (true) {
 				
-				const {x, y} = getAtomPosition(atom)
+				const {x, y} = atom.getPosition()
 				const left = x
 				const top = y
 				const right = x + atom.width
@@ -3737,7 +3650,7 @@ on.load(() => {
 				for (const other of others) {
 					if (!other.isSquare) continue
 					
-					const {x: px, y: py} = getAtomPosition(other)
+					const {x: px, y: py} = other.getPosition()
 					const pleft = px
 					const pright = px + other.width
 					const ptop = py
@@ -3762,7 +3675,7 @@ on.load(() => {
 					if (!other.isSquare) continue
 					if (!other.expanded) continue
 
-					const {x: px, y: py} = getAtomPosition(other.pickerPad)
+					const {x: px, y: py} = other.pickerPad.getPosition()
 					const pleft = px
 					const pright = px + other.pickerPad.width
 					const ptop = py
@@ -3775,7 +3688,7 @@ on.load(() => {
 
 					const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
 					if (slots.length === 0) continue
-					const {x: ax, y: ay} = getAtomPosition(other)
+					const {x: ax, y: ay} = other.getPosition()
 
 					for (const slot of slots) {
 						const slotId = CHANNEL_IDS[slot]
@@ -3791,7 +3704,7 @@ on.load(() => {
 
 					if (winningSquare !== undefined) {
 
-						const {x: ax, y: ay} = getAtomPosition(winningSquare)
+						const {x: ax, y: ay} = winningSquare.getPosition()
 						const slotId = CHANNEL_IDS[winningSlot]
 
 						if (atom.highlight !== undefined) {
@@ -3911,9 +3824,9 @@ on.load(() => {
 
 		rightDraggable: true,
 		rightDrag: (atom) => {
-			const clone = makeAtom(COLOURTODE_TRIANGLE)
+			const clone = new Atom(COLOURTODE_TRIANGLE)
 			clone.direction = atom.direction
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
 			clone.x = x
@@ -3946,7 +3859,7 @@ on.load(() => {
 
 			for (const cellAtom of paddle.cellAtoms) {
 				if (cellAtom.slotted !== undefined) {
-					const {x, y} = getAtomPosition(cellAtom.slotted)
+					const {x, y} = cellAtom.slotted.getPosition()
 					freeChild(paddle, cellAtom.slotted)
 					cellAtom.slotted.cellAtom = undefined
 					cellAtom.slotted.attached = false
@@ -4019,9 +3932,9 @@ on.load(() => {
 
 		rightDraggable: true,
 		rightDrag: (atom) => {
-			const clone = makeAtom(COLOURTODE_PICKER_CHANNEL)
+			const clone = new Atom(COLOURTODE_PICKER_CHANNEL)
 			atomRegistry.register(clone)
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
 			clone.value = atom.value.clone()
@@ -4218,7 +4131,7 @@ on.load(() => {
 			atom.highlightedAtom = undefined
 			if (hand.content === atom && hand.state === HAND.DRAGGING) {
 
-				const {x, y} = getAtomPosition(atom)
+				const {x, y} = atom.getPosition()
 				let left = x
 				let top = y
 				let right = x + atom.width
@@ -4252,7 +4165,7 @@ on.load(() => {
 							if (!endAtom.expanded) continue
 	
 							const slot = endAtom[slotName]
-							const {x: px, y: py} = getAtomPosition(slot)
+							const {x: px, y: py} = slot.getPosition()
 							const pleft = px
 							const pright = px + slot.width
 							const ptop = py
@@ -4273,7 +4186,7 @@ on.load(() => {
 						if (!square.isSquare) continue
 						if (!square.expanded) continue
 
-						const {x: px, y: py} = getAtomPosition(square.pickerPad)
+						const {x: px, y: py} = square.pickerPad.getPosition()
 
 						const pleft = px
 						const pright = px + square.pickerPad.width
@@ -4288,7 +4201,7 @@ on.load(() => {
 						const slots = ["red", "green", "blue"].filter(slot => square[slot] === undefined)
 						if (slots.length === 0) continue
 						
-						const {x: ax, y: ay} = getAtomPosition(square)
+						const {x: ax, y: ay} = square.getPosition()
 
 						for (const slot of slots) {
 							const slotId = CHANNEL_IDS[slot]
@@ -4307,7 +4220,7 @@ on.load(() => {
 
 				if (winningSquare !== undefined) {
 
-					const {x: ax, y: ay} = getAtomPosition(winningSquare)
+					const {x: ax, y: ay} = winningSquare.getPosition()
 					const slotId = CHANNEL_IDS[winningSlot]
 
 					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
@@ -4318,7 +4231,7 @@ on.load(() => {
 					atom.highlightedAtom = winningSquare
 					atom.highlightedSlot = winningSlot
 				} else if (atom.highlightedAtom) {
-					const {x: ax, y: ay} = getAtomPosition(atom.highlightedAtom)
+					const {x: ax, y: ay} = atom.highlightedAtom.getPosition()
 
 					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
 					atom.highlight.hasBorder = true
@@ -4574,7 +4487,7 @@ on.load(() => {
 		overlaps: COLOURTODE_RECTANGLE.overlaps,
 		offscreen: COLOURTODE_RECTANGLE.offscreen,
 		draw: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			const {width, height} = atom
 			let points = [
 				[x + width*MINUS_MAGIC_NUMBER*2, y],
@@ -4749,14 +4662,14 @@ on.load(() => {
 		},
 		hover: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			let left = x
 			let top = y
 			let right = x + atom.width
 			let bottom = y + atom.height
 
 			for (const paddle of paddles) {
-				const {x: px, y: py} = getAtomPosition(paddle)
+				const {x: px, y: py} = paddle.getPosition()
 				const pright = px + paddle.width
 				const ptop = py
 				const pbottom = py + paddle.height
@@ -4833,14 +4746,14 @@ on.load(() => {
 			return clone
 		},
 		clone: (atom) => {
-			const clone = makeAtom(COLOURTODE_HEXAGON)
+			const clone = new Atom(COLOURTODE_HEXAGON)
 			for (let i = 0; i < 6; i++) {
 				clone.ons[i] = atom.ons[i]
 			}
 			if (atom.expanded) {
 				clone.expand(clone)
 			}
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			clone.x = x
 			clone.y = y
 			return clone
@@ -4930,7 +4843,7 @@ on.load(() => {
 		height: COLOURTODE_SQUARE.size / 3,
 		draw: (atom, ctx) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			const {width, height} = atom
 
 			const path = new Path2D()
@@ -4959,7 +4872,7 @@ on.load(() => {
 
 	const COLOURTODE_CHANNEL_SELECTION_END = {
 		draw: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			
 
@@ -5144,9 +5057,9 @@ on.load(() => {
 		highlighter: true,
 		rightDraggable: true,
 		rightDrag: (atom) => {
-			const clone = makeAtom(COLOURTODE_TALL_RECTANGLE)
+			const clone = new Atom(COLOURTODE_TALL_RECTANGLE)
 			atomRegistry.register(clone)
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
 			clone.variable = atom.variable
@@ -5191,7 +5104,7 @@ on.load(() => {
 		},
 		hover: (atom) => {
 
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			const left = x
 			const top = y
 			const right = x + atom.width
@@ -5220,7 +5133,7 @@ on.load(() => {
 						if (!endAtom.expanded) continue
 
 						const slot = endAtom[slotName]
-						const {x: px, y: py} = getAtomPosition(slot)
+						const {x: px, y: py} = slot.getPosition()
 						const pleft = px
 						const pright = px + slot.width
 						const ptop = py
@@ -5241,7 +5154,7 @@ on.load(() => {
 				if (!other.isSquare) continue
 				if (!other.expanded) continue
 
-				const {x: px, y: py} = getAtomPosition(other.pickerPad)
+				const {x: px, y: py} = other.pickerPad.getPosition()
 				const pleft = px
 				const pright = px + other.pickerPad.width
 				const ptop = py
@@ -5254,7 +5167,7 @@ on.load(() => {
 
 				const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
 				if (slots.length === 0) continue
-				const {x: ax, y: ay} = getAtomPosition(other)
+				const {x: ax, y: ay} = other.getPosition()
 
 				for (const slot of slots) {
 					const slotId = CHANNEL_IDS[slot]
@@ -5270,7 +5183,7 @@ on.load(() => {
 
 				if (winningSquare !== undefined) {
 
-					const {x: ax, y: ay} = getAtomPosition(winningSquare)
+					const {x: ax, y: ay} = winningSquare.getPosition()
 					const slotId = CHANNEL_IDS[winningSlot]
 
 					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
@@ -5315,7 +5228,7 @@ on.load(() => {
 			atomRegistry.delete(atom)
 		},
 		draw: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			let size = atom.size
 
@@ -5704,7 +5617,7 @@ on.load(() => {
 
 		drag: (paddle, x, y) => {
 			if (false && paddle.pinhole.locked) {
-				const square = makeAtom(COLOURTODE_SQUARE)
+				const square = new Atom(COLOURTODE_SQUARE)
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
 				const cells = makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
@@ -5741,7 +5654,7 @@ on.load(() => {
 			let cellAtoms = paddle.cellAtoms
 			if (cellAtoms.length === 0) {
 				
-				const square = makeAtom(COLOURTODE_SQUARE)
+				const square = new Atom(COLOURTODE_SQUARE)
 				hand.offset.x = -square.width/2
 				hand.offset.y = -square.height/2
 				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
@@ -5762,7 +5675,7 @@ on.load(() => {
 				square.update(square)
 				return square
 			}
-			const square = makeAtom(COLOURTODE_SQUARE)
+			const square = new Atom(COLOURTODE_SQUARE)
 			hand.offset.x = -square.width/2
 			hand.offset.y = -square.height/2
 			const cells = makeDiagramCellsFromCellAtoms(cellAtoms)
@@ -5800,7 +5713,7 @@ on.load(() => {
 
 			if (!atom.visible) return
 			
-			const [x, y] = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const left = x
 			const right = x + atom.width
@@ -6487,7 +6400,7 @@ on.load(() => {
 	}
 
 	const createPaddle = () => {
-		const paddle = makeAtom(PADDLE)
+		const paddle = new Atom(PADDLE)
 		paddles.push(paddle)
 		positionPaddles()
 		atomRegistry.register(paddle)
@@ -6651,7 +6564,7 @@ on.load(() => {
 		size: COLOURTODE_SQUARE.size,
 		update: (atom) => {
 			
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const id = atomRegistry.atoms.indexOf(atom)
 			const left = x
@@ -6661,7 +6574,7 @@ on.load(() => {
 
 			if (hand.content === atom) for (const paddle of paddles) {
 				const pid = atomRegistry.atoms.indexOf(paddle)
-				const {x: px, y: py} = getAtomPosition(paddle)
+				const {x: px, y: py} = paddle.getPosition()
 				const pright = px + paddle.width
 				const ptop = py
 				const pbottom = py + paddle.height
@@ -6732,9 +6645,9 @@ on.load(() => {
 
 		rightDraggable: true,
 		rightDrag: (atom) => {
-			const clone = makeAtom(SYMMETRY_CIRCLE)
+			const clone = new Atom(SYMMETRY_CIRCLE)
 			clone.value = atom.value
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 			hand.offset.x -= atom.x - x
 			hand.offset.y -= atom.y - y
 			clone.x = x
@@ -6912,7 +6825,7 @@ on.load(() => {
 			atom.drawX(atom, ctx)
 		},
 		drawX: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const W = (atom.size)
 			const H = (BORDER_THICKNESS*1.0)
@@ -6953,7 +6866,7 @@ on.load(() => {
 			atom.drawY(atom, ctx)
 		},
 		drawY: (atom, ctx, height = atom.size, offset = 0) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			const W = (BORDER_THICKNESS*1.0)
 			const H = (height)
@@ -6994,7 +6907,7 @@ on.load(() => {
 			atom.drawR(atom, ctx)
 		},
 		drawR: (atom, ctx) => {
-			const {x, y} = getAtomPosition(atom)
+			const {x, y} = atom.getPosition()
 
 			let X = (x + atom.size/2)
 			let Y = (y + atom.size/2)
@@ -7037,7 +6950,7 @@ on.load(() => {
 	//====================//
 	const makeSquareFromValue = (value) => {
 
-		const newAtom = makeAtom({...COLOURTODE_SQUARE})
+		const newAtom = new Atom({...COLOURTODE_SQUARE})
 		newAtom.value = DragonArray.cloneContent(value)
 
 		if (newAtom.value !== undefined) {
@@ -7058,7 +6971,7 @@ on.load(() => {
 				if (channel === undefined) continue
 				if (channel.variable === undefined) continue
 				
-				const triangle = makeAtom(COLOURTODE_TRIANGLE)
+				const triangle = new Atom(COLOURTODE_TRIANGLE)
 				newAtom.variableAtoms[i] = triangle
 				triangle.highlightedSlot = CHANNEL_NAMES[i]
 				triangle.channelId = i
@@ -7112,7 +7025,7 @@ on.load(() => {
 				return newAtom
 			}
 
-			const newAtom = makeAtom({...atom.element, x: atom.x, y: atom.y})
+			const newAtom = new Atom({...atom.element, x: atom.x, y: atom.y})
 			atomRegistry.register(newAtom)
 
 			if (newAtom.value !== undefined) {
@@ -7134,7 +7047,7 @@ on.load(() => {
 		}
 		y += BORDER_THICKNESS
 
-		const atom = makeAtom({...COLOURTODE_TOOL, width, height, size, x: Math.round(menuRight), y, element})
+		const atom = new Atom({...COLOURTODE_TOOL, width, height, size, x: Math.round(menuRight), y, element})
 		atom.menuId = menuId
 		menuId++
 		atom.attached = true
@@ -7326,7 +7239,7 @@ on.load(() => {
 				}
 				loadedColour = true
 			}
-			const square = v.isLeftSlot ? makeAtom(SLOT) : makeSquareFromValue(v.value)
+			const square = v.isLeftSlot ? new Atom(SLOT) : makeSquareFromValue(v.value)
 			square.isLeftSlot = v.isLeftSlot
 			atomRegistry.register(square)
 			giveChild(paddle, square)
