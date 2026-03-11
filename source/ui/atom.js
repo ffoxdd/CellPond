@@ -28,9 +28,7 @@ class Atom {
 	get height() { return this._height !== undefined ? this._height : this.size }
 	set height(v) { this._height = v }
 
-	constructor(element) {
-		if (element !== undefined) Object.assign(this, element)
-	}
+	constructor() {}
 
 	// === Interface methods (override in concrete types) ===
 	click() {}
