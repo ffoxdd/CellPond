@@ -99,7 +99,7 @@ class SymmetryCircle extends Atom {
 
 						paddle.hasSymmetry = true
 						paddle.symmetryCircle = atom
-						UI.updatePaddleSize(paddle)
+						UI.emit("paddleSizeChanged",paddle)
 
 						atom.dx = 0
 						atom.dy = 0
@@ -115,7 +115,7 @@ class SymmetryCircle extends Atom {
 					UI.freeChild(paddle, atom)
 					paddle.hasSymmetry = false
 					paddle.symmetryCircle = undefined
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				}
 
 				return atom

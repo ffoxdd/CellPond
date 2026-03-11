@@ -3,7 +3,7 @@
 //====================//
 class ColourtodeSquare extends Atom {
 	static touchFn(atom) {
-		UI.setBrushColour(atom.value)
+		UI.emit("brushColourChanged",atom.value)
 		return atom
 	}
 
@@ -59,7 +59,7 @@ class ColourtodeSquare extends Atom {
 			overlaps: Rectangle.overlapsFn,
 			offscreen: Rectangle.offscreenFn,
 			touch: (atom) => {
-				UI.setBrushColour(atom.value)
+				UI.emit("brushColourChanged",atom.value)
 				return atom
 			},
 			click: (atom) => {
@@ -89,16 +89,16 @@ class ColourtodeSquare extends Atom {
 					atom.unexpand(atom)
 				}
 
-				UI.setBrushColour(atom.value)
+				UI.emit("brushColourChanged",atom.value)
 			},
 
 			expand: (atom) => {
 				atom.expanded = true
 				atom.createPicker(atom)
 				if (atom.value.channels.some(v => v === undefined)) {
-					// UI.unlockMenuTool("hexagon")
-					// UI.unlockMenuTool("wide_rectangle")
-					UI.unlockMenuTool("triangle")
+					// UI.emit("menuToolUnlock","hexagon")
+					// UI.emit("menuToolUnlock","wide_rectangle")
+					UI.emit("menuToolUnlock","triangle")
 				}
 			},
 
@@ -243,17 +243,13 @@ class ColourtodeSquare extends Atom {
 
 				if (atom.parent !== UI.atomRegistry.baseParent) {
 					const paddle = atom.parent
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 				}
 
 				const brushDiagramCell = new DiagramCell({content: atom.value})
 				state.brush.colour = new Diagram({left: [brushDiagramCell]})
 
-				UI.squareTool.toolbarNeedsColourUpdate = true
-				UI.triangleTool.toolbarNeedsColourUpdate = true
-				UI.circleTool.toolbarNeedsColourUpdate = true
-				// wideRectangleTool.toolbarNeedsColourUpdate = true
-				UI.tallRectangleTool.toolbarNeedsColourUpdate = true
+				UI.emit("toolbarColourChanged")
 
 			},
 
@@ -708,7 +704,7 @@ class ColourtodeSquare extends Atom {
 							UI.giveChild(paddle, atom)
 						}
 
-						UI.updatePaddleSize(paddle)
+						UI.emit("paddleSizeChanged",paddle)
 					}
 					else if (atom.highlightedAtom.isSlot && atom.highlightedSide === "slot") {
 						const slot = atom.highlightedAtom
@@ -723,7 +719,7 @@ class ColourtodeSquare extends Atom {
 						atom.cellAtom = slot.cellAtom
 						atom.slottee = true
 
-						UI.updatePaddleSize(slot.parent)
+						UI.emit("paddleSizeChanged",slot.parent)
 					}
 					else if (atom.highlightedAtom.isLeftSlot && atom.highlightedSide === "slot") {
 						const slot = atom.highlightedAtom
@@ -743,7 +739,7 @@ class ColourtodeSquare extends Atom {
 							slot.slotted.cellAtom = atom
 						}
 						UI.giveChild(paddle, atom)
-						UI.updatePaddleRule(paddle)
+						UI.emit("paddleRuleChanged",paddle)
 						UI.deleteChild(paddle, slot)
 
 					}
@@ -787,7 +783,7 @@ class ColourtodeSquare extends Atom {
 						atom.slottee = true
 						atom.dx = 0
 						atom.dy = 0
-						UI.updatePaddleSize(paddle)
+						UI.emit("paddleSizeChanged",paddle)
 					}
 					else if ((atom.highlightedAtom.isLeftSlot || atom.highlightedAtom.isSquare) && atom.highlightedAtom.parent.isPaddle) {
 						const square = atom.highlightedAtom
@@ -820,7 +816,7 @@ class ColourtodeSquare extends Atom {
 
 						atom.dx = 0
 						atom.dy = 0
-						UI.updatePaddleSize(paddle)
+						UI.emit("paddleSizeChanged",paddle)
 
 					}
 					else {
@@ -849,7 +845,7 @@ class ColourtodeSquare extends Atom {
 						joinee.needsColoursUpdate = true
 						joinee.colourTicker = Infinity
 
-						UI.setBrushColour(joinee.value)
+						UI.emit("brushColourChanged",joinee.value)
 
 					}
 
@@ -946,7 +942,7 @@ class ColourtodeSquare extends Atom {
 				UI.hand.offset.y -= atom.y - newAtom.y
 
 				UI.atomRegistry.register(newAtom)
-				UI.setBrushColour(newAtom.value)
+				UI.emit("brushColourChanged",newAtom.value)
 
 				return newAtom
 			},
@@ -986,7 +982,7 @@ class ColourtodeSquare extends Atom {
 							paddle.cellAtoms.splice(id, 1)
 						}
 						atom.cellAtom = undefined
-						UI.updatePaddleSize(paddle)
+						UI.emit("paddleSizeChanged",paddle)
 						return atom
 					}
 
@@ -1009,7 +1005,7 @@ class ColourtodeSquare extends Atom {
 						dummy.slotted.cellAtom = dummy
 						atom.slotted = undefined
 					}
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 
 				}
 

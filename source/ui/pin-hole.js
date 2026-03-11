@@ -37,7 +37,7 @@ class PinHole extends Atom {
 					handle.draggable = true
 					paddle.draggable = true
 					atom.draggable = true
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 				}
 
 				else {
@@ -64,7 +64,7 @@ class PinHole extends Atom {
 						paddle.grabbable = false
 						paddle.draggable = false
 					}
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 				}
 			},
 			grab: (atom) => atom.parent.parent,

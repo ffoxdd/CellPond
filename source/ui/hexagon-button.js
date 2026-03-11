@@ -32,7 +32,7 @@ class HexagonButton extends Atom {
 
 				if (hexagon.parent.isPaddle) {
 					const paddle = hexagon.parent
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				} else if (hexagon.parent.isSquare) {
 					const square = hexagon.parent
 					hexagon.updateValue(hexagon)

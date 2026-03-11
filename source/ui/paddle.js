@@ -41,7 +41,7 @@ class Paddle extends Atom {
 				paddle.dummyRight = UI.createChild(paddle, new Slot())
 				paddle.dummyRight.visible = false
 
-				UI.updatePaddleSize(paddle)
+				UI.emit("paddleSizeChanged",paddle)
 
 			},
 
@@ -58,19 +58,19 @@ class Paddle extends Atom {
 				if (distanceFromMax < distanceFromMin) {
 					paddle.x = paddle.maxX
 					paddle.expanded = true
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 
 					if (UI.paddles.last === paddle) {
-						UI.createPaddle()
+						UI.emit("paddleCreate")
 					}
 
 				} else {
 					paddle.x = paddle.minX
 					paddle.expanded = false
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 
 					if (UI.paddles.last !== paddle) {
-						UI.deletePaddle(paddle)
+						UI.emit("paddleDelete", paddle)
 					}
 				}
 				paddle.dx = 0
@@ -79,7 +79,7 @@ class Paddle extends Atom {
 			click: (paddle) => {
 				const cells = UI.makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
 				const diagram = new Diagram({left: cells})
-				UI.setBrushColour(diagram)
+				UI.emit("brushColourChanged",diagram)
 			},
 
 			drag: (paddle, x, y) => {
@@ -125,7 +125,7 @@ class Paddle extends Atom {
 					UI.hand.offset.x = -square.width/2
 					UI.hand.offset.y = -square.height/2
 					const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
-					UI.setBrushColour(leftClone)
+					UI.emit("brushColourChanged",leftClone)
 					UI.atomRegistry.register(square)
 					square.value = leftClone
 					square.update(square)
@@ -136,7 +136,7 @@ class Paddle extends Atom {
 					const square = cellAtoms[0].clone(cellAtoms[0])
 					UI.hand.offset.x = -square.width/2
 					UI.hand.offset.y = -square.height/2
-					UI.setBrushColour(leftClone)
+					UI.emit("brushColourChanged",leftClone)
 					UI.atomRegistry.register(square)
 					square.value = leftClone
 					square.update(square)
@@ -151,7 +151,7 @@ class Paddle extends Atom {
 
 				square.value = diagram
 				UI.atomRegistry.register(square)
-				UI.setBrushColour(diagram)
+				UI.emit("brushColourChanged",diagram)
 				square.update(square)
 				return square
 			},

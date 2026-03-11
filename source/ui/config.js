@@ -21,4 +21,7 @@ const UI = {
 	get MINUS_MAGIC_NUMBER() { return 1 - this.MAGIC_NUMBER },
 	get HIGHLIGHT_THICKNESS() { return this.BORDER_THICKNESS },
 	DPR: 1,
+	events: new EventBus(),
+	on(...args) { return this.events.on(...args) },
+	emit(...args) { return this.events.emit(...args) },
 }

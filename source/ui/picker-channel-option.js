@@ -72,7 +72,7 @@ class PickerChannelOption extends Atom {
 
 				if (parent.parent.isPaddle) {
 					const paddle = parent.parent
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				}
 			},
 

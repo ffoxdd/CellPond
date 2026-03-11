@@ -65,7 +65,7 @@ class ChannelSelectionEnd extends Atom {
 
 				if (atom.parent.parent.isPaddle) {
 					const paddle = atom.parent.parent
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				}
 			},
 			dragLockX: true,

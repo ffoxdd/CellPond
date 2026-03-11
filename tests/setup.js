@@ -112,6 +112,7 @@ function loadCellPond() {
 		"Habitat.install(this);",
 		readScript("libraries/colour.js"),
 		readScript("libraries/lz-string.js"),
+		readScript("source/event-bus.js"),
 		readScript("source/colour.js"),
 		readScript("source/camera.js"),
 		readScript("source/ui/config.js"),

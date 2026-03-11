@@ -220,7 +220,7 @@ class Hexagon extends Atom {
 					UI.giveChild(paddle, atom)
 
 					paddle.chance = atom
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 
 					atom.dx = 0
 					atom.dy = 0
@@ -231,7 +231,7 @@ class Hexagon extends Atom {
 					const paddle = atom.parent
 					UI.freeChild(paddle, atom)
 					paddle.chance = undefined
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				} else if (atom.parent.isSquare) {
 					const square = atom.parent
 					square[atom.variable] = undefined

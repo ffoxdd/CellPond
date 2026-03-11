@@ -24,7 +24,7 @@ class SymmetryToggleR extends Atom {
 				const circle = atom.parent
 				if (circle.parent !== UI.atomRegistry.baseParent) {
 					const paddle = circle.parent
-					UI.updatePaddleRule(paddle)
+					UI.emit("paddleRuleChanged",paddle)
 				}
 			},
 			value: false,

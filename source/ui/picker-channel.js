@@ -73,7 +73,7 @@ class PickerChannel extends Atom {
 					const paddle = atom.parent
 					paddle.chance = undefined
 					UI.freeChild(paddle, atom)
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 				}
 
 				return atom
@@ -372,13 +372,13 @@ class PickerChannel extends Atom {
 					UI.giveChild(paddle, atom)
 
 					paddle.chance = atom
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 
 					atom.dx = 0
 					atom.dy = 0
 				}
 
-				UI.unlockMenuTool("triangle")
+				UI.emit("menuToolUnlock","triangle")
 			},
 
 			click: (atom) => {

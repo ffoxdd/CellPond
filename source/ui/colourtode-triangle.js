@@ -23,7 +23,7 @@ class ColourtodeTriangle extends Atom {
 
 				if (atom.parent.isPaddle) {
 					atom.parent.pinhole.locked = !atom.parent.pinhole.locked
-					UI.updatePaddleRule(atom.parent)
+					UI.emit("paddleRuleChanged",atom.parent)
 					return
 				}
 
@@ -228,13 +228,10 @@ class ColourtodeTriangle extends Atom {
 					const diagramCell = new DiagramCell({content: square.value})
 					state.brush.colour = new Diagram({left: [diagramCell]})
 
-					UI.squareTool.toolbarNeedsColourUpdate = true
-					UI.circleTool.toolbarNeedsColourUpdate = true
-					UI.triangleTool.toolbarNeedsColourUpdate = true
-					UI.tallRectangleTool.toolbarNeedsColourUpdate = true
+					UI.emit("toolbarColourChanged")
 
 					if (square.parent.isPaddle) {
-						UI.updatePaddleRule(square.parent)
+						UI.emit("paddleRuleChanged",square.parent)
 					}
 					return
 				}
@@ -258,7 +255,7 @@ class ColourtodeTriangle extends Atom {
 						}
 					}
 
-					UI.updatePaddleSize(paddle)
+					UI.emit("paddleSizeChanged",paddle)
 
 					if (atom.expanded) {
 						atom.unexpand(atom)
@@ -266,7 +263,7 @@ class ColourtodeTriangle extends Atom {
 
 					atom.attached = true
 
-					UI.unlockMenuTool("circle")
+					UI.emit("menuToolUnlock","circle")
 				}
 
 			},
@@ -322,7 +319,7 @@ class ColourtodeTriangle extends Atom {
 
 				paddle.pinhole.locked = false
 
-				UI.updatePaddleSize(paddle)
+				UI.emit("paddleSizeChanged",paddle)
 				return atom
 			},
 

@@ -1644,7 +1644,7 @@ on.load(() => {
 			squareTool.toolbarNeedsColourUpdate = true
 		}
 	}
-	UI.setBrushColour = setBrushColour
+	UI.on("brushColourChanged", setBrushColour)
 
 
 	// Gradient functions defined in source/gradient.js
@@ -1863,7 +1863,7 @@ on.load(() => {
 		updatePaddleRule(paddle)
 		positionPaddles()
 	}
-	UI.updatePaddleSize = updatePaddleSize
+	UI.on("paddleSizeChanged", updatePaddleSize)
 
 	// Diagram cell utilities moved to source/dragon.js
 	UI.makeDiagramCellsFromCellAtoms = makeDiagramCellsFromCellAtoms
@@ -2039,9 +2039,9 @@ on.load(() => {
 	}
 
 	UI.PADDLE_HANDLE_SIZE = UI.PADDLE_X
-	UI.updatePaddleRule = updatePaddleRule
-	UI.createPaddle = createPaddle
-	UI.deletePaddle = deletePaddle
+	UI.on("paddleRuleChanged", updatePaddleRule)
+	UI.on("paddleCreate", createPaddle)
+	UI.on("paddleDelete", deletePaddle)
 
 
 	const SYMMETRY_TOGGLINGS = new Map()
@@ -2196,7 +2196,13 @@ on.load(() => {
 	UI.circleTool = circleTool
 	UI.tallRectangleTool = tallRectangleTool
 	UI.getAllBaseAtoms = getAllBaseAtoms
-	UI.unlockMenuTool = unlockMenuTool
+	UI.on("menuToolUnlock", unlockMenuTool)
+	UI.on("toolbarColourChanged", () => {
+		squareTool.toolbarNeedsColourUpdate = true
+		triangleTool.toolbarNeedsColourUpdate = true
+		circleTool.toolbarNeedsColourUpdate = true
+		tallRectangleTool.toolbarNeedsColourUpdate = true
+	})
 	createPaddle()
 	
 	squareTool.value = DragonArray.fromSplash(state.brush.colour)
