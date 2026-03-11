@@ -764,3 +764,364 @@ DRAGON_INSTRUCTION.merge = (cell) => {
 
 }
 DRAGON_INSTRUCTION.merge.type = "MERGE"
+
+//========================//
+// DIAGRAM CELL UTILITIES //
+//========================//
+const isDragonArraySingleColour = (array) => {
+	const splashes = array.getSplashSet()
+	return splashes.size === 1
+}
+
+const isDragonArrayEqual = (a, b) => {
+
+	for (let i = 0; i < 3; i++) {
+		const achannel = a.channels[i]
+		const bchannel = b.channels[i]
+		if (achannel === undefined && bchannel !== undefined) return false
+		if (achannel !== undefined && bchannel === undefined) return false
+		if (achannel === undefined && bchannel === undefined) continue
+		if (achannel.variable !== bchannel.variable) return false
+	}
+
+	const asplashes = a.getSplashes()
+	const bsplashes = b.getSplashes()
+
+	for (const asplash of asplashes) {
+		const id = bsplashes.indexOf(asplash)
+		if (id === -1) return false
+		bsplashes.splice(id, 1)
+	}
+
+	if (bsplashes.length > 0) return false
+
+	return true
+
+}
+
+const applyRangeStamp = (stampeds, value) => {
+	if (value.stamp) return //already got a manual stamp
+	const isSingle = isDragonArraySingleColour(value)
+	if (!isSingle) {
+		let newStamp = undefined
+		for (let i = 0; i < stampeds.length; i++) {
+			const stamped = stampeds[i]
+			if (isDragonArrayEqual(stamped, value)) {
+				newStamp = i
+				break
+			}
+		}
+		if (newStamp === undefined) {
+			newStamp = stampeds.length
+			stampeds.push(value)
+		}
+		value.stamp = newStamp.toString()
+	}
+}
+
+const getTopLeftOfCellAtoms = (cellAtoms) => {
+	let smallestX = Infinity
+	let smallestY = Infinity
+	let leader = undefined
+
+	for (const cellAtom of cellAtoms) {
+		if (cellAtom.x <= smallestX) {
+			if (cellAtom.y <= smallestY) {
+				leader = cellAtom
+				smallestX = cellAtom.x
+				smallestY = cellAtom.y
+			}
+		}
+	}
+
+	return leader
+}
+
+const getBounds = (cells) => {
+
+	let left = Infinity
+	let right = -Infinity
+	let top = Infinity
+	let bottom = -Infinity
+
+	for (const cell of cells) {
+
+		const cleft = cell.x
+		const cright = cell.x + cell.width
+		const ctop = cell.y
+		const cbottom = cell.y + cell.height
+
+		if (cleft < left) left = cleft
+		if (ctop < top) top = ctop
+		if (cright > right) right = cright
+		if (cbottom > bottom) bottom = cbottom
+	}
+
+
+	return [left, right, top, bottom]
+}
+
+const makeDiagramCellsFromCellAtoms = (cellAtoms) => {
+
+	const orderedCellAtoms = sortByPosition(cellAtoms)
+	const [left, , top, ] = getBounds(cellAtoms)
+	const diagramCells = []
+
+	for (const cellAtom of cellAtoms) {
+		const x = (cellAtom.x - left) / cellAtom.width
+		const y = (cellAtom.y - top) / cellAtom.height
+
+		const leftClone = DragonArray.cloneContent(cellAtom.value) //TODO: should act different for multis
+		const diagramCell = new DiagramCell({x, y, content: leftClone})
+		diagramCells.push(diagramCell)
+
+	}
+
+	return diagramCells
+
+}
+UI.makeDiagramCellsFromCellAtoms = makeDiagramCellsFromCellAtoms
+
+
+//this only works on nested diagrams where every cell is the same size
+const flattenAndFillDiagramCells = (diagramCells, fillContent) => {
+	const orderedCells = sortByPosition(diagramCells)
+	
+	const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
+	
+	const diagramWidth = diagramRight - diagramLeft
+	const diagramHeight = diagramBottom - diagramTop
+	const dimX = diagramCells.length == 0 ? 1 : Math.round(diagramWidth/orderedCells[0].width)
+	const dimY = diagramCells.length == 0 ? 1 : Math.round(diagramHeight/orderedCells[0].height)
+	const miniWidth = 1/dimX
+	const miniHeight = 1/dimY
+	
+	let addCount=0
+	const flatList = []
+	for (let x = 0; x < dimX; x++) {
+		for (let y = 0; y < dimY; y++) {				
+			const miniDiagramCell = orderedCells[addCount]
+			
+			let miniClone
+			
+			if (miniDiagramCell === undefined || ((miniDiagramCell.x-diagramLeft)/diagramWidth+128 != x/dimX+128) || ((miniDiagramCell.y-diagramTop)/diagramHeight+128 != y/dimY+128)){
+				if(fillContent){
+					miniClone = DragonArray.cloneContent(fillContent)
+				} else {
+					continue
+				}
+			} else { 
+				addCount++
+				if (miniDiagramCell.content.isDiagram){ //if mini-mini cells
+					for (const miniMiniCell of flattenAndFillDiagramCells(miniDiagramCell.content.left,fillContent)) {
+						const diagramCell = new DiagramCell({
+							x: (x + miniMiniCell.x)/dimX,
+							y: (y + miniMiniCell.y)/dimY,
+							width: miniWidth * miniMiniCell.width,
+							height: miniHeight * miniMiniCell.height,
+							content: miniMiniCell.content,
+						})
+						flatList.push(diagramCell)
+					}
+					continue
+				} else{
+					miniClone = DragonArray.cloneContent(miniDiagramCell.content)
+				}
+			}
+			
+			const diagramCell = new DiagramCell({
+				x: x/dimX,
+				y: y/dimY,
+				width: miniWidth,
+				height: miniHeight,
+				content: miniClone,
+			})
+			flatList.push(diagramCell)
+		}
+		
+	}
+	return flatList
+}
+
+
+
+//adds diagram to left assuming every cell is the same size
+const addDiagramCellsToLeftList = (diagramCells, list, stampeds, posX, posY, sizeX=1, sizeY=1) => {
+	//if empty list 
+	if (diagramCells.length == 0){
+		const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+		const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+		const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+		const miniClone = new DragonArray({channels: [red, green, blue]})
+		applyRangeStamp(stampeds, miniClone)
+			const diagramCell = new DiagramCell({
+				x: posX,
+				y: posY,
+				width: sizeX,
+				height: sizeY,
+				content: miniClone,
+				instruction: DRAGON_INSTRUCTION.recolour,
+			})
+		list.push(diagramCell)
+		return
+	}
+	
+	
+	let addCount = 0
+	const orderedMiniLeftCells = sortByPosition(diagramCells)
+	// get diagram dimensions
+	const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
+	const diagramWidth = diagramRight - diagramLeft
+	const diagramHeight = diagramBottom - diagramTop
+	const dimX = Math.round(diagramWidth/orderedMiniLeftCells[0].width)
+	const dimY = Math.round(diagramHeight/orderedMiniLeftCells[0].height)
+
+	
+	let miniCounts = {X: dimX, Y: dimY, total: 0}
+	// check for every mini cell
+	for (let x = 0; x < dimX; x++) {
+		for (let y = 0; y < dimY; y++) {				
+			const miniDiagramCell = orderedMiniLeftCells[addCount]
+			
+			const miniX = posX + x/dimX*sizeX
+			const miniY = posY + y/dimY*sizeY
+			const miniWidth = sizeX/dimX
+			const miniHeight = sizeY/dimY
+			
+			let miniClone
+			//fills in not filled spaces
+			if (miniDiagramCell === undefined || ((miniDiagramCell.x-diagramLeft)/diagramWidth+128 != x/dimX+128) || ((miniDiagramCell.y-diagramTop)/diagramHeight+128 != y/dimY+128)){
+				const red = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 0})
+				const green = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 1})
+				const blue = new DragonNumber({values: [true, true, true, true, true, true, true, true, true, true], channel: 2})
+				miniClone = new DragonArray({channels: [red, green, blue]})
+				
+			} else { 
+				addCount++
+				if (miniDiagramCell.content.isDiagram){ //if mini-mini cells
+					const miniMiniCounts = addDiagramCellsToLeftList(miniDiagramCell.content.left, list, stampeds, miniX, miniY, miniWidth, miniHeight)
+					if (miniMiniCounts){
+						miniCounts[x*dimY + y] = miniMiniCounts
+						miniCounts.total += miniMiniCounts.total-1
+					}
+					continue
+				} else{
+					miniClone = DragonArray.cloneContent(miniDiagramCell.content)
+				}
+			}
+			
+			applyRangeStamp(stampeds, miniClone)
+			const diagramCell = new DiagramCell({
+				x: miniX,
+				y: miniY,
+				width: miniWidth,
+				height: miniHeight,
+				content: miniClone,
+				instruction: DRAGON_INSTRUCTION.recolour,
+			})
+			list.push(diagramCell)
+		}
+	}
+	miniCounts.total+= dimX*dimY
+	return miniCounts
+}
+
+//adds diagram to right assuming every cell is the same size
+const addDiagramCellsToRightList = (diagramCells, list, stampeds, posX, posY, miniCounts={X: 1, Y: 1, total: 1}, sizeX=1, sizeY=1) => {
+	
+	//if empty cell fill with nothing(s)
+	if (diagramCells === undefined || diagramCells.length==0) {
+		for (let i = 0; i < miniCounts.total;i++) {
+			const nothingCell = new DiagramCell({
+				x: posX,
+				y: posY,
+				width: sizeX,
+				height: sizeY,
+				instruction: DRAGON_INSTRUCTION.nothing,
+			})
+			
+			list.push(nothingCell)
+		}
+		return
+	}
+	
+	const orderedMiniLeftCells = sortByPosition(diagramCells)
+	// get diagram dimensions
+	const [diagramLeft, diagramRight, diagramTop, diagramBottom] = getBounds(diagramCells)
+	const diagramWidth = diagramRight - diagramLeft
+	const diagramHeight = diagramBottom - diagramTop
+	const dimX = Math.round(diagramWidth/orderedMiniLeftCells[0].width)
+	const dimY = Math.round(diagramHeight/orderedMiniLeftCells[0].height)
+	
+	if(miniCounts.X != dimX || miniCounts.Y != dimY){ //left and right arent split the same
+		if (miniCounts.total > 1){ // merge if left is split
+			const mergeCell = new DiagramCell({
+					x: posX,
+					y: posY,
+					width: sizeX,
+					height: sizeY,
+					instruction: DRAGON_INSTRUCTION.merge,
+					splitX: 1,
+					splitY: miniCounts.total,//workaround to merge not evenly split cells
+			})
+			
+			list.push(mergeCell)
+		}
+
+		if (dimX * dimY != 1) { // split if rigth is split
+			const splitCell = new DiagramCell({
+				x: posX,
+				y: posY,
+				width: sizeX,
+				height: sizeY,
+				instruction: DRAGON_INSTRUCTION.split,
+				splitX: dimX,
+				splitY: dimY,
+			})
+
+			list.push(splitCell)
+		}
+		miniCounts={X: 1, Y: 1, total: 1} // after merge left is 1x1
+	}
+			
+	let addCount = 0
+	for (let x = 0; x < dimX; x++) {
+		for (let y = 0; y < dimY; y++) {				
+			const miniDiagramCell = orderedMiniLeftCells[addCount]
+			
+			const miniX = posX + x/dimX*sizeX
+			const miniY = posY + y/dimY*sizeY
+			const miniWidth = sizeX/dimX
+			const miniHeight = sizeY/dimY
+			
+			let miniClone
+			//fills in not filled spaces
+			if (miniDiagramCell === undefined || (dimX*dimY > 1) && (((miniDiagramCell.x-diagramLeft)/diagramWidth+128 != x/dimX+128) || ((miniDiagramCell.y-diagramTop)/diagramHeight+128 != y/dimY+128))){
+				addDiagramCellsToRightList(undefined, list, stampeds, miniX, miniY, miniCounts[x*dimY + y], miniWidth, miniHeight)
+				continue
+			} else if (miniDiagramCell.content.isDiagram) {//if mini-mini cells
+				addDiagramCellsToRightList(miniDiagramCell.content.left, list, stampeds, miniX, miniY, miniCounts[x*dimY + y], miniWidth, miniHeight)
+				
+			} else if (miniCounts[x*dimY + y] !== undefined && miniCounts[x*dimY + y].total > 1){ // cells of left diagram need to get merged
+				addDiagramCellsToRightList([miniDiagramCell], list, stampeds, miniX, miniY, miniCounts[x*dimY + y], miniWidth, miniHeight)
+				
+			} else { // left and right have same dimensions => recolour
+				miniClone = DragonArray.cloneContent(miniDiagramCell.content)
+				applyRangeStamp(stampeds, miniClone)
+				const diagramCell = new DiagramCell({
+					x: miniX,
+					y: miniY,
+					width: miniWidth,
+					height: miniHeight,
+					content: miniClone,
+					instruction: DRAGON_INSTRUCTION.recolour,
+				})
+				list.push(diagramCell)
+				
+			}
+			
+			addCount++
+			
+		}
+	}
+}
