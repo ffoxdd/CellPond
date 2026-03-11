@@ -151,6 +151,7 @@ function loadCellPond() {
 		readScript("source/ui/colourtode-triangle.js"),
 		readScript("source/ui/colourtode-square.js"),
 		readScript("source/ui/colourtode-tool.js"),
+		readScript("source/gradient.js"),
 		readScript("source/draw-queue.js"),
 		readScript("source/cell.js"),
 		coreSource,
