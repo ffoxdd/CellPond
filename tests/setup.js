@@ -149,6 +149,7 @@ function loadCellPond() {
 		readScript("source/ui/hexagon.js"),
 		readScript("source/ui/colourtode-triangle.js"),
 		readScript("source/ui/colourtode-square.js"),
+		readScript("source/ui/colourtode-tool.js"),
 		readScript("source/cell.js"),
 		coreSource,
 		readScript("source/dragon.js"),

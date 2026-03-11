@@ -2989,40 +2989,6 @@ on.load(() => {
 
 	let menuRight = 10
 
-	const COLOURTODE_TOOL = {
-		element: new ColourtodeSquare(),
-		draw: (atom, ctx) => {
-			if ((atom.previousBrushColour !== state.brush.colour) || atom.toolbarNeedsColourUpdate) {
-				atom.update(atom)
-			}
-			if (atom.unlocked) {
-				atom.element.draw(atom, ctx)
-			}
-		},
-		overlaps: (atom, x, y) => atom.element.overlaps(atom, x, y),
-		grab: (atom, x, y) => {
-			return atom
-		},
-		drag: (atom) => {
-
-			if (atom === squareTool) {
-				const newAtom = makeSquareFromValue(atom.value)
-				atomRegistry.register(newAtom)
-				return newAtom
-			}
-
-			const newAtom = new Atom({...atom.element, x: atom.x, y: atom.y})
-			atomRegistry.register(newAtom)
-
-			if (newAtom.value !== undefined) {
-				
-			}
-
-			return newAtom
-		},
-		cursor: () => "move",
-	}
-
 	let menuId = 0
 	const addMenuTool = (element, unlockName) => {
 		const {width = UI.SQUARE_SIZE, height = UI.SQUARE_SIZE, size} = element
@@ -3033,7 +2999,7 @@ on.load(() => {
 		}
 		y += BORDER_THICKNESS
 
-		const atom = new Atom({...COLOURTODE_TOOL, width, height, size, x: Math.round(menuRight), y, element})
+		const atom = new ColourtodeTool({width, height, size, x: Math.round(menuRight), y, element})
 		atom.menuId = menuId
 		menuId++
 		atom.attached = true
