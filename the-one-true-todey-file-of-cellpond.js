@@ -3123,345 +3123,7 @@ on.load(() => {
 	}
 
 	// Ctrl+F: trdef
-	const COLOURTODE_TRIANGLE = {
-		behindOtherChildren: true,
-		expanded: false,
-		draw: (atom, ctx) => {
-			if (atom.direction === "right") TriangleRight.drawFn(atom, ctx)
-			else if (atom.direction === "down") TriangleDown.drawFn(atom, ctx)
-			else if (atom.direction === "up") TriangleUp.drawFn(atom, ctx)
-			else if (atom.direction === "left") TriangleLeft.drawFn(atom, ctx)
-			else TriangleRight.drawFn(atom, ctx)
-		},
-		colour: Colour.splash(999),
-		overlaps: triangleOverlaps,
-		offscreen: triangleOffscreen,
-		size: COLOURTODE_SQUARE.size,
-		width: TriangleRight.DEFAULT_WIDTH,
-		direction: "right",
-		click: (atom) => {
-			
-			if (atom.parent.isPaddle) {
-				atom.parent.pinhole.locked = !atom.parent.pinhole.locked
-				updatePaddleRule(atom.parent)
-				return
-			}
 
-			if (atom.expanded) {
-				atom.unexpand(atom)
-			}
-			else {
-				atom.expand(atom)
-			}
-		},
-
-		expand: (atom) => {
-			atom.pad = createChild(atom, new TrianglePad())
-			atom.handle = createChild(atom, new TriangleHandle())
-			atom.expanded = true
-
-			atom.upPick = createChild(atom, new TrianglePickUp())
-			atom.downPick = createChild(atom, new TrianglePickDown())
-			
-			if (atom.direction === "up") atom.upPick.value = true
-			if (atom.direction === "down") atom.downPick.value = true
-		},
-
-		unexpand: (atom) => {
-			deleteChild(atom, atom.pad)
-			deleteChild(atom, atom.handle)
-			deleteChild(atom, atom.upPick)
-			deleteChild(atom, atom.downPick)
-			atom.expanded = false
-		},
-
-		highlighter: true,
-
-		// Returns what atom to highlight when being hovered over stuff
-		hover: (atom) => {
-
-			atom.highlightedSlot = undefined
-
-			// FIND A PADDLE!???
-			if (atom.direction === "right") {
-
-				// Get my bounds
-				const {x, y} = atom.getPosition()
-				const left = x
-				const top = y
-				const right = x + atom.width
-				const bottom = y + atom.height
-
-				for (const paddle of paddles) {
-
-					// Don't pick hidden or filled paddles
-					if (!paddle.expanded) continue
-					if (paddle.pinhole.locked) continue
-					if (paddle.rightTriangle !== undefined) continue
-
-					// Get paddle bounds
-					const {x: px, y: py} = paddle.getPosition()
-					const pleft = px
-					const pright = px + paddle.width
-					const ptop = py
-					const pbottom = py + paddle.height
-
-					// Check if I am hovering over the paddle
-					if (left > pright) continue
-					if (right < pleft) continue
-					if (top > pbottom) continue
-					if (bottom < ptop) continue
-
-					// Return the highlight and the highlighted atom (the paddle)
-					return paddle
-				}
-			}
-
-			// FIND A SQUARE TO STAMP????
-			if (true) {
-				
-				const {x, y} = atom.getPosition()
-				const left = x
-				const top = y
-				const right = x + atom.width
-				const bottom = y + atom.height
-
-				const others = getAllBaseAtoms()
-				for (const other of others) {
-					if (!other.isSquare) continue
-					
-					const {x: px, y: py} = other.getPosition()
-					const pleft = px
-					const pright = px + other.width
-					const ptop = py
-					const pbottom = py + other.height
-					
-					if (left > pright) continue
-					if (right < pleft) continue
-					if (top > pbottom) continue
-					if (bottom < ptop) continue
-
-					return other
-				}
-
-				// FIND A CHANNEL????
-				let winningDistance = Infinity
-				let winningSquare = undefined
-				let winningSlot = undefined
-
-				const atoms = getAllBaseAtoms()
-				for (const other of atoms) {
-					if (other === atom) continue
-					if (!other.isSquare) continue
-					if (!other.expanded) continue
-
-					const {x: px, y: py} = other.pickerPad.getPosition()
-					const pleft = px
-					const pright = px + other.pickerPad.width
-					const ptop = py
-					const pbottom = py + other.pickerPad.height
-
-					if (left > pright) continue
-					if (right < pleft) continue
-					if (bottom < ptop) continue
-					if (top > pbottom) continue
-
-					const slots = ["red", "green", "blue"].filter(slot => other[slot] === undefined)
-					if (slots.length === 0) continue
-					const {x: ax, y: ay} = other.getPosition()
-
-					for (const slot of slots) {
-						const slotId = CHANNEL_IDS[slot]
-						const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + OPTION_MARGIN)
-						const sy = ay + OPTION_MARGIN
-						const distance = Math.hypot(x - sx, y - sy)
-						if (distance < winningDistance) {
-							winningDistance = distance
-							winningSlot = slot
-							winningSquare = other
-						}
-					}
-
-					if (winningSquare !== undefined) {
-
-						const {x: ax, y: ay} = winningSquare.getPosition()
-						const slotId = CHANNEL_IDS[winningSlot]
-
-						if (atom.highlight !== undefined) {
-							deleteChild(atom, atom.highlight)
-							atom.highlight = undefined
-						}
-
-						atom.highlight = createChild(atom, new Highlight(), {bottom: true})
-						atom.highlight.hasBorder = true
-						atom.highlight.x = ax + winningSquare.size + OPTION_MARGIN + slotId*(OPTION_MARGIN+winningSquare.size)
-						atom.highlight.y = ay
-						atom.highlight.width = OPTION_MARGIN*2+winningSquare.size
-						atom.highlightedAtom = winningSquare
-						atom.highlightedSlot = winningSlot
-					}
-				}
-
-				return winningSquare
-
-				// return
-			}
-
-			return undefined
-		},
-
-		updateValue: (atom) => {
-			if (atom.direction === "up" || atom.direction === "down") {
-				atom.variable = atom.highlightedSlot
-			} else if (atom.direction === "left") {
-				if (atom.highlightedSlot === "red") atom.variable = "blue"
-				else if (atom.highlightedSlot === "green") atom.variable = "red"
-				else if (atom.highlightedSlot === "blue") atom.variable = "green"
-			} else if (atom.direction === "right") {
-				if (atom.highlightedSlot === "red") atom.variable = "green"
-				else if (atom.highlightedSlot === "green") atom.variable = "blue"
-				else if (atom.highlightedSlot === "blue") atom.variable = "red"
-			}
-			const add = atom.direction === "up" ? DragonNumber.fromInt(1) : undefined
-			const subtract = atom.direction === "down" ? DragonNumber.fromInt(1) : undefined
-			const value = new DragonNumber({channel: atom.channelId, variable: atom.variable, add, subtract})
-			atom.value = value
-		},
-
-		place: (atom, receiver) => {
-
-			if (receiver.isSquare && atom.highlightedSlot !== undefined) {
-				atom.channelId = CHANNEL_IDS[atom.highlightedSlot]
-				atom.updateValue(atom)
-
-				const square = receiver
-				square.receiveNumber(square, atom.value, atom.channelId, {expanded: atom.expanded, numberAtom: atom})
-				atomRegistry.delete(atom)
-				atom.dx = 0
-				atom.dy = 0
-				return
-			}
-
-			if (receiver.isSquare) {
-				const square = receiver
-
-				if (square.stamp === undefined) {
-					square.stamp = "circle"
-					square.value.stamp = "circle"
-					square.needsColoursUpdate = true
-				} else {
-					square.stamp = undefined
-					square.value.stamp = undefined
-					square.needsColoursUpdate = true
-				}
-
-				const diagramCell = new DiagramCell({content: square.value})
-				state.brush.colour = new Diagram({left: [diagramCell]})
-
-				squareTool.toolbarNeedsColourUpdate = true
-				circleTool.toolbarNeedsColourUpdate = true
-				triangleTool.toolbarNeedsColourUpdate = true
-				// wideRectangleTool.toolbarNeedsColourUpdate = true
-				tallRectangleTool.toolbarNeedsColourUpdate = true
-
-				if (square.parent.isPaddle) {
-					updatePaddleRule(square.parent)
-				}
-				return
-			}
-			
-			if (receiver.isPaddle) {
-				const paddle = receiver
-				giveChild(paddle, atom)
-				paddle.rightTriangle = atom
-				atom.x = Paddle.WIDTH/2 - atom.width/2
-				atom.y = Paddle.HEIGHT/2 - atom.height/2
-				atom.dx = 0
-				atom.dy = 0
-
-				atom.hasBorder = false
-				paddle.pinhole.locked = atom.colour === Colour.splash(999)
-
-				for (const cellAtom of paddle.cellAtoms) {
-					if (cellAtom.slotted !== undefined) {
-						atomRegistry.register(cellAtom.slotted)
-						giveChild(paddle, cellAtom.slotted)
-					}
-				}
-
-				updatePaddleSize(paddle)
-
-				if (atom.expanded) {
-					atom.unexpand(atom)
-				}
-
-				atom.attached = true
-
-				unlockMenuTool("circle")
-			}
-
-		},
-
-		rightDraggable: true,
-		rightDrag: (atom) => {
-			const clone = new Atom(COLOURTODE_TRIANGLE)
-			clone.direction = atom.direction
-			const {x, y} = atom.getPosition()
-			hand.offset.x -= atom.x - x
-			hand.offset.y -= atom.y - y
-			clone.x = x
-			clone.y = y
-			atomRegistry.register(clone)
-			return clone
-		},
-
-		drag: (atom) => {
-
-			if (atom.parent.isSquare) {
-				const square = atom.parent
-				atom.attached = false
-				square[atom.highlightedSlot] = undefined
-				freeChild(square, atom)
-				square.receiveNumber(square, undefined, atom.channelId)
-				return atom
-			}
-
-			if (!atom.parent.isPaddle) return atom
-			const paddle = atom.parent
-			// 	clone.direction = atom.direction
-			// 	clone.x = x
-			// 	clone.y = y
-			// }
-
-			atom.attached = false
-			freeChild(paddle, atom)
-			paddle.rightTriangle = undefined
-
-			for (const cellAtom of paddle.cellAtoms) {
-				if (cellAtom.slotted !== undefined) {
-					const {x, y} = cellAtom.slotted.getPosition()
-					freeChild(paddle, cellAtom.slotted)
-					cellAtom.slotted.cellAtom = undefined
-					cellAtom.slotted.attached = false
-					cellAtom.slotted.x = x
-					cellAtom.slotted.y = y
-					cellAtom.slotted.slottee = false
-					cellAtom.slotted = undefined
-				}
-			}
-
-			if (atom.colour !== Colour.splash(999)) {
-				atom.hasBorder = true
-				atom.borderColour = Colour.Grey
-			}
-
-			paddle.pinhole.locked = false
-
-			updatePaddleSize(paddle)
-			return atom
-		},
-
-	}
 
 	const OPTION_MARGIN = 10
 	const CHANNEL_HEIGHT = COLOURTODE_SQUARE.size - OPTION_MARGIN*2
@@ -5229,7 +4891,7 @@ on.load(() => {
 				if (channel === undefined) continue
 				if (channel.variable === undefined) continue
 				
-				const triangle = new Atom(COLOURTODE_TRIANGLE)
+				const triangle = new ColourtodeTriangle()
 				newAtom.variableAtoms[i] = triangle
 				triangle.highlightedSlot = CHANNEL_NAMES[i]
 				triangle.channelId = i
@@ -5345,7 +5007,7 @@ on.load(() => {
 
 	squareTool = addMenuTool(COLOURTODE_SQUARE)
 	menuRight += BORDER_THICKNESS
-	const triangleTool = addMenuTool(COLOURTODE_TRIANGLE, "triangle")
+	const triangleTool = addMenuTool(new ColourtodeTriangle(), "triangle")
 	//triangleTool.size -= BORDER_THICKNESS*1.5
 	//triangleTool.y += BORDER_THICKNESS*1.5 / 2
 	menuRight -= BORDER_THICKNESS
@@ -5353,6 +5015,12 @@ on.load(() => {
 	const hexagonTool = addMenuTool(new Hexagon(), "hexagon")
 	//menuRight += BORDER_THICKNESS
 	const tallRectangleTool = {} //addMenuTool(COLOURTODE_TALL_RECTANGLE, "tall_rectangle")
+	UI.squareTool = squareTool
+	UI.triangleTool = triangleTool
+	UI.circleTool = circleTool
+	UI.tallRectangleTool = tallRectangleTool
+	UI.getAllBaseAtoms = getAllBaseAtoms
+	UI.unlockMenuTool = unlockMenuTool
 	createPaddle()
 	
 	squareTool.value = DragonArray.fromSplash(state.brush.colour)
@@ -5573,7 +5241,7 @@ on.load(() => {
 
 	PADDLE_UNPACK.rightTriangle = (paddle, value) => {
 		if (!value) return undefined
-		const arrow = createChild(paddle, COLOURTODE_TRIANGLE)
+		const arrow = createChild(paddle, new ColourtodeTriangle())
 		return arrow
 	}
 
