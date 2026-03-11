@@ -780,7 +780,7 @@ on.load(() => {
 		let dy = e.deltaY / 100
 
 		if (e.altKey) {
-			PADDLE.scroll -= 50 * dy
+			UI.paddleScroll -= 50 * dy
 			positionPaddles()
 		}
 
@@ -1937,6 +1937,7 @@ on.load(() => {
 			squareTool.toolbarNeedsColourUpdate = true
 		}
 	}
+	UI.setBrushColour = setBrushColour
 
 	// Ctrl+F: sqdef
 	const COLOURTODE_SQUARE = {
@@ -2577,8 +2578,8 @@ on.load(() => {
 					if (atom.highlightedSide === "right") {
 
 						const dummy = createChild(paddle, new Slot(), {bottom: true})
-						dummy.x = PADDLE.width/2 - atom.width/2
-						dummy.y = PADDLE.height/2 - atom.height/2
+						dummy.x = Paddle.WIDTH/2 - atom.width/2
+						dummy.y = Paddle.HEIGHT/2 - atom.height/2
 						dummy.isLeftSlot = true
 						dummy.isSlot = false
 						paddle.cellAtoms.push(dummy)
@@ -2909,6 +2910,7 @@ on.load(() => {
 		size: 40,
 		expanded: false,
 	}
+	UI.COLOURTODE_SQUARE = COLOURTODE_SQUARE
 
 	const getWarpedGradientPoints = (width, height) => {
 		
@@ -3372,8 +3374,8 @@ on.load(() => {
 				const paddle = receiver
 				giveChild(paddle, atom)
 				paddle.rightTriangle = atom
-				atom.x = PADDLE.width/2 - atom.width/2
-				atom.y = PADDLE.height/2 - atom.height/2
+				atom.x = Paddle.WIDTH/2 - atom.width/2
+				atom.y = Paddle.HEIGHT/2 - atom.height/2
 				atom.dx = 0
 				atom.dy = 0
 
@@ -4762,159 +4764,6 @@ on.load(() => {
 
 	// Ctrl+F: addef
 	const PADDLE_MARGIN = COLOURTODE_SQUARE.size/2
-	const PADDLE = {
-		stayAtBack: true,
-		attached: true,
-		noDampen: true,
-		isPaddle: true,
-		behindChildren: true,
-		draw: Rectangle.drawFn,
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		colour: Colour.Grey,
-		size: COLOURTODE_SQUARE.size + OPTION_MARGIN*4, //for legacy
-		width: COLOURTODE_SQUARE.size + OPTION_MARGIN*4,
-		height: COLOURTODE_SQUARE.size + OPTION_MARGIN*4,
-		dragOnly: true,
-		dragLockY: true,
-		scroll: 0,
-		rightTriangle: undefined,
-		x: Math.round(PADDLE_MARGIN), //needed for handle creation
-		y: COLOURTODE_SQUARE.size + OPTION_MARGIN + PADDLE_MARGIN,
-		construct: (paddle) => {
-
-			paddle.cellAtoms = []
-			paddle.slots = []
-
-			const handle = createChild(paddle, new PaddleHandle())
-			paddle.handle = handle
-			paddle.setLimits(paddle)
-			paddle.x = paddle.minX
-			paddle.expanded = false
-
-			paddle.pinhole = createChild(handle, new PinHole())
-
-			paddle.dummyLeft = createChild(paddle, new Slot())
-			paddle.dummyLeft.visible = false
-
-			paddle.dummyRight = createChild(paddle, new Slot())
-			paddle.dummyRight.visible = false
-
-			updatePaddleSize(paddle)
-
-		},
-
-		setLimits: (paddle) => {
-			paddle.maxX = paddle.handle.width
-			paddle.minX = paddle.handle.width - paddle.width
-		},
-
-		drop: (paddle) => {
-
-			const distanceFromMax = paddle.maxX - paddle.x
-			const distanceFromMin = paddle.x - paddle.minX
-
-			if (distanceFromMax < distanceFromMin) {
-				paddle.x = paddle.maxX
-				paddle.expanded = true
-				updatePaddleRule(paddle)
-
-				if (paddles.last === paddle) {
-					createPaddle()
-				}
-
-			} else {
-				paddle.x = paddle.minX
-				paddle.expanded = false
-				updatePaddleRule(paddle)
-
-				if (paddles.last !== paddle) {
-					deletePaddle(paddle)
-				}
-			}
-			paddle.dx = 0
-		},
-
-		click: (paddle) => {
-			const cells = makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-			const diagram = new Diagram({left: cells})
-			setBrushColour(diagram)
-		},
-
-		drag: (paddle, x, y) => {
-			if (false && paddle.pinhole.locked) {
-				const square = new Atom(COLOURTODE_SQUARE)
-				hand.offset.x = -square.width/2
-				hand.offset.y = -square.height/2
-				const cells = makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-				const diagram = new Diagram({left: cells})
-				diagram.normalise()
-
-				square.value = diagram
-				atomRegistry.register(square)
-				state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
-				square.update(square)
-				return square
-			}
-			return paddle
-		},
-
-		rightDraggable: true,
-		getColour: (paddle) => {
-			let cellAtoms = paddle.cellAtoms
-			if (cellAtoms.length === 0) {
-				
-				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
-				return leftClone
-
-			} else if (cellAtoms.length === 1) {
-				const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
-				return leftClone
-			}
-			const cells = makeDiagramCellsFromCellAtoms(cellAtoms)
-			const diagram = new Diagram({left: cells})
-			diagram.normalise()
-			return diagram
-		},
-		rightDrag: (paddle) => {
-			let cellAtoms = paddle.cellAtoms
-			if (cellAtoms.length === 0) {
-				
-				const square = new Atom(COLOURTODE_SQUARE)
-				hand.offset.x = -square.width/2
-				hand.offset.y = -square.height/2
-				const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
-				setBrushColour(leftClone)
-				atomRegistry.register(square)
-				square.value = leftClone
-				square.update(square)
-				return square
-
-			} else if (cellAtoms.length === 1) {
-				const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
-				const square = cellAtoms[0].clone(cellAtoms[0])
-				hand.offset.x = -square.width/2
-				hand.offset.y = -square.height/2
-				setBrushColour(leftClone)
-				atomRegistry.register(square)
-				square.value = leftClone
-				square.update(square)
-				return square
-			}
-			const square = new Atom(COLOURTODE_SQUARE)
-			hand.offset.x = -square.width/2
-			hand.offset.y = -square.height/2
-			const cells = makeDiagramCellsFromCellAtoms(cellAtoms)
-			const diagram = new Diagram({left: cells})
-			diagram.normalise()
-
-			square.value = diagram
-			atomRegistry.register(square)
-			setBrushColour(diagram)
-			square.update(square)
-			return square
-		},
-	}
 
 	const fillPoints = (colour, points, ctx) => {
 		
@@ -4935,8 +4784,8 @@ on.load(() => {
 	// Ctrl+F: adwww
 	const updatePaddleSize = (paddle) => {
 		
-		let width = PADDLE.width
-		let height = PADDLE.size
+		let width = Paddle.WIDTH
+		let height = Paddle.SIZE
 
 		if (paddle.cellAtoms.length > 0) {
 			let top = Infinity
@@ -4961,8 +4810,8 @@ on.load(() => {
 			let topOffset = 0
 			let leftOffset = 0
 
-			const yPadding = (PADDLE.height/2 - COLOURTODE_SQUARE.size/2)
-			const xPadding = (PADDLE.width/2 - COLOURTODE_SQUARE.size/2)
+			const yPadding = (Paddle.HEIGHT/2 - COLOURTODE_SQUARE.size/2)
+			const xPadding = (Paddle.WIDTH/2 - COLOURTODE_SQUARE.size/2)
 
 			const desiredTop = yPadding
 			const desiredLeft = xPadding
@@ -5185,6 +5034,7 @@ on.load(() => {
 		return diagramCells
 
 	}
+	UI.makeDiagramCellsFromCellAtoms = makeDiagramCellsFromCellAtoms
 
 
 	//this only works on nested diagrams where every cell is the same size
@@ -5572,7 +5422,7 @@ on.load(() => {
 		let previous = undefined
 		for (const paddle of paddles) {
 			if (previous === undefined) {
-				paddle.y = PADDLE.y + PADDLE.scroll
+				paddle.y = Paddle.Y + UI.paddleScroll
 				previous = paddle
 				continue
 			}
@@ -5592,7 +5442,7 @@ on.load(() => {
 	}
 
 	const createPaddle = () => {
-		const paddle = new Atom(PADDLE)
+		const paddle = new Paddle()
 		paddles.push(paddle)
 		positionPaddles()
 		atomRegistry.register(paddle)
@@ -5601,6 +5451,8 @@ on.load(() => {
 
 	UI.PADDLE_HANDLE_SIZE = UI.PADDLE_X
 	UI.updatePaddleRule = updatePaddleRule
+	UI.createPaddle = createPaddle
+	UI.deletePaddle = deletePaddle
 
 
 	const SYMMETRY_TOGGLINGS = new Map()

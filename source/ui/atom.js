@@ -1,40 +1,32 @@
 //======//
 // ATOM //
 //======//
+// Interface for all UI elements. Concrete types extend this and
+// override the interface methods (draw, overlaps, offscreen, etc.).
 class Atom {
+
+	// === Value defaults ===
+	grabbable = true
+	draggable = true
+	highlighter = false
+	hasInner = true
+	x = 0
+	y = 0
+	dx = 0
+	dy = 0
+	maxX = Infinity
+	minX = -Infinity
+	maxY = Infinity
+	minY = -Infinity
+	size = 40
+
 	constructor(element = {}) {
-		this.grabbable = true
-		this.draggable = true
-		this.click = () => {}
-		this.rightClick = () => {}
-		this.drag = (a) => a
-		this.rightDrag = (a) => a
-		this.move = () => {}
-		this.drop = () => {}
-		this.draw = () => {}
-		this.update = () => {}
-		this.offscreen = () => false
-		this.overlaps = () => false
-		this.grab = (a) => a
-		this.touch = (a) => a
-		this.highlighter = false
-		this.hover = () => {}
-		this.place = () => {}
-		this.x = 0
-		this.y = 0
-		this.dx = 0
-		this.dy = 0
-		this.maxX = Infinity
-		this.minX = -Infinity
-		this.maxY = Infinity
-		this.minY = -Infinity
-		this.size = 40
+		// Per-instance state (must not be shared across instances)
 		this.colour = Colour.splash(999)
 		this.children = []
 		this.parent = UI.atomRegistry.baseParent
-		this.hasInner = true
-		this.construct = () => {}
 
+		// Apply element overrides
 		Object.assign(this, element)
 
 		// width/height default to size if not explicitly provided
@@ -44,6 +36,24 @@ class Atom {
 		this.construct(this)
 	}
 
+	// === Interface methods (override in concrete types) ===
+	click() {}
+	rightClick() {}
+	drag(a) { return a }
+	rightDrag(a) { return a }
+	move() {}
+	drop() {}
+	draw() {}
+	update() {}
+	offscreen() { return false }
+	overlaps() { return false }
+	grab(a) { return a }
+	touch(a) { return a }
+	hover() {}
+	place() {}
+	construct() {}
+
+	// === Shared behavior ===
 	drawTree(ctx) {
 		for (const child of this.children) {
 			if (child.behindParent) child.drawTree(ctx)

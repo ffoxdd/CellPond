@@ -16,4 +16,5 @@ const UI = {
 	SYMMETRY_CIRCLE_SIZE: 40,
 	get PADDLE_X() { return Math.round(this.SQUARE_SIZE / 2) },
 	get PADDLE_TOTAL_SIZE() { return this.SQUARE_SIZE + this.OPTION_MARGIN * 4 },
+	paddleScroll: 0,
 }
