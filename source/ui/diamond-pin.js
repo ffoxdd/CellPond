@@ -6,7 +6,7 @@ class DiamondPin extends Atom {
 		const pinSize = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
 		super({
 			draw: (atom, ctx) => {
-				COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
+				TallRectangle.drawFn(atom, ctx)
 			},
 			offscreen: Rectangle.offscreenFn,
 			overlaps: Rectangle.overlapsFn,

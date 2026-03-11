@@ -5,7 +5,7 @@ class DiamondChoice extends Atom {
 	constructor(element = {}) {
 		super({
 			draw: (atom, ctx) => {
-				COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
+				TallRectangle.drawFn(atom, ctx)
 			},
 			offscreen: Rectangle.offscreenFn,
 			overlaps: Rectangle.overlapsFn,
