@@ -144,6 +144,7 @@ function loadCellPond() {
 		readScript("source/ui/picker-channel-option.js"),
 		readScript("source/ui/symmetry-circle.js"),
 		readScript("source/ui/paddle.js"),
+		readScript("source/ui/hexagon.js"),
 		readScript("source/cell.js"),
 		coreSource,
 		readScript("source/dragon.js"),
