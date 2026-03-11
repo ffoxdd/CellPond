@@ -1,35 +1,4 @@
 //==================//
-// SYMMETRY LAYOUT  //
-//==================//
-function symmetryLayout() {
-	const S = UI.SYMMETRY_CIRCLE_SIZE
-	const M = UI.OPTION_MARGIN
-	const toggleSize = UI.SQUARE_SIZE - M
-
-	const pad = {
-		width: S,
-		x: S + M,
-		height: (S * 3) - M,
-		y: -(S * 3)/3 + M/2,
-	}
-
-	const toggleX = pad.x + pad.width/2 - toggleSize/2
-
-	return {
-		pad,
-		handle: {
-			width: S/2 + M,
-			x: S/2 + S/4,
-			height: S / 3,
-			y: S/2 - (S / 3)/2,
-		},
-		toggleX: { size: toggleSize, x: toggleX, y: pad.y + M/2 },
-		toggleY: { size: toggleSize, x: toggleX, y: M/2 },
-		toggleR: { size: toggleSize, x: toggleX, y: pad.y + pad.height - toggleSize - M/2 },
-	}
-}
-
-//==================//
 // SYMMETRY CIRCLE  //
 //==================//
 class SymmetryCircle extends Atom {

@@ -118,28 +118,17 @@ class ColourtodeSquare extends Atom {
 	}
 
 	createPicker() {
-		const S = UI.SYMMETRY_CIRCLE_SIZE
-		const pickerHandle = UI.createChild(this, new SymmetryHandle({
-			width: S/2 + UI.OPTION_MARGIN,
-			height: S / 3,
-			x: S/2 + S/4,
-			y: S/2 - (S / 3)/2,
-			behindParent: true,
-		}))
+		const pickerHandle = UI.createChild(this, new SymmetryHandle(pickerHandleLayout()))
 		this.pickerHandle = pickerHandle
 
-		const pickerPad = UI.createChild(this, new PickerPad({
-			width: UI.OPTION_MARGIN + 3*(UI.SQUARE_SIZE + UI.OPTION_MARGIN),
-			height: UI.SQUARE_SIZE,
-			x: UI.SQUARE_SIZE + UI.OPTION_MARGIN,
-		}))
+		const pickerPad = UI.createChild(this, new PickerPad(pickerPadLayout()))
 		this.pickerPad = pickerPad
 
-		const channelLayout = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
+		const cl = channelLayout()
 
 		if (this.value.channels[2] !== undefined) {
 			if (this.value.channels[2].variable === undefined) {
-				const blue = UI.createChild(this, new PickerChannel(channelLayout))
+				const blue = UI.createChild(this, new PickerChannel(cl))
 				blue.channelSlot = "blue"
 				blue.x += UI.OPTION_MARGIN + 3 * (UI.SQUARE_SIZE + UI.OPTION_MARGIN)
 				blue.value = this.value.channels[2]
@@ -164,7 +153,7 @@ class ColourtodeSquare extends Atom {
 
 		if (this.value.channels[1] !== undefined) {
 			if (this.value.channels[1].variable === undefined) {
-				const green = UI.createChild(this, new PickerChannel(channelLayout))
+				const green = UI.createChild(this, new PickerChannel(cl))
 				green.channelSlot = "green"
 				green.x += UI.OPTION_MARGIN + 2 * (UI.SQUARE_SIZE + UI.OPTION_MARGIN)
 				green.value = this.value.channels[1]
@@ -189,7 +178,7 @@ class ColourtodeSquare extends Atom {
 
 		if (this.value.channels[0] !== undefined) {
 			if (this.value.channels[0].variable === undefined) {
-				const red = UI.createChild(this, new PickerChannel(channelLayout))
+				const red = UI.createChild(this, new PickerChannel(cl))
 				red.channelSlot = "red"
 				red.x += UI.OPTION_MARGIN + UI.SQUARE_SIZE + UI.OPTION_MARGIN
 				red.value = this.value.channels[0]

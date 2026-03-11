@@ -83,7 +83,7 @@ class PickerChannelOption extends Atom {
 	}
 
 	construct() {
-		const paddingLayout = {width: UI.SQUARE_SIZE, height: UI.OPTION_MARGIN}
+		const paddingLayout = optionPaddingLayout()
 
 		if (this.pityTop) {
 			const topPity = UI.createChild(this, new OptionPadding(paddingLayout))

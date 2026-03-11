@@ -308,8 +308,7 @@ const deletePaddle = (paddle, id = UI.paddles.indexOf(paddle)) => {
 }
 
 const createPaddle = () => {
-	const ps = UI.PADDLE_TOTAL_SIZE
-	const paddle = new Paddle({size: ps, width: ps, height: ps})
+	const paddle = new Paddle(paddleLayout())
 	UI.paddles.push(paddle)
 	positionPaddles()
 	UI.atomRegistry.register(paddle)

@@ -22,8 +22,7 @@ class TallRectangle extends Atom {
 	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 
 	rightDrag() {
-		const ds = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-		const clone = new TallRectangle({size: ds, width: ds, height: ds})
+		const clone = new TallRectangle(diamondLayout().tallRectangle)
 		UI.atomRegistry.register(clone)
 		const {x, y} = this.getPosition()
 		UI.hand.offset.x -= this.x - x
@@ -222,16 +221,14 @@ class TallRectangle extends Atom {
 
 			if (this.operationAtoms.padtop === undefined) {
 				if (this.value.add.variable === undefined) {
-					const channelLayout = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
-					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout))
+					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout()))
 					operationAtom.value = this.value.add
 					this.operationAtoms.padTop = operationAtom
 					operationAtom.x = this.padTop.x + UI.OPTION_MARGIN
 					operationAtom.y = this.padTop.y + this.padTop.height/2 - operationAtom.height/2
 					operationAtom.highlightedSlot = "padTop"
 				} else {
-					const ds3 = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-					const operationAtom = UI.createChild(this, new TallRectangle({size: ds3, width: ds3, height: ds3}))
+					const operationAtom = UI.createChild(this, new TallRectangle(diamondLayout().tallRectangle))
 					operationAtom.value = this.value.add
 					operationAtom.variable = this.value.add.variable
 					operationAtom.makeOperationAtoms()
@@ -248,8 +245,7 @@ class TallRectangle extends Atom {
 
 			if (this.operationAtoms.padBottom === undefined) {
 				if (this.value.subtract.variable === undefined) {
-					const channelLayout2 = {width: UI.SQUARE_SIZE, y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2, height: UI.CHANNEL_HEIGHT}
-					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout2))
+					const operationAtom = UI.createChild(this, new PickerChannel(channelLayout()))
 					operationAtom.value = this.value.subtract
 					this.operationAtoms.padBottom = operationAtom
 					operationAtom.x = this.padBottom.x + UI.OPTION_MARGIN
@@ -338,32 +334,29 @@ class TallRectangle extends Atom {
 
 
 
-		const choiceSize = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
-		const choiceLayout = {size: choiceSize, width: choiceSize, height: choiceSize}
-		const pinSize = choiceSize / 2
-		const pinLayout = {size: pinSize, width: pinSize, height: pinSize}
+		const dl = diamondLayout()
 
-		this.red = UI.createChild(this, new DiamondChoice(choiceLayout))
+		this.red = UI.createChild(this, new DiamondChoice(dl.choice))
 		this.red.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2
 		this.red.borderColour = Colour.Red
 		this.red.colour = Colour.Black
 		this.red.value = "red"
 
-		this.green = UI.createChild(this, new DiamondChoice(choiceLayout))
-		this.green.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (choiceSize+UI.OPTION_MARGIN)*1
+		this.green = UI.createChild(this, new DiamondChoice(dl.choice))
+		this.green.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (dl.choice.size+UI.OPTION_MARGIN)*1
 		this.green.borderColour = Colour.Green
 		this.green.colour = Colour.Black
 		this.green.value = "green"
 
-		this.blue = UI.createChild(this, new DiamondChoice(choiceLayout))
-		this.blue.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (choiceSize+UI.OPTION_MARGIN)*2
+		this.blue = UI.createChild(this, new DiamondChoice(dl.choice))
+		this.blue.x = this.padRight.x + UI.OPTION_MARGIN/Math.SQRT2 + (dl.choice.size+UI.OPTION_MARGIN)*2
 		this.blue.borderColour = Colour.Blue
 		this.blue.colour = Colour.Black
 		this.blue.value = "blue"
 
-		this.winnerPin = UI.createChild(this, new DiamondPin(pinLayout))
-		this.winnerPin.x = this[this.variable].x + pinSize/2
-		this.winnerPin.y = pinSize/2
+		this.winnerPin = UI.createChild(this, new DiamondPin(dl.pin))
+		this.winnerPin.x = this[this.variable].x + dl.pin.size/2
+		this.winnerPin.y = dl.pin.size/2
 		this.winnerPin.colour = this[this.variable].borderColour
 		this.winnerPin.borderColour = this.winnerPin.colour
 

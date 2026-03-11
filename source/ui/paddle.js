@@ -30,21 +30,13 @@ class Paddle extends Atom {
 		this.cellAtoms = []
 		this.slots = []
 
-		const handle = UI.createChild(this, new PaddleHandle({
-			size: UI.PADDLE_X,
-			x: -UI.PADDLE_X,
-			y: UI.PADDLE_TOTAL_SIZE/2 - UI.PADDLE_X/2,
-		}))
+		const handle = UI.createChild(this, new PaddleHandle(paddleHandleLayout()))
 		this.handle = handle
 		this.setLimits()
 		this.x = this.minX
 		this.expanded = false
 
-		this.pinhole = UI.createChild(handle, new PinHole({
-			size: UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2,
-			x: UI.OPTION_MARGIN/2/2,
-			y: UI.OPTION_MARGIN/2/2,
-		}))
+		this.pinhole = UI.createChild(handle, new PinHole(pinHoleLayout()))
 
 		this.dummyLeft = UI.createChild(this, new Slot())
 		this.dummyLeft.visible = false
