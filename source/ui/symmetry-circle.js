@@ -5,136 +5,140 @@ class SymmetryCircle extends Atom {
 	constructor(element = {}) {
 		super({
 			hasBorder: true,
-			draw: (atom, ctx) => {
-				Circle.drawFn(atom, ctx)
-				if (atom.value === undefined) return
-				const [x, y, r] = getRGB(atom.value)
-				if (x > 0) SymmetryToggleX.drawX(atom, ctx)
-				if (y > 0) SymmetryToggleY.drawY(atom, ctx)
-				if (r > 0) SymmetryToggleR.drawR(atom, ctx)
-			},
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
 			expanded: false,
 			borderColour: Colour.Grey,
 			colour: Colour.Black,
 			value: 0,
-			click: (atom) => {
-				if (atom.expanded) {
-					atom.unexpand(atom)
-				} else {
-					atom.expand(atom)
-				}
-			},
-
-			expand: (atom) => {
-				atom.pad = UI.createChild(atom, new SymmetryPad())
-				atom.handle = UI.createChild(atom, new SymmetryHandle())
-				atom.handle.width += UI.OPTION_MARGIN
-				atom.expanded = true
-
-				const [x, y, r] = getRGB(atom.value)
-				atom.xToggle = UI.createChild(atom, new SymmetryToggleX())
-				atom.yToggle = UI.createChild(atom, new SymmetryToggleY())
-				atom.rToggle = UI.createChild(atom, new SymmetryToggleR())
-
-				if (x > 0) atom.xToggle.value = true
-				if (y > 0) atom.yToggle.value = true
-				if (r > 0) atom.rToggle.value = true
-			},
-
-			unexpand: (atom) => {
-				UI.deleteChild(atom, atom.pad)
-				UI.deleteChild(atom, atom.handle)
-				UI.deleteChild(atom, atom.xToggle)
-				UI.deleteChild(atom, atom.yToggle)
-				UI.deleteChild(atom, atom.rToggle)
-				atom.expanded = false
-			},
-
 			size: UI.SQUARE_SIZE,
-			update: (atom) => {
-				const {x, y} = atom.getPosition()
-
-				const id = UI.atomRegistry.atoms.indexOf(atom)
-				const left = x
-				const top = y
-				const right = x + atom.width
-				const bottom = y + atom.height
-
-				if (UI.hand.content === atom) for (const paddle of UI.paddles) {
-					const pid = UI.atomRegistry.atoms.indexOf(paddle)
-					const {x: px, y: py} = paddle.getPosition()
-					const pright = px + paddle.width
-					const ptop = py
-					const pbottom = py + paddle.height
-
-					if (!paddle.hasSymmetry && paddle.expanded && id > pid && left <= pright && right >= pright && ((top < pbottom && top > ptop) || (bottom > ptop && bottom < pbottom))) {
-						if (atom.highlightPaddle !== undefined) {
-							UI.deleteChild(atom, atom.highlightPaddle)
-						}
-
-						atom.highlightPaddle = UI.createChild(atom, new Highlight(), {bottom: true})
-						atom.highlightPaddle.width = UI.BORDER_THICKNESS
-						atom.highlightPaddle.height = paddle.height
-						atom.highlightPaddle.y = ptop
-						atom.highlightPaddle.x = pright - UI.BORDER_THICKNESS/2
-						atom.highlightedPaddle = paddle
-						return
-					}
-				}
-
-				if (atom.highlightPaddle !== undefined) {
-					UI.deleteChild(atom, atom.highlightPaddle)
-					atom.highlightPaddle = undefined
-					atom.highlightedPaddle = undefined
-				}
-			},
-			drop: (atom) => {
-				if (!atom.attached) {
-					if (atom.highlightedPaddle !== undefined) {
-						const paddle = atom.highlightedPaddle
-						atom.attached = true
-						UI.giveChild(paddle, atom)
-
-						paddle.hasSymmetry = true
-						paddle.symmetryCircle = atom
-						UI.emit("paddleSizeChanged",paddle)
-
-						atom.dx = 0
-						atom.dy = 0
-					}
-				}
-			},
-
-			drag: (atom) => {
-				if (atom.attached) {
-					const paddle = atom.parent
-
-					atom.attached = false
-					UI.freeChild(paddle, atom)
-					paddle.hasSymmetry = false
-					paddle.symmetryCircle = undefined
-					UI.emit("paddleSizeChanged",paddle)
-				}
-
-				return atom
-			},
-
 			rightDraggable: true,
-			rightDrag: (atom) => {
-				const clone = new SymmetryCircle()
-				clone.value = atom.value
-				const {x, y} = atom.getPosition()
-				UI.hand.offset.x -= atom.x - x
-				UI.hand.offset.y -= atom.y - y
-				clone.x = x
-				clone.y = y
-				UI.atomRegistry.register(clone)
-				return clone
-			},
 			...element,
 		})
+	}
+
+	draw(atom, ctx) {
+		Circle.drawFn(this, ctx)
+		if (this.value === undefined) return
+		const [x, y, r] = getRGB(this.value)
+		if (x > 0) SymmetryToggleX.drawX(this, ctx)
+		if (y > 0) SymmetryToggleY.drawY(this, ctx)
+		if (r > 0) SymmetryToggleR.drawR(this, ctx)
+	}
+
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+
+	click(atom) {
+		if (this.expanded) {
+			this.unexpand(this)
+		} else {
+			this.expand(this)
+		}
+	}
+
+	expand(atom) {
+		this.pad = UI.createChild(this, new SymmetryPad())
+		this.handle = UI.createChild(this, new SymmetryHandle())
+		this.handle.width += UI.OPTION_MARGIN
+		this.expanded = true
+
+		const [x, y, r] = getRGB(this.value)
+		this.xToggle = UI.createChild(this, new SymmetryToggleX())
+		this.yToggle = UI.createChild(this, new SymmetryToggleY())
+		this.rToggle = UI.createChild(this, new SymmetryToggleR())
+
+		if (x > 0) this.xToggle.value = true
+		if (y > 0) this.yToggle.value = true
+		if (r > 0) this.rToggle.value = true
+	}
+
+	unexpand(atom) {
+		UI.deleteChild(this, this.pad)
+		UI.deleteChild(this, this.handle)
+		UI.deleteChild(this, this.xToggle)
+		UI.deleteChild(this, this.yToggle)
+		UI.deleteChild(this, this.rToggle)
+		this.expanded = false
+	}
+
+	update(atom) {
+		const {x, y} = this.getPosition()
+
+		const id = UI.atomRegistry.atoms.indexOf(this)
+		const left = x
+		const top = y
+		const right = x + this.width
+		const bottom = y + this.height
+
+		if (UI.hand.content === this) for (const paddle of UI.paddles) {
+			const pid = UI.atomRegistry.atoms.indexOf(paddle)
+			const {x: px, y: py} = paddle.getPosition()
+			const pright = px + paddle.width
+			const ptop = py
+			const pbottom = py + paddle.height
+
+			if (!paddle.hasSymmetry && paddle.expanded && id > pid && left <= pright && right >= pright && ((top < pbottom && top > ptop) || (bottom > ptop && bottom < pbottom))) {
+				if (this.highlightPaddle !== undefined) {
+					UI.deleteChild(this, this.highlightPaddle)
+				}
+
+				this.highlightPaddle = UI.createChild(this, new Highlight(), {bottom: true})
+				this.highlightPaddle.width = UI.BORDER_THICKNESS
+				this.highlightPaddle.height = paddle.height
+				this.highlightPaddle.y = ptop
+				this.highlightPaddle.x = pright - UI.BORDER_THICKNESS/2
+				this.highlightedPaddle = paddle
+				return
+			}
+		}
+
+		if (this.highlightPaddle !== undefined) {
+			UI.deleteChild(this, this.highlightPaddle)
+			this.highlightPaddle = undefined
+			this.highlightedPaddle = undefined
+		}
+	}
+
+	drop(atom) {
+		if (!this.attached) {
+			if (this.highlightedPaddle !== undefined) {
+				const paddle = this.highlightedPaddle
+				this.attached = true
+				UI.giveChild(paddle, this)
+
+				paddle.hasSymmetry = true
+				paddle.symmetryCircle = this
+				UI.emit("paddleSizeChanged",paddle)
+
+				this.dx = 0
+				this.dy = 0
+			}
+		}
+	}
+
+	drag(atom) {
+		if (this.attached) {
+			const paddle = this.parent
+
+			this.attached = false
+			UI.freeChild(paddle, this)
+			paddle.hasSymmetry = false
+			paddle.symmetryCircle = undefined
+			UI.emit("paddleSizeChanged",paddle)
+		}
+
+		return this
+	}
+
+	rightDrag(atom) {
+		const clone = new SymmetryCircle()
+		clone.value = this.value
+		const {x, y} = this.getPosition()
+		UI.hand.offset.x -= this.x - x
+		UI.hand.offset.y -= this.y - y
+		clone.x = x
+		clone.y = y
+		UI.atomRegistry.register(clone)
+		return clone
 	}
 
 	static get SIZE() { return UI.SQUARE_SIZE }

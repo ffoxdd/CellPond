@@ -7,33 +7,35 @@ class SymmetryToggleR extends Atom {
 			hasBorder: true,
 			borderColour: Colour.Black,
 			colour: Colour.Grey,
-			draw: (atom, ctx) => {
-				atom.colour = atom.value? Colour.Silver : Colour.Grey
-				Circle.drawFn(atom, ctx)
-				atom.drawR(atom, ctx)
-			},
-			drawR: SymmetryToggleR.drawR,
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
 			expanded: false,
-			click: (atom) => {
-				atom.value = !atom.value
-				let [x, y, r] = getRGB(atom.parent.value)
-				r = atom.value? 1 : 0
-				atom.parent.value = x+y+r
-				const circle = atom.parent
-				if (circle.parent !== UI.atomRegistry.baseParent) {
-					const paddle = circle.parent
-					UI.emit("paddleRuleChanged",paddle)
-				}
-			},
 			value: false,
 			size: UI.SQUARE_SIZE - UI.OPTION_MARGIN,
-			grab: (atom) => atom.parent,
 			x: SymmetryPad.X + SymmetryPad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN)/2,
 			y: SymmetryPad.Y + SymmetryPad.HEIGHT - (UI.SQUARE_SIZE - UI.OPTION_MARGIN) - UI.OPTION_MARGIN/2,
 			...element,
 		})
+	}
+
+	draw(atom, ctx) {
+		this.colour = this.value ? Colour.Silver : Colour.Grey
+		Circle.drawFn(this, ctx)
+		SymmetryToggleR.drawR(this, ctx)
+	}
+
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab(atom) { return this.parent }
+
+	click(atom) {
+		this.value = !this.value
+		let [x, y, r] = getRGB(this.parent.value)
+		r = this.value ? 1 : 0
+		this.parent.value = x+y+r
+		const circle = this.parent
+		if (circle.parent !== UI.atomRegistry.baseParent) {
+			const paddle = circle.parent
+			UI.emit("paddleRuleChanged",paddle)
+		}
 	}
 
 	static drawR(atom, ctx) {

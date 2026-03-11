@@ -4,19 +4,20 @@
 class TrianglePad extends Atom {
 	constructor(element = {}) {
 		super({
-			draw: Rectangle.drawFn,
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
 			dragOnly: true,
 			width: UI.SYMMETRY_CIRCLE_SIZE,
 			x: UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN,
 			height: (UI.SYMMETRY_CIRCLE_SIZE * 2) - UI.OPTION_MARGIN,
 			y: -UI.SYMMETRY_CIRCLE_SIZE/2 + UI.OPTION_MARGIN/2,
 			colour: Colour.Grey,
-			grab: (atom) => atom.parent,
 			...element,
 		})
 	}
+
+	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab(atom) { return this.parent }
 
 	static get X() { return UI.SYMMETRY_CIRCLE_SIZE*Math.sqrt(3)/2 + UI.OPTION_MARGIN }
 	static get WIDTH() { return UI.SYMMETRY_CIRCLE_SIZE }

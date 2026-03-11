@@ -7,16 +7,17 @@ class Slot extends Atom {
 			visible: true,
 			isSlot: true,
 			behindChildren: true,
-			draw: Slot.drawFn,
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
 			colour: Colour.Black,
 			size: UI.SQUARE_SIZE,
-			grab: (atom) => atom.parent,
 			dragOnly: true,
 			...element,
 		})
 	}
+
+	draw(atom, ctx) { Slot.drawFn(this, ctx) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab(atom) { return this.parent }
 
 	static drawFn(atom, ctx) {
 		if (!atom.visible) return

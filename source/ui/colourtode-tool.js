@@ -3,40 +3,35 @@
 //====================//
 class ColourtodeTool extends Atom {
 	constructor(element = {}) {
-		const defaults = {
+		super({
 			element: new ColourtodeSquare(),
-			draw: (atom, ctx) => {
-				if ((atom.previousBrushColour !== state.brush.colour) || atom.toolbarNeedsColourUpdate) {
-					atom.update(atom)
-				}
-				if (atom.unlocked) {
-					atom.element.draw(atom, ctx)
-				}
-			},
-			overlaps: (atom, x, y) => atom.element.overlaps(atom, x, y),
-			grab: (atom, x, y) => {
-				return atom
-			},
-			drag: (atom) => {
+			...element,
+		})
+	}
 
-				if (atom === UI.squareTool) {
-					const newAtom = UI.makeSquareFromValue(atom.value)
-					UI.atomRegistry.register(newAtom)
-					return newAtom
-				}
+	draw(atom, ctx) {
+		if ((this.previousBrushColour !== state.brush.colour) || this.toolbarNeedsColourUpdate) {
+			this.update(this)
+		}
+		if (this.unlocked) {
+			this.element.draw(this, ctx)
+		}
+	}
 
-				const newAtom = new Atom({...atom.element, x: atom.x, y: atom.y})
-				UI.atomRegistry.register(newAtom)
+	overlaps(atom, x, y) { return this.element.overlaps(this, x, y) }
+	grab(atom) { return this }
+	cursor() { return "move" }
 
-				if (newAtom.value !== undefined) {
-
-				}
-
-				return newAtom
-			},
-			cursor: () => "move",
+	drag(atom) {
+		if (this === UI.squareTool) {
+			const newAtom = UI.makeSquareFromValue(this.value)
+			UI.atomRegistry.register(newAtom)
+			return newAtom
 		}
 
-		super({ ...defaults, ...element })
+		const newAtom = new Atom({...this.element, x: this.x, y: this.y})
+		UI.atomRegistry.register(newAtom)
+
+		return newAtom
 	}
 }

@@ -4,16 +4,17 @@
 class ChannelSelectionSide extends Atom {
 	constructor(element = {}) {
 		super({
-			overlaps: Rectangle.overlapsFn,
-			offscreen: Rectangle.offscreenFn,
 			width: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
 			height: UI.SQUARE_SIZE,
-			grab: (atom) => atom.parent,
-			touch: (atom) => atom.parent,
-			dragLockX: true,
-			draw: Rectangle.drawFn,
 			colour: Colour.Grey,
+			dragLockX: true,
 			...element,
 		})
 	}
+
+	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	grab(atom) { return this.parent }
+	touch(atom) { return this.parent }
 }

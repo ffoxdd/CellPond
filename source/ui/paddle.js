@@ -9,9 +9,6 @@ class Paddle extends Atom {
 			noDampen: true,
 			isPaddle: true,
 			behindChildren: true,
-			draw: Rectangle.drawFn,
-			overlaps: Rectangle.overlapsFn,
-			offscreen: Rectangle.offscreenFn,
 			colour: Colour.Grey,
 			size: UI.PADDLE_TOTAL_SIZE, //for legacy
 			width: UI.PADDLE_TOTAL_SIZE,
@@ -22,141 +19,140 @@ class Paddle extends Atom {
 			rightTriangle: undefined,
 			x: Math.round(Paddle.MARGIN), //needed for handle creation
 			y: UI.SQUARE_SIZE + UI.OPTION_MARGIN + Paddle.MARGIN,
-			construct: (paddle) => {
-
-				paddle.cellAtoms = []
-				paddle.slots = []
-
-				const handle = UI.createChild(paddle, new PaddleHandle())
-				paddle.handle = handle
-				paddle.setLimits(paddle)
-				paddle.x = paddle.minX
-				paddle.expanded = false
-
-				paddle.pinhole = UI.createChild(handle, new PinHole())
-
-				paddle.dummyLeft = UI.createChild(paddle, new Slot())
-				paddle.dummyLeft.visible = false
-
-				paddle.dummyRight = UI.createChild(paddle, new Slot())
-				paddle.dummyRight.visible = false
-
-				UI.emit("paddleSizeChanged",paddle)
-
-			},
-
-			setLimits: (paddle) => {
-				paddle.maxX = paddle.handle.width
-				paddle.minX = paddle.handle.width - paddle.width
-			},
-
-			drop: (paddle) => {
-
-				const distanceFromMax = paddle.maxX - paddle.x
-				const distanceFromMin = paddle.x - paddle.minX
-
-				if (distanceFromMax < distanceFromMin) {
-					paddle.x = paddle.maxX
-					paddle.expanded = true
-					UI.emit("paddleRuleChanged",paddle)
-
-					if (UI.paddles.last === paddle) {
-						UI.emit("paddleCreate")
-					}
-
-				} else {
-					paddle.x = paddle.minX
-					paddle.expanded = false
-					UI.emit("paddleRuleChanged",paddle)
-
-					if (UI.paddles.last !== paddle) {
-						UI.emit("paddleDelete", paddle)
-					}
-				}
-				paddle.dx = 0
-			},
-
-			click: (paddle) => {
-				const cells = UI.makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-				const diagram = new Diagram({left: cells})
-				UI.emit("brushColourChanged",diagram)
-			},
-
-			drag: (paddle, x, y) => {
-				if (false && paddle.pinhole.locked) {
-					const square = new ColourtodeSquare()
-					UI.hand.offset.x = -square.width/2
-					UI.hand.offset.y = -square.height/2
-					const cells = UI.makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
-					const diagram = new Diagram({left: cells})
-					diagram.normalise()
-
-					square.value = diagram
-					UI.atomRegistry.register(square)
-					state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
-					square.update(square)
-					return square
-				}
-				return paddle
-			},
-
 			rightDraggable: true,
-			getColour: (paddle) => {
-				let cellAtoms = paddle.cellAtoms
-				if (cellAtoms.length === 0) {
-
-					const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
-					return leftClone
-
-				} else if (cellAtoms.length === 1) {
-					const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
-					return leftClone
-				}
-				const cells = UI.makeDiagramCellsFromCellAtoms(cellAtoms)
-				const diagram = new Diagram({left: cells})
-				diagram.normalise()
-				return diagram
-			},
-			rightDrag: (paddle) => {
-				let cellAtoms = paddle.cellAtoms
-				if (cellAtoms.length === 0) {
-
-					const square = new ColourtodeSquare()
-					UI.hand.offset.x = -square.width/2
-					UI.hand.offset.y = -square.height/2
-					const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
-					UI.emit("brushColourChanged",leftClone)
-					UI.atomRegistry.register(square)
-					square.value = leftClone
-					square.update(square)
-					return square
-
-				} else if (cellAtoms.length === 1) {
-					const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
-					const square = cellAtoms[0].clone(cellAtoms[0])
-					UI.hand.offset.x = -square.width/2
-					UI.hand.offset.y = -square.height/2
-					UI.emit("brushColourChanged",leftClone)
-					UI.atomRegistry.register(square)
-					square.value = leftClone
-					square.update(square)
-					return square
-				}
-				const square = new ColourtodeSquare()
-				UI.hand.offset.x = -square.width/2
-				UI.hand.offset.y = -square.height/2
-				const cells = UI.makeDiagramCellsFromCellAtoms(cellAtoms)
-				const diagram = new Diagram({left: cells})
-				diagram.normalise()
-
-				square.value = diagram
-				UI.atomRegistry.register(square)
-				UI.emit("brushColourChanged",diagram)
-				square.update(square)
-				return square
-			},
 			...element,
 		})
+	}
+
+	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+
+	construct(atom) {
+		this.cellAtoms = []
+		this.slots = []
+
+		const handle = UI.createChild(this, new PaddleHandle())
+		this.handle = handle
+		this.setLimits(this)
+		this.x = this.minX
+		this.expanded = false
+
+		this.pinhole = UI.createChild(handle, new PinHole())
+
+		this.dummyLeft = UI.createChild(this, new Slot())
+		this.dummyLeft.visible = false
+
+		this.dummyRight = UI.createChild(this, new Slot())
+		this.dummyRight.visible = false
+
+		UI.emit("paddleSizeChanged",this)
+	}
+
+	setLimits(atom) {
+		this.maxX = this.handle.width
+		this.minX = this.handle.width - this.width
+	}
+
+	drop(atom) {
+		const distanceFromMax = this.maxX - this.x
+		const distanceFromMin = this.x - this.minX
+
+		if (distanceFromMax < distanceFromMin) {
+			this.x = this.maxX
+			this.expanded = true
+			UI.emit("paddleRuleChanged",this)
+
+			if (UI.paddles.last === this) {
+				UI.emit("paddleCreate")
+			}
+
+		} else {
+			this.x = this.minX
+			this.expanded = false
+			UI.emit("paddleRuleChanged",this)
+
+			if (UI.paddles.last !== this) {
+				UI.emit("paddleDelete", this)
+			}
+		}
+		this.dx = 0
+	}
+
+	click(atom) {
+		const cells = UI.makeDiagramCellsFromCellAtoms(this.cellAtoms)
+		const diagram = new Diagram({left: cells})
+		UI.emit("brushColourChanged",diagram)
+	}
+
+	drag(atom, x, y) {
+		if (false && this.pinhole.locked) {
+			const square = new ColourtodeSquare()
+			UI.hand.offset.x = -square.width/2
+			UI.hand.offset.y = -square.height/2
+			const cells = UI.makeDiagramCellsFromCellAtoms(this.cellAtoms)
+			const diagram = new Diagram({left: cells})
+			diagram.normalise()
+
+			square.value = diagram
+			UI.atomRegistry.register(square)
+			state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
+			square.update(square)
+			return square
+		}
+		return this
+	}
+
+	getColour(atom) {
+		let cellAtoms = this.cellAtoms
+		if (cellAtoms.length === 0) {
+			const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
+			return leftClone
+		} else if (cellAtoms.length === 1) {
+			const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
+			return leftClone
+		}
+		const cells = UI.makeDiagramCellsFromCellAtoms(cellAtoms)
+		const diagram = new Diagram({left: cells})
+		diagram.normalise()
+		return diagram
+	}
+
+	rightDrag(atom) {
+		let cellAtoms = this.cellAtoms
+		if (cellAtoms.length === 0) {
+			const square = new ColourtodeSquare()
+			UI.hand.offset.x = -square.width/2
+			UI.hand.offset.y = -square.height/2
+			const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
+			UI.emit("brushColourChanged",leftClone)
+			UI.atomRegistry.register(square)
+			square.value = leftClone
+			square.update(square)
+			return square
+		} else if (cellAtoms.length === 1) {
+			const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
+			const square = cellAtoms[0].clone(cellAtoms[0])
+			UI.hand.offset.x = -square.width/2
+			UI.hand.offset.y = -square.height/2
+			UI.emit("brushColourChanged",leftClone)
+			UI.atomRegistry.register(square)
+			square.value = leftClone
+			square.update(square)
+			return square
+		}
+		const square = new ColourtodeSquare()
+		UI.hand.offset.x = -square.width/2
+		UI.hand.offset.y = -square.height/2
+		const cells = UI.makeDiagramCellsFromCellAtoms(cellAtoms)
+		const diagram = new Diagram({left: cells})
+		diagram.normalise()
+
+		square.value = diagram
+		UI.atomRegistry.register(square)
+		UI.emit("brushColourChanged",diagram)
+		square.update(square)
+		return square
 	}
 
 	static get WIDTH() { return UI.PADDLE_TOTAL_SIZE }

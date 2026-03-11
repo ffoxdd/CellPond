@@ -5,9 +5,6 @@ class Highlight extends Atom {
 	constructor(element = {}) {
 		super({
 			behindParent: true,
-			draw: Rectangle.drawFn,
-			offscreen: Rectangle.offscreenFn,
-			overlaps: Rectangle.overlapsFn,
 			draggable: false,
 			grabbable: false,
 			justVisual: true,
@@ -18,4 +15,8 @@ class Highlight extends Atom {
 			...element,
 		})
 	}
+
+	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
 }

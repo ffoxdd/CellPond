@@ -4,11 +4,6 @@
 class OptionPadding extends Atom {
 	constructor(element = {}) {
 		super({
-			draw: () => {},
-			overlaps: Rectangle.overlapsFn,
-			offscreen: Rectangle.offscreenFn,
-			grab: (atom) => atom.parent.parent,
-			touch: (atom) => atom.parent,
 			colour: Colour.Grey,
 			width: UI.SQUARE_SIZE,
 			height: UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN - UI.CHANNEL_HEIGHT,
@@ -17,4 +12,10 @@ class OptionPadding extends Atom {
 			...element,
 		})
 	}
+
+	draw() {}
+	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	grab(atom) { return this.parent.parent }
+	touch(atom) { return this.parent }
 }
