@@ -84,7 +84,7 @@ class Paddle extends Atom {
 
 			drag: (paddle, x, y) => {
 				if (false && paddle.pinhole.locked) {
-					const square = new Atom(UI.COLOURTODE_SQUARE)
+					const square = new ColourtodeSquare()
 					UI.hand.offset.x = -square.width/2
 					UI.hand.offset.y = -square.height/2
 					const cells = UI.makeDiagramCellsFromCellAtoms(paddle.cellAtoms)
@@ -121,7 +121,7 @@ class Paddle extends Atom {
 				let cellAtoms = paddle.cellAtoms
 				if (cellAtoms.length === 0) {
 
-					const square = new Atom(UI.COLOURTODE_SQUARE)
+					const square = new ColourtodeSquare()
 					UI.hand.offset.x = -square.width/2
 					UI.hand.offset.y = -square.height/2
 					const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
@@ -142,7 +142,7 @@ class Paddle extends Atom {
 					square.update(square)
 					return square
 				}
-				const square = new Atom(UI.COLOURTODE_SQUARE)
+				const square = new ColourtodeSquare()
 				UI.hand.offset.x = -square.width/2
 				UI.hand.offset.y = -square.height/2
 				const cells = UI.makeDiagramCellsFromCellAtoms(cellAtoms)
