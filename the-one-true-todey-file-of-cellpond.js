@@ -1157,7 +1157,7 @@ on.load(() => {
 		if (highlightedAtom === undefined) return
 
 		if (atom.highlight === undefined) {
-			const highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+			const highlight = createChild(atom, new Highlight(), {bottom: true})
 			highlight.hasBorder = true
 			highlight.colour = Colour.Grey
 			const {x, y} = highlightedAtom.getPosition()
@@ -1834,7 +1834,7 @@ on.load(() => {
 	// COLOURTODE - CHILDREN //
 	//=======================//
 	const createChild = (parent, element, {bottom = false} = {}) => {
-		const child = new Atom(element)
+		const child = element instanceof Atom ? element : new Atom(element)
 		if (!bottom) parent.children.push(child)
 		else parent.children.unshift(child)
 		child.parent = parent
@@ -1996,19 +1996,19 @@ on.load(() => {
 		},
 
 		createPicker: (atom) => {
-			const pickerHandle = createChild(atom, SYMMETRY_HANDLE)
+			const pickerHandle = createChild(atom, new SymmetryHandle())
 			pickerHandle.width += OPTION_MARGIN
 			atom.pickerHandle = pickerHandle
 			atom.pickerHandle.behindParent = true
 			
-			const pickerPad = createChild(atom, COLOURTODE_PICKER_PAD)
+			const pickerPad = createChild(atom, new PickerPad())
 			atom.pickerPad = pickerPad
 
 			if (atom.value.channels[2] !== undefined) {
 				if (atom.value.channels[2].variable === undefined) {
 					const blue = createChild(atom, COLOURTODE_PICKER_CHANNEL)
 					blue.channelSlot = "blue" //note: a colour doesn't necessarily have to be in its own channel slot
-					blue.x += COLOURTODE_PICKER_PAD_MARGIN + 3 * (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
+					blue.x += OPTION_MARGIN + 3 * (COLOURTODE_SQUARE.size + OPTION_MARGIN)
 					blue.value = atom.value.channels[2]
 					blue.needsColoursUpdate = true
 					atom.blue = blue
@@ -2022,7 +2022,7 @@ on.load(() => {
 					atomRegistry.register(hexagon)
 					giveChild(atom, hexagon)
 					hexagon.variable = "blue"
-					hexagon.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size)*3 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - hexagon.width/3
+					hexagon.x = (OPTION_MARGIN + COLOURTODE_SQUARE.size)*3 + (COLOURTODE_SQUARE.size + OPTION_MARGIN)/2 - hexagon.width/3
 					hexagon.y = atom.height/2 - hexagon.height/2
 					hexagon.attached = true
 
@@ -2034,7 +2034,7 @@ on.load(() => {
 				if (atom.value.channels[1].variable === undefined) {
 					const green = createChild(atom, COLOURTODE_PICKER_CHANNEL)
 					green.channelSlot = "green" //note: a colour doesn't necessarily have to be in its own channel slot
-					green.x += COLOURTODE_PICKER_PAD_MARGIN + 2 * (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
+					green.x += OPTION_MARGIN + 2 * (COLOURTODE_SQUARE.size + OPTION_MARGIN)
 					green.value = atom.value.channels[1]
 					green.needsColoursUpdate = true
 					atom.green = green
@@ -2048,7 +2048,7 @@ on.load(() => {
 					atomRegistry.register(hexagon)
 					giveChild(atom, hexagon)
 					hexagon.variable = "green"
-					hexagon.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size)*2 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - hexagon.width/3
+					hexagon.x = (OPTION_MARGIN + COLOURTODE_SQUARE.size)*2 + (COLOURTODE_SQUARE.size + OPTION_MARGIN)/2 - hexagon.width/3
 					hexagon.y = atom.height/2 - hexagon.height/2
 					hexagon.attached = true
 
@@ -2060,7 +2060,7 @@ on.load(() => {
 				if (atom.value.channels[0].variable === undefined) {
 					const red = createChild(atom, COLOURTODE_PICKER_CHANNEL)
 					red.channelSlot = "red" //note: a colour doesn't necessarily have to be in its own channel slot
-					red.x += COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN
+					red.x += OPTION_MARGIN + COLOURTODE_SQUARE.size + OPTION_MARGIN
 					red.value = atom.value.channels[0]
 					red.needsColoursUpdate = true
 					atom.red = red
@@ -2072,7 +2072,7 @@ on.load(() => {
 					triangle.behindOtherChildren = false
 					atomRegistry.register(triangle)
 					giveChild(atom, triangle)
-					triangle.x = (COLOURTODE_PICKER_PAD_MARGIN + COLOURTODE_SQUARE.size) + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)/2 - triangle.width/3
+					triangle.x = (OPTION_MARGIN + COLOURTODE_SQUARE.size) + (COLOURTODE_SQUARE.size + OPTION_MARGIN)/2 - triangle.width/3
 					triangle.y = atom.height/2 - triangle.height/2
 					triangle.attached = true
 
@@ -2276,7 +2276,7 @@ on.load(() => {
 							atom.highlightedAtom = other
 						}
 
-						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+						atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 						atom.highlight.hasBorder = true
 						atom.highlight.hasInner = false
 						atom.highlight.width = other.width
@@ -2310,7 +2310,7 @@ on.load(() => {
 						const {x: dummyRightX, y: dummyRightY} = paddle.dummyRight.getPosition()
 
 						if (paddle.rightTriangle === undefined) {
-							atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+							atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 							atom.highlight.hasBorder = true
 							atom.highlight.colour = Colour.Grey
 							atom.highlight.x = dummyLeftX
@@ -2321,7 +2321,7 @@ on.load(() => {
 
 							atom.highlightedAtom = paddle
 						} else if (left > pleft + paddle.rightTriangle.x) {
-							atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+							atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 							atom.highlight.hasBorder = true
 							atom.highlight.colour = Colour.Grey
 							atom.highlight.x = dummyRightX
@@ -2331,7 +2331,7 @@ on.load(() => {
 							atom.highlightedSide = "right"
 							atom.highlightedAtom = paddle
 						} else {
-							atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+							atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 							atom.highlight.hasBorder = true
 							atom.highlight.colour = Colour.Grey
 							atom.highlight.x = dummyLeftX
@@ -2403,7 +2403,7 @@ on.load(() => {
 
 						const {x: cx, y: cy} = winningCellAtom.getPosition()
 
-						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+						atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 						if (winningSide === "left" || winningSide === "right") {
 							atom.highlight.width = HIGHLIGHT_THICKNESS
 							atom.highlight.height = winningCellAtom.height
@@ -2503,7 +2503,7 @@ on.load(() => {
 
 						const {x: cx, y: cy} = winningCellAtom.getPosition()
 
-						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+						atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 						if (winningSide === "left" || winningSide === "right") {
 							atom.highlight.width = HIGHLIGHT_THICKNESS
 							atom.highlight.height = winningCellAtom.height
@@ -2752,7 +2752,7 @@ on.load(() => {
 		joinExpand: (atom) => {
 			atom.joinExpanded = true
 			
-			const pickerPad = createChild(atom, COLOURTODE_PICKER_PAD)
+			const pickerPad = createChild(atom, new PickerPad())
 			atom.pickerPad = pickerPad
 			pickerPad.width = atom.width + OPTION_MARGIN*2
 			pickerPad.x = -OPTION_MARGIN
@@ -2762,11 +2762,11 @@ on.load(() => {
 			pickerPad.grab = (atom) => atom.parent
 			pickerPad.dragOnly = true
 
-			const pickerHandle = createChild(atom, COLOURTODE_PICKER_PAD)
+			const pickerHandle = createChild(atom, new PickerPad())
 			atom.pickerHandle = pickerHandle
-			pickerHandle.width = SYMMETRY_HANDLE.height
+			pickerHandle.width = SymmetryHandle.HEIGHT
 			pickerHandle.x = atom.width/2 - pickerHandle.width/2
-			pickerHandle.height = SYMMETRY_HANDLE.width
+			pickerHandle.height = SymmetryHandle.WIDTH
 			pickerHandle.y = atom.height
 			pickerHandle.touch = (atom) => atom
 			pickerHandle.grab = (atom) => atom.parent
@@ -3149,12 +3149,12 @@ on.load(() => {
 		},
 
 		expand: (atom) => {
-			atom.pad = createChild(atom, TRIANGLE_PAD)
-			atom.handle = createChild(atom, TRIANGLE_HANDLE)
+			atom.pad = createChild(atom, new TrianglePad())
+			atom.handle = createChild(atom, new TriangleHandle())
 			atom.expanded = true
 
-			atom.upPick = createChild(atom, TRIANGLE_PICK_UP)
-			atom.downPick = createChild(atom, TRIANGLE_PICK_DOWN)
+			atom.upPick = createChild(atom, new TrianglePickUp())
+			atom.downPick = createChild(atom, new TrianglePickDown())
 			
 			if (atom.direction === "up") atom.upPick.value = true
 			if (atom.direction === "down") atom.downPick.value = true
@@ -3265,7 +3265,7 @@ on.load(() => {
 
 					for (const slot of slots) {
 						const slotId = CHANNEL_IDS[slot]
-						const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
+						const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + OPTION_MARGIN)
 						const sy = ay + OPTION_MARGIN
 						const distance = Math.hypot(x - sx, y - sy)
 						if (distance < winningDistance) {
@@ -3285,7 +3285,7 @@ on.load(() => {
 							atom.highlight = undefined
 						}
 
-						atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+						atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 						atom.highlight.hasBorder = true
 						atom.highlight.x = ax + winningSquare.size + OPTION_MARGIN + slotId*(OPTION_MARGIN+winningSquare.size)
 						atom.highlight.y = ay
@@ -3460,20 +3460,6 @@ on.load(() => {
 	const CHANNEL_HEIGHT = COLOURTODE_SQUARE.size - OPTION_MARGIN*2
 	const OPTION_SPACING = CHANNEL_HEIGHT + OPTION_MARGIN
 
-	const COLOURTODE_PICKER_PAD_MARGIN = OPTION_MARGIN
-	const COLOURTODE_PICKER_PAD = {
-		draw: Rectangle.drawFn,
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		grab: (atom) => atom.parent,
-		colour: Colour.Grey,
-		width: COLOURTODE_PICKER_PAD_MARGIN + 3*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN),
-		height: COLOURTODE_SQUARE.size,
-		y: 0,
-		x: COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN,
-		dragOnly: true,
-		isPicker: true,
-	}
 
 	const CHANNEL_IDS = {
 		red: 0,
@@ -3574,7 +3560,7 @@ on.load(() => {
 			atom.dcolourId = 1
 			atom.colourTicker = Infinity
 
-			atom.selectionBack = createChild(atom, COLOURTODE_CHANNEL_SELECTION_SIDE)
+			atom.selectionBack = createChild(atom, new ChannelSelectionSide())
 
 			const selectionTop = createChild(atom, COLOURTODE_CHANNEL_SELECTION_END)
 			atom.selectionTop = selectionTop
@@ -3778,7 +3764,7 @@ on.load(() => {
 
 						for (const slot of slots) {
 							const slotId = CHANNEL_IDS[slot]
-							const sx = ax + square.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
+							const sx = ax + square.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + OPTION_MARGIN)
 							const sy = ay + OPTION_MARGIN
 							const distance = Math.hypot(x - sx, y - sy)
 							if (distance < winningDistance) {
@@ -3796,7 +3782,7 @@ on.load(() => {
 					const {x: ax, y: ay} = winningSquare.getPosition()
 					const slotId = CHANNEL_IDS[winningSlot]
 
-					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+					atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 					atom.highlight.hasBorder = true
 					atom.highlight.x = ax + winningSquare.size + OPTION_MARGIN + slotId*(OPTION_MARGIN+winningSquare.size)
 					atom.highlight.y = ay
@@ -3806,7 +3792,7 @@ on.load(() => {
 				} else if (atom.highlightedAtom) {
 					const {x: ax, y: ay} = atom.highlightedAtom.getPosition()
 
-					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+					atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 					atom.highlight.hasBorder = true
 					atom.highlight.x = ax
 					atom.highlight.y = ay
@@ -4129,7 +4115,7 @@ on.load(() => {
 				ctx.stroke(path)
 
 				if (atom.parent.isSquare) {
-					SYMMETRY_TOGGLE_Y.drawY(atom, ctx, atom.size - 8, 4)
+					SymmetryToggleY.drawY(atom, ctx, atom.size - 8, 4)
 				}
 			}
 		},
@@ -4252,7 +4238,7 @@ on.load(() => {
 						deleteChild(atom, atom.highlightPaddle)
 					}
 
-					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+					atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 					atom.highlight.width = HIGHLIGHT_THICKNESS
 					atom.highlight.height = paddle.height
 					atom.highlight.y = ptop
@@ -4355,7 +4341,7 @@ on.load(() => {
 			Circle.drawFn(atom, ctx)
 		},
 		construct: (atom) => {
-			atom.inner = createChild(atom, HEXAGON_BUTTON_INNER, {bottom: false})
+			atom.inner = createChild(atom, new HexagonButtonInner(), {bottom: false})
 			atom.inner.x = atom.width/2 - atom.inner.width/2
 			atom.inner.y = atom.height/2 - atom.inner.height/2
 		},
@@ -4385,17 +4371,6 @@ on.load(() => {
 		}
 	}
 
-	const HEXAGON_BUTTON_INNER = {
-		size: COLOURTODE_SQUARE.size * 2/3,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		grab: (atom) => atom.parent,
-		touch: (atom) => atom.parent,
-		draw: Circle.drawFn,
-		hasBorder: true,
-		borderColour: Colour.Black,
-		colour: Colour.Grey,
-	}
 
 	const HEXAGON_HANDLE = {
 		offscreen: Rectangle.offscreenFn,
@@ -4519,18 +4494,6 @@ on.load(() => {
 		dragLockX: true,
 	}
 
-	const COLOURTODE_CHANNEL_SELECTION_SIDE = {
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		width: (COLOURTODE_SQUARE.size - CHANNEL_HEIGHT)/2,
-		height: COLOURTODE_SQUARE.size,
-		//grabbable: false,
-		grab: (atom) => atom.parent,
-		touch: (atom) => atom.parent,
-		dragLockX: true,
-		draw: Rectangle.drawFn,
-		colour: Colour.Grey,
-	}
 
 	const COLOURTODE_PICKER_CHANNEL_OPTION = {
 		draw: Rectangle.drawFn,
@@ -4610,12 +4573,12 @@ on.load(() => {
 		construct: (atom) => {
 
 			if (atom.pityTop) {
-				const topPity = createChild(atom, COLOURTODE_OPTION_PADDING)
+				const topPity = createChild(atom, new OptionPadding())
 				topPity.y = -topPity.height
 			}
 
 			if (atom.pityBottom) {
-				const bottomPity = createChild(atom, COLOURTODE_OPTION_PADDING)
+				const bottomPity = createChild(atom, new OptionPadding())
 				bottomPity.y = atom.height
 			}
 
@@ -4744,7 +4707,7 @@ on.load(() => {
 
 				for (const slot of slots) {
 					const slotId = CHANNEL_IDS[slot]
-					const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN)
+					const sx = ax + other.size + OPTION_MARGIN*2 + slotId*(COLOURTODE_SQUARE.size + OPTION_MARGIN)
 					const sy = ay + OPTION_MARGIN
 					const distance = Math.hypot(x - sx, y - sy)
 					if (distance < winningDistance) {
@@ -4759,7 +4722,7 @@ on.load(() => {
 					const {x: ax, y: ay} = winningSquare.getPosition()
 					const slotId = CHANNEL_IDS[winningSlot]
 
-					atom.highlight = createChild(atom, HIGHLIGHT, {bottom: true})
+					atom.highlight = createChild(atom, new Highlight(), {bottom: true})
 					atom.highlight.hasBorder = true
 					atom.highlight.x = ax + winningSquare.size + OPTION_MARGIN + slotId*(OPTION_MARGIN+winningSquare.size)
 					atom.highlight.y = ay
@@ -4921,16 +4884,16 @@ on.load(() => {
 
 			if (atom.value.add === undefined) {
 				if (atom.y < 0 || !(atom.parent.isTallRectangle && atom.parent.operationAtoms.padBottom === atom)) {
-					atom.handleTop = createChild(atom, SYMMETRY_HANDLE)
+					atom.handleTop = createChild(atom, new SymmetryHandle())
 					atom.handleTop.width = atom.handleTop.height
 					atom.handleTop.height *= 2
 					atom.handleTop.y = atom.height/2 - atom.handleTop.height
 					atom.handleTop.x = atom.width/2 - atom.handleTop.width/2
 					atom.handleTop.behindParent = true
 
-					atom.padTop = createChild(atom, SYMMETRY_PAD)
-					atom.padTop.height = COLOURTODE_PICKER_PAD.height
-					atom.padTop.width = COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN*2
+					atom.padTop = createChild(atom, new SymmetryPad())
+					atom.padTop.height = PickerPad.HEIGHT
+					atom.padTop.width = COLOURTODE_SQUARE.size + OPTION_MARGIN*2
 					atom.padTop.x = atom.width/2 - atom.padTop.width/2
 					atom.padTop.y = -atom.padTop.height - OPTION_MARGIN
 				}
@@ -4938,32 +4901,32 @@ on.load(() => {
 
 			if (atom.value.subtract === undefined) {
 				if (atom.y > 0 || !(atom.parent.isTallRectangle && atom.parent.operationAtoms.padTop === atom)) {
-					atom.handleBottom = createChild(atom, SYMMETRY_HANDLE)
+					atom.handleBottom = createChild(atom, new SymmetryHandle())
 					atom.handleBottom.width = atom.handleBottom.height
 					atom.handleBottom.height *= 2
 					atom.handleBottom.y = atom.height/2
 					atom.handleBottom.x = atom.width/2 - atom.handleBottom.width/2
 					atom.handleBottom.behindParent = true
 
-					atom.padBottom = createChild(atom, SYMMETRY_PAD)
-					atom.padBottom.height = COLOURTODE_PICKER_PAD.height
-					atom.padBottom.width = COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN*2
+					atom.padBottom = createChild(atom, new SymmetryPad())
+					atom.padBottom.height = PickerPad.HEIGHT
+					atom.padBottom.width = COLOURTODE_SQUARE.size + OPTION_MARGIN*2
 					atom.padBottom.x = atom.width/2 - atom.padBottom.width/2
 					atom.padBottom.y = atom.height + OPTION_MARGIN
 				}
 			}
 			
-			atom.handleRight = createChild(atom, SYMMETRY_HANDLE)
+			atom.handleRight = createChild(atom, new SymmetryHandle())
 			atom.handleRight.y = atom.height/2 - atom.handleRight.height/2
 			atom.handleRight.x = atom.width/2
 			atom.handleRight.width *= 2.5
 			atom.handleRight.behindParent = true
 
-			atom.padRight = createChild(atom, SYMMETRY_PAD)
-			atom.padRight.height = COLOURTODE_PICKER_PAD.height
+			atom.padRight = createChild(atom, new SymmetryPad())
+			atom.padRight.height = PickerPad.HEIGHT
 			atom.padRight.width = OPTION_MARGIN + (atom.width+OPTION_MARGIN/1.5)*3
 			atom.padRight.y = atom.height/2 - atom.padRight.height/2
-			atom.padRight.x = atom.width/2 + (COLOURTODE_SQUARE.size + COLOURTODE_PICKER_PAD_MARGIN*2)/2 + OPTION_MARGIN
+			atom.padRight.x = atom.width/2 + (COLOURTODE_SQUARE.size + OPTION_MARGIN*2)/2 + OPTION_MARGIN
 			
 			
 
@@ -4985,7 +4948,7 @@ on.load(() => {
 			atom.blue.colour = Colour.Black
 			atom.blue.value = "blue"
 
-			atom.winnerPin = createChild(atom, DIAMOND_PIN)
+			atom.winnerPin = createChild(atom, new DiamondPin())
 			atom.winnerPin.x = atom[atom.variable].x + atom.winnerPin.width/2
 			atom.winnerPin.y = atom.winnerPin.height/2
 			atom.winnerPin.colour = atom[atom.variable].borderColour
@@ -5077,33 +5040,6 @@ on.load(() => {
 		}
 	}
 	
-	const DIAMOND_PIN = {
-		draw: (atom, ctx) => {
-			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		hasBorder: true,
-		size: (CHANNEL_HEIGHT + OPTION_MARGIN/3*2) / 2,
-		height: (CHANNEL_HEIGHT + OPTION_MARGIN/3*2) / 2,
-		width: (CHANNEL_HEIGHT + OPTION_MARGIN/3*2) / 2,
-		grab: (atom) => atom.parent,
-		touch: (atom) => atom.parent,
-	}
-	
-	const COLOURTODE_OPTION_PADDING = {
-		draw: () => {},
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		grab: (atom) => atom.parent.parent,
-		touch: (atom) => atom.parent,
-		colour: Colour.Grey,
-		width: COLOURTODE_SQUARE.size,
-		height: OPTION_SPACING - CHANNEL_HEIGHT,
-		y: 0,
-		x: 0,
-		//dragOnly: true,
-	}
 
 	paddles = []
 
@@ -5133,13 +5069,13 @@ on.load(() => {
 			paddle.cellAtoms = []
 			paddle.slots = []
 
-			const handle = createChild(paddle, PADDLE_HANDLE)
+			const handle = createChild(paddle, new PaddleHandle())
 			paddle.handle = handle
 			paddle.setLimits(paddle)
 			paddle.x = paddle.minX
 			paddle.expanded = false
 
-			paddle.pinhole = createChild(handle, PIN_HOLE)
+			paddle.pinhole = createChild(handle, new PinHole())
 
 			paddle.dummyLeft = createChild(paddle, SLOT)
 			paddle.dummyLeft.visible = false
@@ -5957,94 +5893,9 @@ on.load(() => {
 		return paddle
 	}
 
-	const PADDLE_HANDLE = {
-		isPaddleHandle: true,
-		attached: true,
-		behindChildren: true,
-		draw: Rectangle.drawFn,
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		colour: Colour.Grey,
-		size: PADDLE.x,
-		x: -PADDLE.x,
-		y: PADDLE.size/2 - PADDLE.x/2,
-		touch: (atom) => atom.parent.pinhole,
-		grab: (atom) => {
-			return atom.parent.pinhole
-		},
-	}
+	UI.PADDLE_HANDLE_SIZE = UI.PADDLE_X
+	UI.updatePaddleRule = updatePaddleRule
 
-	UI.PADDLE_HANDLE_SIZE = PADDLE_HANDLE.size
-
-	const PIN_HOLE = {
-		isPinhole: true,
-		attached: true,
-		locked: false,
-		borderScale: 1/2,
-		borderColour: Colour.Black,
-		draw: (atom, ctx) => {
-			return
-			if (atom.locked) {
-				atom.hasBorder = true
-				atom.colour = Colour.Grey				
-			}
-			else {
-				atom.hasBorder = false
-				atom.colour = Colour.Black
-			}
-			Circle.drawFn(atom, ctx)
-		},
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		colour: Colour.Black,
-		size: PADDLE_HANDLE.size - OPTION_MARGIN/2,
-		y: OPTION_MARGIN/2/2,
-		x: OPTION_MARGIN/2/2,
-		click: (atom) => {
-			return
-			const handle = atom.parent
-			const paddle = handle.parent
-			if (atom.locked) {
-				atom.locked = false
-				paddle.grabbable = true
-				handle.draggable = true
-				paddle.draggable = true
-				atom.draggable = true
-				updatePaddleRule(paddle)
-			} 
-
-			else {
-				atom.locked = true
-				handle.draggable = false
-				atom.draggable = false
-
-				for (const cellAtom of paddle.cellAtoms) {
-					if (cellAtom.expanded) {
-						cellAtom.unexpand(cellAtom)
-					}
-					if (cellAtom.slotted !== undefined) {
-						const slotted = cellAtom.slotted
-						if (slotted.expanded) {
-							slotted.unexpand(slotted)
-						}
-					}
-					if (cellAtom.joins.length > 0 && cellAtom.joinExpanded) {
-						cellAtom.joinUnepxand(cellAtom)
-					}
-				}
-
-				
-
-				if (paddle.cellAtoms.length === 0) {
-					paddle.grabbable = false
-					paddle.draggable = false
-				}
-				updatePaddleRule(paddle)
-			}
-		},
-		grab: (atom) => atom.parent.parent,
-		
-	}
 
 	const SYMMETRY_TOGGLINGS = new Map()
 	SYMMETRY_TOGGLINGS.set(0, DRAGON_TRANSFORMATIONS.NONE)
@@ -6065,9 +5916,9 @@ on.load(() => {
 			Circle.drawFn(atom, ctx)
 			if (atom.value === undefined) return
 			const [x, y, r] = getXYR(atom.value)
-			if (x > 0) SYMMETRY_TOGGLE_X.drawX(atom, ctx)
-			if (y > 0) SYMMETRY_TOGGLE_Y.drawY(atom, ctx)
-			if (r > 0) SYMMETRY_TOGGLE_R.drawR(atom, ctx)
+			if (x > 0) SymmetryToggleX.drawX(atom, ctx)
+			if (y > 0) SymmetryToggleY.drawY(atom, ctx)
+			if (r > 0) SymmetryToggleR.drawR(atom, ctx)
 		},
 		offscreen: Rectangle.offscreenFn,
 		overlaps: Rectangle.overlapsFn,
@@ -6089,15 +5940,15 @@ on.load(() => {
 		},
 
 		expand: (atom) => {
-			atom.pad = createChild(atom, SYMMETRY_PAD)
-			atom.handle = createChild(atom, SYMMETRY_HANDLE)
+			atom.pad = createChild(atom, new SymmetryPad())
+			atom.handle = createChild(atom, new SymmetryHandle())
 			atom.handle.width += OPTION_MARGIN
 			atom.expanded = true
 
 			const [x, y, r] = getXYR(atom.value)
-			atom.xToggle = createChild(atom, SYMMETRY_TOGGLE_X)
-			atom.yToggle = createChild(atom, SYMMETRY_TOGGLE_Y)
-			atom.rToggle = createChild(atom, SYMMETRY_TOGGLE_R)
+			atom.xToggle = createChild(atom, new SymmetryToggleX())
+			atom.yToggle = createChild(atom, new SymmetryToggleY())
+			atom.rToggle = createChild(atom, new SymmetryToggleR())
 
 			if (x > 0) atom.xToggle.value = true
 			if (y > 0) atom.yToggle.value = true
@@ -6137,7 +5988,7 @@ on.load(() => {
 						deleteChild(atom, atom.highlightPaddle)
 					}
 
-					atom.highlightPaddle = createChild(atom, HIGHLIGHT, {bottom: true})
+					atom.highlightPaddle = createChild(atom, new Highlight(), {bottom: true})
 					atom.highlightPaddle.width = HIGHLIGHT_THICKNESS
 					atom.highlightPaddle.height = paddle.height
 					atom.highlightPaddle.y = ptop
@@ -6210,72 +6061,7 @@ on.load(() => {
 	}
 
 	const HIGHLIGHT_THICKNESS = BORDER_THICKNESS
-	const HIGHLIGHT = {
-		behindParent: true,
-		draw: Rectangle.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		draggable: false,
-		grabbable: false,
-		justVisual: true,
-		colour: Colour.splash(999),
-		borderColour: Colour.splash(999),
-		hasAbsolutePosition: true,
-		hasInner: false,
-	}
 
-	const TRIANGLE_PAD = {
-		draw: Rectangle.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		dragOnly: true,
-		width: SYMMETRY_CIRCLE.size,
-		x: SYMMETRY_CIRCLE.size*Math.sqrt(3)/2 + OPTION_MARGIN,
-		height: (SYMMETRY_CIRCLE.size * 2) - OPTION_MARGIN,
-		y: -SYMMETRY_CIRCLE.size/2 + OPTION_MARGIN/2,
-		colour: Colour.Grey,
-		grab: (atom) => atom.parent,
-	}
-
-	const TRIANGLE_HANDLE = {
-		draw: Rectangle.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		dragOnly: true,
-		width: SYMMETRY_CIRCLE.size/2 + OPTION_MARGIN,
-		x: SYMMETRY_CIRCLE.size/2,
-		height: SYMMETRY_CIRCLE.size / 3,
-		y: SYMMETRY_CIRCLE.size/2 - (SYMMETRY_CIRCLE.size / 3)/2,
-		colour: Colour.Grey,
-		grab: (atom) => atom.parent,
-	}
-
-	const SYMMETRY_PAD = {
-		draw: Rectangle.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		dragOnly: true,
-		width: SYMMETRY_CIRCLE.size,
-		x: SYMMETRY_CIRCLE.size + OPTION_MARGIN,
-		height: (SYMMETRY_CIRCLE.size * 3) - OPTION_MARGIN,
-		y: -(SYMMETRY_CIRCLE.size * 3)/3 + OPTION_MARGIN/2,
-		colour: Colour.Grey,
-		grab: (atom) => atom.parent,
-	}
-
-	const SYMMETRY_HANDLE = {
-		draw: Rectangle.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		dragOnly: true,
-		//touch: (atom) => atom.parent,
-		width: SYMMETRY_CIRCLE.size/2,
-		x: SYMMETRY_CIRCLE.size/2 + SYMMETRY_CIRCLE.size/4,
-		height: SYMMETRY_CIRCLE.size / 3,
-		y: SYMMETRY_CIRCLE.size/2 - (SYMMETRY_CIRCLE.size / 3)/2,
-		colour: Colour.Grey,
-		grab: (atom) => atom.parent,
-	}
 
 	const rotateTriangleRotation = (rotation, clockwise) => {
 		clockwise = !clockwise
@@ -6288,214 +6074,8 @@ on.load(() => {
 
 		throw new Error("Invalid rotation or clockwiseness")
 	}
+	UI.rotateTriangleRotation = rotateTriangleRotation
 
-	const TRIANGLE_PICK_UP = {
-		hasBorder: true,
-		colour: Colour.Black,
-		borderColour: Colour.Black,
-		draw: (atom, ctx) => {
-			TriangleUp.drawFn(atom, ctx)
-		},
-		touch: (atom) => {
-			atom.colour = Colour.Silver
-			return atom
-		},
-		click: (atom) => {
-			
-			const triangle = atom.parent
-			// triangle.upPick.value = false
-			// triangle.rightPick.value = false
-			// triangle.downPick.value = false
-			atom.colour = Colour.Black
-			
-			triangle.direction = rotateTriangleRotation(triangle.direction, true)
-			atom.value = true
-
-			triangle.updateValue(triangle)
-			const parent = triangle.parent
-			if (parent.isSquare) {
-				parent.receiveNumber(parent, triangle.value, triangle.channelId, {expanded: triangle.expanded, numberAtom: triangle})
-			}
-		},
-		offscreen: triangleOffscreen,
-		overlaps: triangleOverlaps,
-		
-		value: false,
-		size: COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5,
-		grab: (atom) => atom.parent,
-		x: TRIANGLE_PAD.x + TRIANGLE_PAD.width/2 - (COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5)/2,
-		y: TRIANGLE_PAD.y + OPTION_MARGIN*1.5/2,
-	}
-
-	const TRIANGLE_PICK_DOWN = {
-		hasBorder: true,
-		colour: Colour.Black,
-		borderColour: Colour.Black,
-		draw: (atom, ctx) => {
-			TriangleDown.drawFn(atom, ctx)
-		},
-		touch: (atom) => {
-			atom.colour = Colour.Silver
-			return atom
-		},
-		click: (atom) => {
-			
-			const triangle = atom.parent
-			// triangle.upPick.value = false
-			// triangle.rightPick.value = false
-			// triangle.downPick.value = false
-			atom.colour = Colour.Black
-			
-			triangle.direction = rotateTriangleRotation(triangle.direction, false)
-			atom.value = true
-
-
-			triangle.updateValue(triangle)
-			const parent = triangle.parent
-			if (parent.isSquare) {
-				parent.receiveNumber(parent, triangle.value, triangle.channelId, {expanded: triangle.expanded, numberAtom: triangle})
-			}
-
-		},
-		offscreen: triangleOffscreen,
-		overlaps: triangleOverlaps,
-		
-		value: false,
-		size: COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5,
-		grab: (atom) => atom.parent,
-		x: TRIANGLE_PAD.x + TRIANGLE_PAD.width/2 - (COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5)/2,
-		y: TRIANGLE_PAD.y + TRIANGLE_PAD.height - (COLOURTODE_SQUARE.size - OPTION_MARGIN*1.5) - OPTION_MARGIN/2,
-	}
-	
-	const SYMMETRY_TOGGLE_X = {
-		hasBorder: true,
-		borderColour: Colour.Black,
-		colour: Colour.Grey,
-		draw: (atom, ctx) => {
-			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			Circle.drawFn(atom, ctx)
-			atom.drawX(atom, ctx)
-		},
-		drawX: (atom, ctx) => {
-			const {x, y} = atom.getPosition()
-
-			const W = (atom.size)
-			const H = (BORDER_THICKNESS*1.0)
-			const X = (x)
-			const Y = (y + atom.size/2 - BORDER_THICKNESS*1.0/2)
-
-			ctx.fillStyle = atom.borderColour
-			ctx.fillRect(X, Y, W, H)
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		expanded: false,
-		click: (atom) => {
-			atom.value = !atom.value
-			let [x, y, r] = getXYR(atom.parent.value)
-			x = atom.value? 100 : 0
-			atom.parent.value = x+y+r
-			const circle = atom.parent
-			if (circle.parent !== atomRegistry.baseParent) {
-				const paddle = circle.parent
-				updatePaddleRule(paddle)
-			}
-		},
-		value: false,
-		size: COLOURTODE_SQUARE.size - OPTION_MARGIN,
-		grab: (atom) => atom.parent,
-		x: SYMMETRY_PAD.x + SYMMETRY_PAD.width/2 - (COLOURTODE_SQUARE.size - OPTION_MARGIN)/2,
-		y: SYMMETRY_PAD.y + OPTION_MARGIN/2,
-	}
-	
-	const SYMMETRY_TOGGLE_Y = {
-		hasBorder: true,
-		borderColour: Colour.Black,
-		colour: Colour.Grey,
-		draw: (atom, ctx) => {
-			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			Circle.drawFn(atom, ctx)
-			atom.drawY(atom, ctx)
-		},
-		drawY: (atom, ctx, height = atom.size, offset = 0) => {
-			const {x, y} = atom.getPosition()
-
-			const W = (BORDER_THICKNESS*1.0)
-			const H = (height)
-			const X = (x + atom.size/2 - BORDER_THICKNESS*1.0/2)
-			const Y = (y) + offset
-
-			ctx.fillStyle = atom.borderColour
-			ctx.fillRect(X, Y, W, H)
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		expanded: false,
-		click: (atom) => {
-			atom.value = !atom.value
-			let [x, y, r] = getXYR(atom.parent.value)
-			y = atom.value? 10 : 0
-			atom.parent.value = x+y+r
-			const circle = atom.parent
-			if (circle.parent !== atomRegistry.baseParent) {
-				const paddle = circle.parent
-				updatePaddleRule(paddle)
-			}
-		},
-		value: false,
-		size: COLOURTODE_SQUARE.size - OPTION_MARGIN,
-		grab: (atom) => atom.parent,
-		x: SYMMETRY_PAD.x + SYMMETRY_PAD.width/2 - (COLOURTODE_SQUARE.size - OPTION_MARGIN)/2,
-		y: OPTION_MARGIN/2,
-	}
-	
-	const SYMMETRY_TOGGLE_R = {
-		hasBorder: true,
-		borderColour: Colour.Black,
-		colour: Colour.Grey,
-		draw: (atom, ctx) => {
-			atom.colour = atom.value? Colour.Silver : Colour.Grey
-			Circle.drawFn(atom, ctx)
-			atom.drawR(atom, ctx)
-		},
-		drawR: (atom, ctx) => {
-			const {x, y} = atom.getPosition()
-
-			let X = (x + atom.size/2)
-			let Y = (y + atom.size/2)
-			let R = atom.size/2 - (BORDER_THICKNESS*1.5)*2
-
-			ctx.fillStyle = atom.borderColour
-			ctx.beginPath()
-			ctx.arc(X, Y, R, 0, 2*Math.PI)
-			ctx.fill()
-			
-			R -= BORDER_THICKNESS
-			ctx.fillStyle = atom.colour
-			ctx.beginPath()
-			ctx.arc(X, Y, R, 0, 2*Math.PI)
-			ctx.fill()
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		expanded: false,
-		click: (atom) => {
-			atom.value = !atom.value
-			let [x, y, r] = getXYR(atom.parent.value)
-			r = atom.value? 1 : 0
-			atom.parent.value = x+y+r
-			const circle = atom.parent
-			if (circle.parent !== atomRegistry.baseParent) {
-				const paddle = circle.parent
-				updatePaddleRule(paddle)
-			}
-		},
-		value: false,
-		size: COLOURTODE_SQUARE.size - OPTION_MARGIN,
-		grab: (atom) => atom.parent,
-		x: SYMMETRY_PAD.x + SYMMETRY_PAD.width/2 - (COLOURTODE_SQUARE.size - OPTION_MARGIN)/2,
-		y: SYMMETRY_PAD.y + SYMMETRY_PAD.height - (COLOURTODE_SQUARE.size - OPTION_MARGIN) - OPTION_MARGIN/2,
-	}
 
 	//====================//
 	// COLOURTODE - TOOLS //
@@ -6593,7 +6173,7 @@ on.load(() => {
 	const addMenuTool = (element, unlockName) => {
 		const {width = COLOURTODE_SQUARE.size, height = COLOURTODE_SQUARE.size, size} = element
 		
-		let y = COLOURTODE_PICKER_PAD_MARGIN
+		let y = OPTION_MARGIN
 		if (height < COLOURTODE_SQUARE.size) {
 			y += (COLOURTODE_SQUARE.size - height)/2
 		}

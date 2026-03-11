@@ -12,4 +12,8 @@ const UI = {
 	toolBorderColours: null,
 	CT_SCALE: 1,
 	PADDLE_HANDLE_SIZE: 0,
+	get CHANNEL_HEIGHT() { return this.SQUARE_SIZE - this.OPTION_MARGIN * 2 },
+	SYMMETRY_CIRCLE_SIZE: 40,
+	get PADDLE_X() { return Math.round(this.SQUARE_SIZE / 2) },
+	get PADDLE_TOTAL_SIZE() { return this.SQUARE_SIZE + this.OPTION_MARGIN * 4 },
 }
