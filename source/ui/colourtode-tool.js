@@ -2,8 +2,14 @@
 // COLOURTODE TOOL    //
 //====================//
 class ColourtodeTool extends Atom {
-	constructor(element = {}) {
-		super(element)
+	constructor({width, height, size, x, y, element} = {}) {
+		super()
+		this.width = width
+		this.height = height
+		this.size = size
+		this.x = x
+		this.y = y
+		this.element = element
 	}
 
 	draw(ctx) {

@@ -132,7 +132,74 @@ async function run() {
 		console.log("  \x1b[31m✗\x1b[0m No UI elements found on paddle canvas")
 	}
 
-	const total = 4
+	// Test 5: Toolbar shapes visible in top-left region
+	// The toolbar has 4 tool shapes (square, triangle, circle, hexagon)
+	// rendered as white shapes in the top ~60px of the UI canvas
+	const toolbarCheck = await page.evaluate(() => {
+		const canvases = document.querySelectorAll("canvas")
+		const canvas = canvases.length > 1 ? canvases[1] : canvases[0]
+		if (!canvas) return { ok: false, reason: "no canvas" }
+		const ctx = canvas.getContext("2d")
+		const dpr = window.devicePixelRatio || 1
+
+		// Scan the toolbar region (top 60px, left 400px) for bright pixels
+		// Tools are white shapes on dark background
+		const region = { x: 0, y: 0, w: Math.min(400 * dpr, canvas.width), h: Math.min(60 * dpr, canvas.height) }
+		const imageData = ctx.getImageData(region.x, region.y, region.w, region.h)
+		const data = imageData.data
+
+		let brightPixels = 0
+		for (let i = 0; i < data.length; i += 4) {
+			// Check for bright (white-ish) pixels: R+G+B > 600
+			if (data[i] + data[i+1] + data[i+2] > 600 && data[i+3] > 200) {
+				brightPixels++
+			}
+		}
+
+		return { ok: brightPixels > 50, brightPixels }
+	})
+
+	if (toolbarCheck.ok) {
+		console.log(`  \x1b[32m✓\x1b[0m Toolbar shapes visible (${toolbarCheck.brightPixels} bright pixels)`)
+		passed++
+	} else {
+		console.log(`  \x1b[31m✗\x1b[0m Toolbar shapes missing (${toolbarCheck.brightPixels} bright pixels in top-left)`)
+	}
+
+	// Test 6: Paddle visible (coloured rectangle on the left side, below toolbar)
+	const paddleCheck = await page.evaluate(() => {
+		const canvases = document.querySelectorAll("canvas")
+		const canvas = canvases.length > 1 ? canvases[1] : canvases[0]
+		if (!canvas) return { ok: false, reason: "no canvas" }
+		const ctx = canvas.getContext("2d")
+		const dpr = window.devicePixelRatio || 1
+
+		// Paddle region: left edge, below toolbar (y=60-300, x=0-80)
+		const region = { x: 0, y: Math.round(60 * dpr), w: Math.min(80 * dpr, canvas.width), h: Math.min(250 * dpr, canvas.height) }
+		const imageData = ctx.getImageData(region.x, region.y, region.w, region.h)
+		const data = imageData.data
+
+		// Look for non-black pixels — the paddle is a coloured rectangle
+		// (dark blue-grey) that stands out from the pure black background
+		let nonBlackPixels = 0
+		for (let i = 0; i < data.length; i += 4) {
+			const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3]
+			if (a > 200 && (r > 20 || g > 20 || b > 20)) {
+				nonBlackPixels++
+			}
+		}
+
+		return { ok: nonBlackPixels > 30, nonBlackPixels }
+	})
+
+	if (paddleCheck.ok) {
+		console.log(`  \x1b[32m✓\x1b[0m Paddle visible (${paddleCheck.nonBlackPixels} non-black pixels)`)
+		passed++
+	} else {
+		console.log(`  \x1b[31m✗\x1b[0m Paddle missing (${paddleCheck.nonBlackPixels} non-black pixels in paddle region)`)
+	}
+
+	const total = 6
 	console.log(`\n  \x1b[${passed === total ? "32" : "31"}m${passed}/${total} browser tests passing\x1b[0m`)
 
 	await browser.close()

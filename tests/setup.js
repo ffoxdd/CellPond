@@ -116,6 +116,7 @@ function loadCellPond() {
 		readScript("source/colour.js"),
 		readScript("source/camera.js"),
 		readScript("source/ui/config.js"),
+		readScript("source/ui/layout.js"),
 		readScript("source/ui/atom-registry.js"),
 		readScript("source/ui/atom.js"),
 		readScript("source/ui/rectangle.js"),
