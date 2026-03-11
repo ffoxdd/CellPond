@@ -1899,6 +1899,9 @@ on.load(() => {
 	UI.CT_SCALE = CT_SCALE
 	UI.createChild = createChild
 	UI.deleteChild = deleteChild
+	UI.giveChild = giveChild
+	UI.freeChild = freeChild
+	UI.hand = hand
 
 	const isCellAtomSpotFilled = (paddle, [sx, sy], slotted = false) => {
 		for (let cellAtom of paddle.cellAtoms) {
@@ -4755,6 +4758,7 @@ on.load(() => {
 	
 
 	paddles = []
+	UI.paddles = paddles
 
 	// Ctrl+F: addef
 	const PADDLE_MARGIN = COLOURTODE_SQUARE.size/2
@@ -4992,7 +4996,7 @@ on.load(() => {
 		}
 		
 		if (paddle.hasSymmetry || paddle.chance !== undefined) {
-			width += SYMMETRY_CIRCLE.size/3
+			width += SymmetryCircle.SIZE/3
 		}
 
 		paddle.width = width
@@ -5611,156 +5615,6 @@ on.load(() => {
 
 	const getXYR = getRGB
 
-	// Ctrl+F: cedef
-	const SYMMETRY_CIRCLE = {
-		hasBorder: true,
-		draw: (atom, ctx) => {
-			Circle.drawFn(atom, ctx)
-			if (atom.value === undefined) return
-			const [x, y, r] = getXYR(atom.value)
-			if (x > 0) SymmetryToggleX.drawX(atom, ctx)
-			if (y > 0) SymmetryToggleY.drawY(atom, ctx)
-			if (r > 0) SymmetryToggleR.drawR(atom, ctx)
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		//behindChildren: true,
-		expanded: false,
-		borderColour: Colour.Grey,
-		colour: Colour.Black,
-		value: 0,
-		click: (atom) => {
-			
-			if (atom.expanded) {
-				atom.unexpand(atom)
-			}
-
-			else {
-
-				atom.expand(atom)
-			}
-		},
-
-		expand: (atom) => {
-			atom.pad = createChild(atom, new SymmetryPad())
-			atom.handle = createChild(atom, new SymmetryHandle())
-			atom.handle.width += OPTION_MARGIN
-			atom.expanded = true
-
-			const [x, y, r] = getXYR(atom.value)
-			atom.xToggle = createChild(atom, new SymmetryToggleX())
-			atom.yToggle = createChild(atom, new SymmetryToggleY())
-			atom.rToggle = createChild(atom, new SymmetryToggleR())
-
-			if (x > 0) atom.xToggle.value = true
-			if (y > 0) atom.yToggle.value = true
-			if (r > 0) atom.rToggle.value = true
-		},
-
-		unexpand: (atom) => {
-			deleteChild(atom, atom.pad)
-			deleteChild(atom, atom.handle)
-			deleteChild(atom, atom.xToggle)
-			deleteChild(atom, atom.yToggle)
-			deleteChild(atom, atom.rToggle)
-			atom.expanded = false
-		},
-		
-		size: COLOURTODE_SQUARE.size,
-		update: (atom) => {
-			
-			const {x, y} = atom.getPosition()
-
-			const id = atomRegistry.atoms.indexOf(atom)
-			const left = x
-			const top = y
-			const right = x + atom.width
-			const bottom = y + atom.height
-
-			if (hand.content === atom) for (const paddle of paddles) {
-				const pid = atomRegistry.atoms.indexOf(paddle)
-				const {x: px, y: py} = paddle.getPosition()
-				const pright = px + paddle.width
-				const ptop = py
-				const pbottom = py + paddle.height
-
-
-				if (!paddle.hasSymmetry && paddle.expanded && id > pid && left <= pright && right >= pright && ((top < pbottom && top > ptop) || (bottom > ptop && bottom < pbottom))) {
-					if (atom.highlightPaddle !== undefined) {
-						deleteChild(atom, atom.highlightPaddle)
-					}
-
-					atom.highlightPaddle = createChild(atom, new Highlight(), {bottom: true})
-					atom.highlightPaddle.width = HIGHLIGHT_THICKNESS
-					atom.highlightPaddle.height = paddle.height
-					atom.highlightPaddle.y = ptop
-					atom.highlightPaddle.x = pright - HIGHLIGHT_THICKNESS/2
-					atom.highlightedPaddle = paddle
-					return
-				}
-
-			}
-
-			if (atom.highlightPaddle !== undefined) {
-				deleteChild(atom, atom.highlightPaddle)
-				atom.highlightPaddle = undefined
-				atom.highlightedPaddle = undefined
-			}
-		},
-		drop: (atom) => {
-
-			if (!atom.attached) {
-				if (atom.highlightedPaddle !== undefined) {
-					const paddle = atom.highlightedPaddle
-					atom.attached = true
-					giveChild(paddle, atom)
-					
-					paddle.hasSymmetry = true
-					paddle.symmetryCircle = atom
-					updatePaddleSize(paddle)
-
-					atom.dx = 0
-					atom.dy = 0
-					
-					
-
-					
-
-				}
-			}
-			
-		},
-
-		drag: (atom) => {
-
-			if (atom.attached) {
-				const paddle = atom.parent
-
-				
-
-				atom.attached = false
-				freeChild(paddle, atom)
-				paddle.hasSymmetry = false
-				paddle.symmetryCircle = undefined
-				updatePaddleSize(paddle)
-			}
-
-			return atom
-		},
-
-		rightDraggable: true,
-		rightDrag: (atom) => {
-			const clone = new Atom(SYMMETRY_CIRCLE)
-			clone.value = atom.value
-			const {x, y} = atom.getPosition()
-			hand.offset.x -= atom.x - x
-			hand.offset.y -= atom.y - y
-			clone.x = x
-			clone.y = y
-			atomRegistry.register(clone)
-			return clone
-		},
-	}
 
 	const HIGHLIGHT_THICKNESS = BORDER_THICKNESS
 
@@ -5925,7 +5779,7 @@ on.load(() => {
 	//triangleTool.size -= BORDER_THICKNESS*1.5
 	//triangleTool.y += BORDER_THICKNESS*1.5 / 2
 	menuRight -= BORDER_THICKNESS
-	const circleTool = addMenuTool(SYMMETRY_CIRCLE, "circle")
+	const circleTool = addMenuTool(new SymmetryCircle(), "circle")
 	const hexagonTool = addMenuTool(COLOURTODE_HEXAGON, "hexagon")
 	//menuRight += BORDER_THICKNESS
 	const tallRectangleTool = {} //addMenuTool(COLOURTODE_TALL_RECTANGLE, "tall_rectangle")
@@ -6103,7 +5957,7 @@ on.load(() => {
 	}
 
 	PADDLE_UNPACK.symmetryCircle = (paddle, value) => {
-		const circle = createChild(paddle, SYMMETRY_CIRCLE)
+		const circle = createChild(paddle, new SymmetryCircle())
 		circle.value = value
 		return circle
 	}
