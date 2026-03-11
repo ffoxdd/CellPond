@@ -31,7 +31,7 @@ function drawRectangle(atom, ctx) {
 			ctx.beginPath()
 			ctx.rect(X, Y, W, H)
 			if (atom.stamp !== undefined) {
-				ctx.arc(X+R, Y+R, Math.round((UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2)/2), 0, 2*Math.PI)
+				ctx.arc(X+R, Y+R, Math.round((PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2)/2), 0, 2*Math.PI)
 			}
 
 
@@ -45,7 +45,7 @@ function drawRectangle(atom, ctx) {
 				ctx.fillStyle = atom.colour
 				ctx.rect(X+border, Y+border, W-border*2, H-border*2)
 				if (atom.stamp !== undefined) {
-					ctx.arc(X+R, Y+R, Math.round((UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2)/2)+border, 0, 2*Math.PI)
+					ctx.arc(X+R, Y+R, Math.round((PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2)/2)+border, 0, 2*Math.PI)
 				}
 				ctx.fill("evenodd")
 			}

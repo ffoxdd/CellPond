@@ -516,29 +516,29 @@ class ColourtodeSquare extends Atom {
 
 					this.highlight = UI.createChild(this, new Highlight(), {bottom: true})
 					if (winningSide === "left" || winningSide === "right") {
-						this.highlight.width = UI.HIGHLIGHT_THICKNESS
+						this.highlight.width = HIGHLIGHT_THICKNESS
 						this.highlight.height = winningCellAtom.height
 					}
 					else if (winningSide === "above" || winningSide === "below") {
 						this.highlight.width = winningCellAtom.width
-						this.highlight.height = UI.HIGHLIGHT_THICKNESS
+						this.highlight.height = HIGHLIGHT_THICKNESS
 					}
 
 					if (winningSide === "left") {
-						this.highlight.x = cx - UI.HIGHLIGHT_THICKNESS/2
+						this.highlight.x = cx - HIGHLIGHT_THICKNESS/2
 						this.highlight.y = cy
 					}
 					else if (winningSide === "right") {
-						this.highlight.x = cx - UI.HIGHLIGHT_THICKNESS/2 + winningCellAtom.width
+						this.highlight.x = cx - HIGHLIGHT_THICKNESS/2 + winningCellAtom.width
 						this.highlight.y = cy
 					}
 					else if (winningSide === "above") {
 						this.highlight.x = cx
-						this.highlight.y = cy - UI.HIGHLIGHT_THICKNESS/2
+						this.highlight.y = cy - HIGHLIGHT_THICKNESS/2
 					}
 					else if (winningSide === "below") {
 						this.highlight.x = cx
-						this.highlight.y = cy - UI.HIGHLIGHT_THICKNESS/2 + winningCellAtom.height
+						this.highlight.y = cy - HIGHLIGHT_THICKNESS/2 + winningCellAtom.height
 					}
 
 					if (winningSide === "slot") {
@@ -616,29 +616,29 @@ class ColourtodeSquare extends Atom {
 
 					this.highlight = UI.createChild(this, new Highlight(), {bottom: true})
 					if (winningSide === "left" || winningSide === "right") {
-						this.highlight.width = UI.HIGHLIGHT_THICKNESS
+						this.highlight.width = HIGHLIGHT_THICKNESS
 						this.highlight.height = winningCellAtom.height
 					}
 					else if (winningSide === "above" || winningSide === "below") {
 						this.highlight.width = winningCellAtom.width
-						this.highlight.height = UI.HIGHLIGHT_THICKNESS
+						this.highlight.height = HIGHLIGHT_THICKNESS
 					}
 
 					if (winningSide === "left") {
-						this.highlight.x = cx - UI.HIGHLIGHT_THICKNESS/2
+						this.highlight.x = cx - HIGHLIGHT_THICKNESS/2
 						this.highlight.y = cy
 					}
 					else if (winningSide === "right") {
-						this.highlight.x = cx - UI.HIGHLIGHT_THICKNESS/2 + winningCellAtom.width
+						this.highlight.x = cx - HIGHLIGHT_THICKNESS/2 + winningCellAtom.width
 						this.highlight.y = cy
 					}
 					else if (winningSide === "above") {
 						this.highlight.x = cx
-						this.highlight.y = cy - UI.HIGHLIGHT_THICKNESS/2
+						this.highlight.y = cy - HIGHLIGHT_THICKNESS/2
 					}
 					else if (winningSide === "below") {
 						this.highlight.x = cx
-						this.highlight.y = cy - UI.HIGHLIGHT_THICKNESS/2 + winningCellAtom.height
+						this.highlight.y = cy - HIGHLIGHT_THICKNESS/2 + winningCellAtom.height
 					}
 
 					if (winningSide === "slot") {

@@ -1,9 +1,17 @@
 //==========//
 // LAYOUT   //
 //==========//
-// Layout functions compute positions and sizes from UI theme constants.
-// Components accept these as constructor params, keeping them focused
-// on shape, drawing, and behavior.
+// Derived layout constants and layout functions, computed from
+// the base theme values on UI (config.js).
+
+const CHANNEL_HEIGHT = UI.SQUARE_SIZE - UI.OPTION_MARGIN * 2
+const OPTION_SPACING = CHANNEL_HEIGHT + UI.OPTION_MARGIN
+const PADDLE_X = Math.round(UI.SQUARE_SIZE / 2)
+const PADDLE_TOTAL_SIZE = UI.SQUARE_SIZE + UI.OPTION_MARGIN * 4
+const PADDLE_HANDLE_SIZE = PADDLE_X
+const HIGHLIGHT_THICKNESS = UI.BORDER_THICKNESS
+const MAGIC_NUMBER = 0.8660254
+const MINUS_MAGIC_NUMBER = 1 - MAGIC_NUMBER
 
 //=== Symmetry panel ===//
 function symmetryLayout() {
@@ -85,21 +93,21 @@ function pickerHandleLayout() {
 function channelLayout() {
 	return {
 		width: UI.SQUARE_SIZE,
-		y: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
-		height: UI.CHANNEL_HEIGHT,
+		y: (UI.SQUARE_SIZE - CHANNEL_HEIGHT)/2,
+		height: CHANNEL_HEIGHT,
 	}
 }
 
 function channelOptionLayout() {
 	return {
 		width: UI.SQUARE_SIZE,
-		height: UI.CHANNEL_HEIGHT,
+		height: CHANNEL_HEIGHT,
 	}
 }
 
 function selectionSideLayout() {
 	return {
-		width: (UI.SQUARE_SIZE - UI.CHANNEL_HEIGHT)/2,
+		width: (UI.SQUARE_SIZE - CHANNEL_HEIGHT)/2,
 		height: UI.SQUARE_SIZE,
 	}
 }
@@ -107,7 +115,7 @@ function selectionSideLayout() {
 function selectionEndLayout() {
 	return {
 		width: UI.SQUARE_SIZE + UI.OPTION_MARGIN*2,
-		height: UI.OPTION_SPACING - UI.CHANNEL_HEIGHT,
+		height: OPTION_SPACING - CHANNEL_HEIGHT,
 		x: -UI.OPTION_MARGIN,
 	}
 }
@@ -121,7 +129,7 @@ function optionPaddingLayout() {
 
 //=== Diamond / tall rectangle ===//
 function diamondLayout() {
-	const size = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
+	const size = CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 	const pinSize = size / 2
 	return {
 		choice: { size, width: size, height: size },
@@ -132,21 +140,21 @@ function diamondLayout() {
 
 //=== Paddle ===//
 function paddleLayout() {
-	const ps = UI.PADDLE_TOTAL_SIZE
+	const ps = PADDLE_TOTAL_SIZE
 	return { size: ps, width: ps, height: ps }
 }
 
 function paddleHandleLayout() {
 	return {
-		size: UI.PADDLE_X,
-		x: -UI.PADDLE_X,
-		y: UI.PADDLE_TOTAL_SIZE/2 - UI.PADDLE_X/2,
+		size: PADDLE_X,
+		x: -PADDLE_X,
+		y: PADDLE_TOTAL_SIZE/2 - PADDLE_X/2,
 	}
 }
 
 function pinHoleLayout() {
 	return {
-		size: UI.PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2,
+		size: PADDLE_HANDLE_SIZE - UI.OPTION_MARGIN/2,
 		x: UI.OPTION_MARGIN/2/2,
 		y: UI.OPTION_MARGIN/2/2,
 	}

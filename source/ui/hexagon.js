@@ -21,15 +21,15 @@ class Hexagon extends Atom {
 		const {x, y} = this.getPosition()
 		const {width, height} = this
 		let points = [
-			[x + width*UI.MINUS_MAGIC_NUMBER*2, y],
-			[x + width*(UI.MAGIC_NUMBER-UI.MINUS_MAGIC_NUMBER), y],
-			[x + width, y + height*UI.MAGIC_NUMBER/2],
-			[x + width*(UI.MAGIC_NUMBER-UI.MINUS_MAGIC_NUMBER), y + height*UI.MAGIC_NUMBER],
-			[x + width*UI.MINUS_MAGIC_NUMBER*2, y + height*UI.MAGIC_NUMBER],
-			[x, y + height*UI.MAGIC_NUMBER/2],
+			[x + width*MINUS_MAGIC_NUMBER*2, y],
+			[x + width*(MAGIC_NUMBER-MINUS_MAGIC_NUMBER), y],
+			[x + width, y + height*MAGIC_NUMBER/2],
+			[x + width*(MAGIC_NUMBER-MINUS_MAGIC_NUMBER), y + height*MAGIC_NUMBER],
+			[x + width*MINUS_MAGIC_NUMBER*2, y + height*MAGIC_NUMBER],
+			[x, y + height*MAGIC_NUMBER/2],
 		]
 
-		points = points.map(([x, y]) => [x, y + UI.MINUS_MAGIC_NUMBER/2*height])
+		points = points.map(([x, y]) => [x, y + MINUS_MAGIC_NUMBER/2*height])
 
 		const extraSegmentCorners = []
 		for (let i = 0; i < 6; i++) {
@@ -127,7 +127,7 @@ class Hexagon extends Atom {
 
 		const {width, height} = this
 
-		const edge = width*UI.MINUS_MAGIC_NUMBER*1.67
+		const edge = width*MINUS_MAGIC_NUMBER*1.67
 		const handlePositions = [
 			[width, height/2 - HexagonHandle.HEIGHT/2],
 			[width - edge, height  - HexagonHandle.HEIGHT/2],
@@ -221,10 +221,10 @@ class Hexagon extends Atom {
 				}
 
 				this.highlight = UI.createChild(this, new Highlight(), {bottom: true})
-				this.highlight.width = UI.HIGHLIGHT_THICKNESS
+				this.highlight.width = HIGHLIGHT_THICKNESS
 				this.highlight.height = paddle.height
 				this.highlight.y = ptop
-				this.highlight.x = pright - UI.HIGHLIGHT_THICKNESS/2
+				this.highlight.x = pright - HIGHLIGHT_THICKNESS/2
 				return paddle
 			}
 		}

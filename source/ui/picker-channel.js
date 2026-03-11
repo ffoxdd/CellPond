@@ -108,7 +108,7 @@ class PickerChannel extends Atom {
 			this.selectionBottom.y = this.height
 		}
 		else {
-			const optionSpacing = UI.OPTION_SPACING
+			const optionSpacing = OPTION_SPACING
 
 			this.selectionTop.y = end - this.selectionTop.height
 			this.selectionBottom.y = start + optionSpacing - this.selectionBottom.height
@@ -496,7 +496,7 @@ class PickerChannel extends Atom {
 		if (startId === undefined) throw new Error("[ColourTode] Number cannot be NOTHING. Please let @TodePond know if you see this error!")
 		const centerOptionId = this.getCenterId()
 
-		const optionSpacing = UI.OPTION_SPACING
+		const optionSpacing = OPTION_SPACING
 		let top = (centerOptionId - 9) * optionSpacing
 		let bottom = centerOptionId*optionSpacing
 

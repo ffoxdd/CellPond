@@ -34,7 +34,7 @@ class ChannelSelectionEnd extends Atom {
 	}
 
 	drop() {
-		let distanceFromMiddle = Math.round((this.y+UI.CHANNEL_HEIGHT/2) / UI.OPTION_SPACING)
+		let distanceFromMiddle = Math.round((this.y+CHANNEL_HEIGHT/2) / OPTION_SPACING)
 
 		const oldNumber = this.parent.value
 
@@ -73,5 +73,5 @@ class ChannelSelectionEnd extends Atom {
 		}
 	}
 
-	static get HEIGHT() { return UI.OPTION_SPACING - UI.CHANNEL_HEIGHT }
+	static get HEIGHT() { return OPTION_SPACING - CHANNEL_HEIGHT }
 }

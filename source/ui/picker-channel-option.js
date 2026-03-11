@@ -40,7 +40,7 @@ class PickerChannelOption extends Atom {
 	getId() {
 		const parent = this.parent
 		const centerId = parent.getCenterId()
-		const offset = this.y / UI.OPTION_SPACING
+		const offset = this.y / OPTION_SPACING
 		return centerId - offset
 	}
 

@@ -16,7 +16,6 @@ const CHANNEL_NAMES = [
 
 UI.CHANNEL_IDS = CHANNEL_IDS
 UI.CHANNEL_NAMES = CHANNEL_NAMES
-UI.OPTION_SPACING = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN
 UI.getGradientImageFromColours = Gradient.getImageFromColours
 UI.getMergedGradient = Gradient.getMergedGradient
 

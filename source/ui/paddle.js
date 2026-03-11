@@ -153,9 +153,9 @@ class Paddle extends Atom {
 		return square
 	}
 
-	static get WIDTH() { return UI.PADDLE_TOTAL_SIZE }
-	static get HEIGHT() { return UI.PADDLE_TOTAL_SIZE }
-	static get SIZE() { return UI.PADDLE_TOTAL_SIZE }
+	static get WIDTH() { return PADDLE_TOTAL_SIZE }
+	static get HEIGHT() { return PADDLE_TOTAL_SIZE }
+	static get SIZE() { return PADDLE_TOTAL_SIZE }
 	static get MARGIN() { return UI.SQUARE_SIZE / 2 }
 	static get Y() { return UI.SQUARE_SIZE + UI.OPTION_MARGIN + Paddle.MARGIN }
 }

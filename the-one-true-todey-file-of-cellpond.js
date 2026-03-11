@@ -496,7 +496,6 @@ on.load(() => {
 	UI.paddles = paddles
 	UI.makeDiagramCellsFromCellAtoms = makeDiagramCellsFromCellAtoms
 
-	UI.PADDLE_HANDLE_SIZE = UI.PADDLE_X
 	UI.createPaddle = createPaddle
 	UI.deletePaddle = deletePaddle
 	UI.updatePaddleSize = updatePaddleSize
