@@ -11,7 +11,7 @@ class SymmetryCircle extends Atom {
 	rightDraggable = true
 
 	draw(ctx) {
-		Circle.drawFn(this, ctx)
+		drawCircle(this, ctx)
 		if (this.value === undefined) return
 		const [x, y, r] = getRGB(this.value)
 		if (x > 0) SymmetryToggleX.drawX(this, ctx)
@@ -19,8 +19,8 @@ class SymmetryCircle extends Atom {
 		if (r > 0) SymmetryToggleR.drawR(this, ctx)
 	}
 
-	offscreen() { return Rectangle.offscreenFn(this) }
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 
 	click() {
 		if (this.expanded) {

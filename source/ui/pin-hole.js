@@ -22,11 +22,11 @@ class PinHole extends Atom {
 			this.hasBorder = false
 			this.colour = Colour.Black
 		}
-		Circle.drawFn(this, ctx)
+		drawCircle(this, ctx)
 	}
 
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
 	grab() { return this.parent.parent }
 
 	click() {

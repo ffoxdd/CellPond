@@ -61,11 +61,11 @@ class ColourtodeSquare extends Atom {
 
 	draw(ctx) {
 		if (this.value.isDiagram) return
-		else Rectangle.drawFn(this, ctx)
+		else drawRectangle(this, ctx)
 	}
 
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
 
 	touch() {
 		UI.emit("brushColourChanged",this.value)

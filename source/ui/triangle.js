@@ -33,170 +33,170 @@ function triangleOffscreen(atom) {
 	return false
 }
 
+function drawTriangleRight(atom, ctx) {
+	const {x, y} = atom.getPosition()
+
+	let size = atom.size
+	if (atom.isTool) size -= UI.BORDER_THICKNESS*2.5
+	if (!atom.isTool) size -= 2
+
+	const height = size
+	const width = size * Math.sqrt(3)/2
+
+	const left = x
+	const right = left + width
+	let top = y + 1
+	if (atom.isTool) top += UI.BORDER_THICKNESS*1.25
+	const bottom = top + height
+	const middleY = top + height/2
+
+	ctx.fillStyle = atom.colour
+	const path = new Path2D()
+
+	path.moveTo(left, top)
+	path.lineTo(right, middleY)
+	path.lineTo(left, bottom)
+	path.closePath()
+	ctx.fillStyle = atom.colour
+	ctx.fill(path)
+	if (atom.hasBorder) {
+		ctx.lineWidth = UI.BORDER_THICKNESS*1.5
+		ctx.strokeStyle = atom.borderColour
+
+		if (atom.isTool) {
+			ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
+		}
+		ctx.stroke(path)
+	}
+}
+
+function drawTriangleUp(atom, ctx) {
+	const {x, y} = atom.getPosition()
+
+	const width = atom.size
+	const height = atom.size * Math.sqrt(3)/2
+	const diff = atom.size - height
+
+	const left = x
+	const right = left + width
+	const top = y + diff/2
+	const bottom = top + height
+	const middleX = left + width/2
+
+	ctx.fillStyle = atom.colour
+	const path = new Path2D()
+
+	path.moveTo(left, bottom)
+	path.lineTo(middleX, top)
+	path.lineTo(right, bottom)
+	path.closePath()
+	ctx.fillStyle = atom.colour
+	ctx.fill(path)
+	if (atom.hasBorder) {
+		ctx.lineWidth = UI.BORDER_THICKNESS*1.5
+		ctx.strokeStyle = atom.borderColour
+		ctx.stroke(path)
+	}
+}
+
+function drawTriangleDown(atom, ctx) {
+	const {x, y} = atom.getPosition()
+
+	const width = atom.size
+	const height = atom.size * Math.sqrt(3)/2
+	const diff = atom.size - height
+
+	const left = x
+	const right = left + width
+	const top = y + diff/2
+	const bottom = top + height
+	const middleX = left + width/2
+
+	ctx.fillStyle = atom.colour
+	const path = new Path2D()
+
+	path.moveTo(left, top)
+	path.lineTo(middleX, bottom)
+	path.lineTo(right, top)
+	path.closePath()
+	ctx.fillStyle = atom.colour
+	ctx.fill(path)
+	if (atom.hasBorder) {
+		ctx.lineWidth = UI.BORDER_THICKNESS*1.5
+		ctx.strokeStyle = atom.borderColour
+		ctx.stroke(path)
+	}
+}
+
+function drawTriangleLeft(atom, ctx) {
+	const {x, y} = atom.getPosition()
+
+	let size = atom.size
+	if (atom.isTool) size -= UI.BORDER_THICKNESS*2.5
+	if (!atom.isTool) size -= 2
+
+	const height = size
+	const width = size * Math.sqrt(3)/2
+
+	const left = x
+	const right = left + width
+	let top = y + 1
+	if (atom.isTool) top += UI.BORDER_THICKNESS*1.25
+	const bottom = top + height
+	const middleY = top + height/2
+
+	ctx.fillStyle = atom.colour
+	const path = new Path2D()
+
+	path.moveTo(right, top)
+	path.lineTo(left, middleY)
+	path.lineTo(right, bottom)
+	path.closePath()
+	ctx.fillStyle = atom.colour
+	ctx.fill(path)
+	if (atom.hasBorder) {
+		ctx.lineWidth = UI.BORDER_THICKNESS*1.5
+		ctx.strokeStyle = atom.borderColour
+
+		if (atom.isTool) {
+			ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
+		}
+		ctx.stroke(path)
+	}
+}
+
 class TriangleRight extends Atom {
 	static get DEFAULT_WIDTH() { return UI.SQUARE_SIZE * Math.sqrt(3)/2 }
 
 	size = UI.SQUARE_SIZE
 	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
 
-	draw(ctx) { TriangleRight.drawFn(this, ctx) }
+	draw(ctx) { drawTriangleRight(this, ctx) }
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }
 	offscreen() { return triangleOffscreen(this) }
-
-	static drawFn(atom, ctx) {
-		const {x, y} = atom.getPosition()
-
-		let size = atom.size
-		if (atom.isTool) size -= UI.BORDER_THICKNESS*2.5
-		if (!atom.isTool) size -= 2
-
-		const height = size
-		const width = size * Math.sqrt(3)/2
-
-		const left = x
-		const right = left + width
-		let top = y + 1
-		if (atom.isTool) top += UI.BORDER_THICKNESS*1.25
-		const bottom = top + height
-		const middleY = top + height/2
-
-		ctx.fillStyle = atom.colour
-		const path = new Path2D()
-
-		path.moveTo(left, top)
-		path.lineTo(right, middleY)
-		path.lineTo(left, bottom)
-		path.closePath()
-		ctx.fillStyle = atom.colour
-		ctx.fill(path)
-		if (atom.hasBorder) {
-			ctx.lineWidth = UI.BORDER_THICKNESS*1.5
-			ctx.strokeStyle = atom.borderColour
-
-			if (atom.isTool) {
-				ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
-			}
-			ctx.stroke(path)
-		}
-	}
 }
 
 class TriangleUp extends Atom {
 	size = UI.SQUARE_SIZE
 
-	draw(ctx) { TriangleUp.drawFn(this, ctx) }
+	draw(ctx) { drawTriangleUp(this, ctx) }
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }
 	offscreen() { return triangleOffscreen(this) }
-
-	static drawFn(atom, ctx) {
-		const {x, y} = atom.getPosition()
-
-		const width = atom.size
-		const height = atom.size * Math.sqrt(3)/2
-		const diff = atom.size - height
-
-		const left = x
-		const right = left + width
-		const top = y + diff/2
-		const bottom = top + height
-		const middleX = left + width/2
-
-		ctx.fillStyle = atom.colour
-		const path = new Path2D()
-
-		path.moveTo(left, bottom)
-		path.lineTo(middleX, top)
-		path.lineTo(right, bottom)
-		path.closePath()
-		ctx.fillStyle = atom.colour
-		ctx.fill(path)
-		if (atom.hasBorder) {
-			ctx.lineWidth = UI.BORDER_THICKNESS*1.5
-			ctx.strokeStyle = atom.borderColour
-			ctx.stroke(path)
-		}
-	}
 }
 
 class TriangleDown extends Atom {
 	size = UI.SQUARE_SIZE
 
-	draw(ctx) { TriangleDown.drawFn(this, ctx) }
+	draw(ctx) { drawTriangleDown(this, ctx) }
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }
 	offscreen() { return triangleOffscreen(this) }
-
-	static drawFn(atom, ctx) {
-		const {x, y} = atom.getPosition()
-
-		const width = atom.size
-		const height = atom.size * Math.sqrt(3)/2
-		const diff = atom.size - height
-
-		const left = x
-		const right = left + width
-		const top = y + diff/2
-		const bottom = top + height
-		const middleX = left + width/2
-
-		ctx.fillStyle = atom.colour
-		const path = new Path2D()
-
-		path.moveTo(left, top)
-		path.lineTo(middleX, bottom)
-		path.lineTo(right, top)
-		path.closePath()
-		ctx.fillStyle = atom.colour
-		ctx.fill(path)
-		if (atom.hasBorder) {
-			ctx.lineWidth = UI.BORDER_THICKNESS*1.5
-			ctx.strokeStyle = atom.borderColour
-			ctx.stroke(path)
-		}
-	}
 }
 
 class TriangleLeft extends Atom {
 	size = UI.SQUARE_SIZE
 	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
 
-	draw(ctx) { TriangleLeft.drawFn(this, ctx) }
+	draw(ctx) { drawTriangleLeft(this, ctx) }
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }
 	offscreen() { return triangleOffscreen(this) }
-
-	static drawFn(atom, ctx) {
-		const {x, y} = atom.getPosition()
-
-		let size = atom.size
-		if (atom.isTool) size -= UI.BORDER_THICKNESS*2.5
-		if (!atom.isTool) size -= 2
-
-		const height = size
-		const width = size * Math.sqrt(3)/2
-
-		const left = x
-		const right = left + width
-		let top = y + 1
-		if (atom.isTool) top += UI.BORDER_THICKNESS*1.25
-		const bottom = top + height
-		const middleY = top + height/2
-
-		ctx.fillStyle = atom.colour
-		const path = new Path2D()
-
-		path.moveTo(right, top)
-		path.lineTo(left, middleY)
-		path.lineTo(right, bottom)
-		path.closePath()
-		ctx.fillStyle = atom.colour
-		ctx.fill(path)
-		if (atom.hasBorder) {
-			ctx.lineWidth = UI.BORDER_THICKNESS*1.5
-			ctx.strokeStyle = atom.borderColour
-
-			if (atom.isTool) {
-				ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
-			}
-			ctx.stroke(path)
-		}
-	}
 }

@@ -8,14 +8,14 @@ class HexagonHandle extends Atom {
 	width = UI.SQUARE_SIZE/2 + UI.SQUARE_SIZE/4
 	height = UI.SQUARE_SIZE / 3
 
-	offscreen() { return Rectangle.offscreenFn(this) }
+	offscreen() { return rectangleOffscreen(this) }
 	touch() { return this.parent }
 	grab() { return this.parent }
 
 	overlaps(x, y) {
 		this.y -= this.height/2
 		this.height *= 2
-		const result = Rectangle.overlapsFn(this, x, y)
+		const result = rectangleOverlaps(this, x, y)
 		this.height /= 2
 		this.y += this.height/2
 		return result

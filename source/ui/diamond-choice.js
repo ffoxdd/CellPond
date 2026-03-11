@@ -7,9 +7,9 @@ class DiamondChoice extends Atom {
 	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 
-	draw(ctx) { TallRectangle.drawFn(this, ctx) }
-	offscreen() { return Rectangle.offscreenFn(this) }
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	draw(ctx) { drawDiamond(this, ctx) }
+	offscreen() { return rectangleOffscreen(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 	grab() { return this.parent }
 
 	click() {

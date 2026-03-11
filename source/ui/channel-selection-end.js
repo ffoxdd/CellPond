@@ -18,8 +18,8 @@ class ChannelSelectionEnd extends Atom {
 		ctx.fillRect(X, Y, W, H)
 	}
 
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
 
 	grab() { return this.parent.expanded ? this : this.parent }
 	touch() { return this.parent.expanded ? this : this.parent }

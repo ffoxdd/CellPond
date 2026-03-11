@@ -10,7 +10,7 @@ class TrianglePickUp extends Atom {
 	x = TrianglePad.X + TrianglePad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN*1.5)/2
 	y = TrianglePad.Y + UI.OPTION_MARGIN*1.5/2
 
-	draw(ctx) { TriangleUp.drawFn(this, ctx) }
+	draw(ctx) { drawTriangleUp(this, ctx) }
 	offscreen() { return triangleOffscreen(this) }
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }
 	grab() { return this.parent }

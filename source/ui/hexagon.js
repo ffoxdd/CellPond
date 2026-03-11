@@ -14,8 +14,8 @@ class Hexagon extends Atom {
 		this.construct()
 	}
 
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
 
 	draw(ctx) {
 		const {x, y} = this.getPosition()

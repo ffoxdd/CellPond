@@ -17,9 +17,9 @@ class TallRectangle extends Atom {
 		this.construct()
 	}
 
-	draw(ctx) { TallRectangle.drawFn(this, ctx) }
-	offscreen() { return Rectangle.offscreenFn(this) }
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	draw(ctx) { drawDiamond(this, ctx) }
+	offscreen() { return rectangleOffscreen(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 
 	rightDrag() {
 		const clone = new TallRectangle()
@@ -383,41 +383,42 @@ class TallRectangle extends Atom {
 		}
 	}
 
-	static drawFn(atom, ctx) {
-		const {x, y} = atom.getPosition()
+}
 
-		let size = atom.size
+function drawDiamond(atom, ctx) {
+	const {x, y} = atom.getPosition()
 
-		const height = size
-		const width = size
+	let size = atom.size
 
-		const left = (x)
-		let right = left + (width)
-		let top = (y)
-		let bottom = top + (height)
-		const middleY = top + (height/2)
-		const middleX = left + (width/2)
+	const height = size
+	const width = size
 
-		ctx.fillStyle = atom.colour
-		const path = new Path2D()
+	const left = (x)
+	let right = left + (width)
+	let top = (y)
+	let bottom = top + (height)
+	const middleY = top + (height/2)
+	const middleX = left + (width/2)
 
-		path.moveTo(...[middleX, top].map(n => (n)))
-		path.lineTo(...[right, middleY].map(n => (n)))
-		path.lineTo(...[middleX, bottom].map(n => (n)))
-		path.lineTo(...[left, middleY].map(n => (n)))
+	ctx.fillStyle = atom.colour
+	const path = new Path2D()
 
-		path.closePath()
-		ctx.fillStyle = atom.colour
-		ctx.fill(path)
-		if (atom.hasBorder) {
-			ctx.lineWidth = UI.BORDER_THICKNESS
-			ctx.strokeStyle = atom.borderColour
+	path.moveTo(...[middleX, top].map(n => (n)))
+	path.lineTo(...[right, middleY].map(n => (n)))
+	path.lineTo(...[middleX, bottom].map(n => (n)))
+	path.lineTo(...[left, middleY].map(n => (n)))
 
-			if (atom.isTool) {
-				ctx.lineWidth = UI.BORDER_THICKNESS*1.5
-				ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
-			}
-			ctx.stroke(path)
+	path.closePath()
+	ctx.fillStyle = atom.colour
+	ctx.fill(path)
+	if (atom.hasBorder) {
+		ctx.lineWidth = UI.BORDER_THICKNESS
+		ctx.strokeStyle = atom.borderColour
+
+		if (atom.isTool) {
+			ctx.lineWidth = UI.BORDER_THICKNESS*1.5
+			ctx.strokeStyle = UI.toolBorderColours[atom.colour.splash]
 		}
+		ctx.stroke(path)
 	}
 }

@@ -12,11 +12,11 @@ class ColourtodeTriangle extends Atom {
 	rightDraggable = true
 
 	draw(ctx) {
-		if (this.direction === "right") TriangleRight.drawFn(this, ctx)
-		else if (this.direction === "down") TriangleDown.drawFn(this, ctx)
-		else if (this.direction === "up") TriangleUp.drawFn(this, ctx)
-		else if (this.direction === "left") TriangleLeft.drawFn(this, ctx)
-		else TriangleRight.drawFn(this, ctx)
+		if (this.direction === "right") drawTriangleRight(this, ctx)
+		else if (this.direction === "down") drawTriangleDown(this, ctx)
+		else if (this.direction === "up") drawTriangleUp(this, ctx)
+		else if (this.direction === "left") drawTriangleLeft(this, ctx)
+		else drawTriangleRight(this, ctx)
 	}
 
 	overlaps(x, y) { return triangleOverlaps(this, x, y) }

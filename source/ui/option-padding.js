@@ -7,8 +7,8 @@ class OptionPadding extends Atom {
 	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN - UI.CHANNEL_HEIGHT
 
 	draw() {}
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
 	grab() { return this.parent.parent }
 	touch() { return this.parent }
 }

@@ -13,12 +13,12 @@ class SymmetryToggleY extends Atom {
 
 	draw(ctx) {
 		this.colour = this.value ? Colour.Silver : Colour.Grey
-		Circle.drawFn(this, ctx)
+		drawCircle(this, ctx)
 		SymmetryToggleY.drawY(this, ctx)
 	}
 
-	offscreen() { return Rectangle.offscreenFn(this) }
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return rectangleOffscreen(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 	grab() { return this.parent }
 
 	click() {

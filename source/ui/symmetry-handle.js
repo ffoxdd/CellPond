@@ -9,9 +9,9 @@ class SymmetryHandle extends Atom {
 	y = UI.SYMMETRY_CIRCLE_SIZE/2 - (UI.SYMMETRY_CIRCLE_SIZE / 3)/2
 	colour = Colour.Grey
 
-	draw(ctx) { Rectangle.drawFn(this, ctx) }
-	offscreen() { return Rectangle.offscreenFn(this) }
-	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	draw(ctx) { drawRectangle(this, ctx) }
+	offscreen() { return rectangleOffscreen(this) }
+	overlaps(x, y) { return rectangleOverlaps(this, x, y) }
 	grab() { return this.parent }
 
 	static get WIDTH() { return UI.SYMMETRY_CIRCLE_SIZE/2 }
