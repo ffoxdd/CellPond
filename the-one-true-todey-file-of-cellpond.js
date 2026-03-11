@@ -1897,6 +1897,8 @@ on.load(() => {
 	UI.toolBorderColours = toolBorderColours
 	UI.canvas = canvas
 	UI.CT_SCALE = CT_SCALE
+	UI.createChild = createChild
+	UI.deleteChild = deleteChild
 
 	const isCellAtomSpotFilled = (paddle, [sx, sy], slotted = false) => {
 		for (let cellAtom of paddle.cellAtoms) {
@@ -2571,7 +2573,7 @@ on.load(() => {
 
 					if (atom.highlightedSide === "right") {
 
-						const dummy = createChild(paddle, SLOT, {bottom: true})
+						const dummy = createChild(paddle, new Slot(), {bottom: true})
 						dummy.x = PADDLE.width/2 - atom.width/2
 						dummy.y = PADDLE.height/2 - atom.height/2
 						dummy.isLeftSlot = true
@@ -2638,7 +2640,7 @@ on.load(() => {
 					atom.attached = true
 					giveChild(paddle, atom)
 
-					const dummy = createChild(paddle, SLOT, {bottom: true})
+					const dummy = createChild(paddle, new Slot(), {bottom: true})
 					dummy.isLeftSlot = true
 					paddle.cellAtoms.push(dummy)
 					dummy.isSlot = false
@@ -2884,7 +2886,7 @@ on.load(() => {
 				
 				atom.slot = undefined
 				if (paddle.rightTriangle !== undefined && atom.slotted !== undefined) {
-					const dummy = createChild(paddle, SLOT, {bottom: true})
+					const dummy = createChild(paddle, new Slot(), {bottom: true})
 					dummy.x = x
 					dummy.y = y
 					dummy.isLeftSlot = true
@@ -3473,6 +3475,10 @@ on.load(() => {
 		"blue",
 	]
 
+	UI.CHANNEL_IDS = CHANNEL_IDS
+	UI.OPTION_SPACING = OPTION_SPACING
+	UI.getGradientImageFromColours = getGradientImageFromColours
+
 	// Ctrl+F: redef
 	const COLOURTODE_PICKER_CHANNEL = {
 		
@@ -3562,12 +3568,12 @@ on.load(() => {
 
 			atom.selectionBack = createChild(atom, new ChannelSelectionSide())
 
-			const selectionTop = createChild(atom, COLOURTODE_CHANNEL_SELECTION_END)
+			const selectionTop = createChild(atom, new ChannelSelectionEnd())
 			atom.selectionTop = selectionTop
 			atom.selectionTop.isTop = true
 			selectionTop.dragOnly = false
 
-			const selectionBottom = createChild(atom, COLOURTODE_CHANNEL_SELECTION_END)
+			const selectionBottom = createChild(atom, new ChannelSelectionEnd())
 			atom.selectionBottom = selectionBottom
 			atom.selectionBottom.isTop = false
 			selectionBottom.dragOnly = false
@@ -3617,10 +3623,10 @@ on.load(() => {
 		},
 
 		positionSelectionBack: (atom) => {
-			atom.selectionBack.x = -COLOURTODE_CHANNEL_SELECTION_END.height
+			atom.selectionBack.x = -ChannelSelectionEnd.HEIGHT
 			atom.selectionBack.y = atom.selectionTop.y
 			atom.selectionBack.height = atom.selectionBottom.y - atom.selectionTop.y + atom.selectionTop.height
-			atom.selectionBack.width = atom.width + COLOURTODE_CHANNEL_SELECTION_END.height*2
+			atom.selectionBack.width = atom.width + ChannelSelectionEnd.HEIGHT*2
 		},
 
 		update: (atom) => {
@@ -4011,7 +4017,7 @@ on.load(() => {
 
 				const pityTop = i !== 9 - endId + 1
 				const pityBottom = i !== 9 - startId - 1
-				const option = createChild(atom, {...COLOURTODE_PICKER_CHANNEL_OPTION, pityTop, pityBottom})
+				const option = createChild(atom, new PickerChannelOption({pityTop, pityBottom}))
 				
 				if (oldOptions !== undefined) {
 					option.isGradient = oldOptions[i].isGradient
@@ -4155,12 +4161,12 @@ on.load(() => {
 
 			const edge = width*MINUS_MAGIC_NUMBER*1.67
 			const handlePositions = [
-				[width, height/2 - HEXAGON_HANDLE.height/2],
-				[width - edge, height  - HEXAGON_HANDLE.height/2],
-				[edge, height  - HEXAGON_HANDLE.height/2],
-				[0, height/2  - HEXAGON_HANDLE.height/2],
-				[edge, 0 - HEXAGON_HANDLE.height/2],
-				[width - edge, 0 - HEXAGON_HANDLE.height/2],
+				[width, height/2 - HexagonHandle.HEIGHT/2],
+				[width - edge, height  - HexagonHandle.HEIGHT/2],
+				[edge, height  - HexagonHandle.HEIGHT/2],
+				[0, height/2  - HexagonHandle.HEIGHT/2],
+				[edge, 0 - HexagonHandle.HEIGHT/2],
+				[width - edge, 0 - HexagonHandle.HEIGHT/2],
 			]
 
 			let buttonPositions = [
@@ -4184,15 +4190,15 @@ on.load(() => {
 			})
 
 			for (let i = 0; i < 6; i++) {
-				const handle = createChild(atom, HEXAGON_HANDLE)
+				const handle = createChild(atom, new HexagonHandle())
 				handle.rotation = i
-				handle.x = handlePositions[i][0] - HEXAGON_HANDLE.width/2
+				handle.x = handlePositions[i][0] - HexagonHandle.WIDTH/2
 				handle.y = handlePositions[i][1]
 				atom.handles.push(handle)
 				
-				const button = createChild(atom, HEXAGON_BUTTON)
-				button.x = buttonPositions[i][0] - HEXAGON_BUTTON.size/2
-				button.y = buttonPositions[i][1] - HEXAGON_BUTTON.size/2
+				const button = createChild(atom, new HexagonButton())
+				button.x = buttonPositions[i][0] - HexagonButton.SIZE/2
+				button.y = buttonPositions[i][1] - HexagonButton.SIZE/2
 				atom.buttons.push(button)
 				button.id = i
 
@@ -4329,262 +4335,10 @@ on.load(() => {
 		];
 		return [ox + rx, oy + ry];
 	};
-
-	const HEXAGON_BUTTON = {
-		size: COLOURTODE_SQUARE.size,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		colour: Colour.Grey,
-		grab: (atom) => atom.parent,
-		behindChildren: true,
-		draw: (atom, ctx) => {
-			Circle.drawFn(atom, ctx)
-		},
-		construct: (atom) => {
-			atom.inner = createChild(atom, new HexagonButtonInner(), {bottom: false})
-			atom.inner.x = atom.width/2 - atom.inner.width/2
-			atom.inner.y = atom.height/2 - atom.inner.height/2
-		},
-		click: (atom) => {
-			if (atom.inner.selected) {
-				atom.inner.selected = false
-				atom.inner.colour = Colour.Grey
-			} else {
-				atom.inner.selected = true
-				atom.inner.colour = Colour.Silver
-			}
-
-			const hexagon = atom.parent
-			hexagon.ons[atom.id] = atom.inner.selected
-			
-			if (hexagon.parent.isPaddle) {
-				const paddle = hexagon.parent
-				updatePaddleSize(paddle)
-			} else if (hexagon.parent.isSquare) {
-				const square = hexagon.parent
-				hexagon.updateValue(hexagon)
-				const slotId = CHANNEL_IDS[hexagon.variable]
-				square.receiveNumber(square, hexagon.value, slotId, {expanded: hexagon.expanded, numberAtom: hexagon})
-			}
-
-			atomRegistry.bringToFront(atom.parent)
-		}
-	}
+	UI.rotate = rotate
 
 
-	const HEXAGON_HANDLE = {
-		offscreen: Rectangle.offscreenFn,
-		overlaps: (atom, x, y) => {
-			atom.y -= atom.height/2
-			atom.height *= 2
-			const result = Rectangle.overlapsFn(atom, x, y)
-			atom.height /= 2
-			atom.y += atom.height/2
-			return result
-		},
-		colour: Colour.Grey,
-		rotation: 0,
-		touch: (atom) => atom.parent,
-		grab: (atom) => atom.parent,
-		x: 50,
-		width: COLOURTODE_SQUARE.size/2 + COLOURTODE_SQUARE.size/4,
-		height: COLOURTODE_SQUARE.size / 3,
-		draw: (atom, ctx) => {
 
-			const {x, y} = atom.getPosition()
-			const {width, height} = atom
-
-			const path = new Path2D()
-			let points = [
-				[x, y],
-				[x+width, y],
-				[x+width, y+height],
-				[x, y+height],
-			]
-			
-			if (atom.rotation > 0) {
-				points = points.map(point => rotate(point, [x+width/2, y+height/2], atom.rotation * Math.PI/3))
-			}
-
-			const [head, ...tail] = points
-
-			path.moveTo(...head)
-			for (const point of tail) {
-				path.lineTo(...point)
-			}
-
-			ctx.fillStyle = atom.colour
-			ctx.fill(path)
-		}
-	}
-
-	const COLOURTODE_CHANNEL_SELECTION_END = {
-		draw: (atom, ctx) => {
-			const {x, y} = atom.getPosition()
-
-			
-
-			
-
-			const X = Math.round(x)
-			const Y = Math.round(y)
-			const W = Math.round(atom.width)
-			const H = Math.round(atom.height)
-
-			ctx.fillStyle = Colour.Grey
-			ctx.fillRect(X, Y, W, H)
-			
-		},
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		height: OPTION_SPACING - CHANNEL_HEIGHT,
-		width: COLOURTODE_SQUARE.size + OPTION_MARGIN*2,
-		x: - OPTION_MARGIN,
-		//grabbable: false,
-		dragOnly: true,
-		grab: (atom) => atom.parent.expanded? atom : atom.parent,
-		touch: (atom) => atom.parent.expanded? atom : atom.parent,
-		cursor: (atom) => {
-			return atom.parent.expanded? "ns-resize" : "pointer"
-		},
-		move: (atom) => {
-			atom.parent.positionSelectionBack(atom.parent)
-		},
-		drop: (atom) => {
-			let distanceFromMiddle = Math.round((atom.y+CHANNEL_HEIGHT/2) / OPTION_SPACING)
-
-			const oldNumber = atom.parent.value
-
-			let [startId, endId] = atom.parent.getStartAndEndId(atom.parent)
-			let centerId = atom.parent.getCenterId(atom.parent)
-
-			if (atom.isTop) {
-				endId = centerId - distanceFromMiddle
-			}
-			if (!atom.isTop) {
-				startId = centerId - (distanceFromMiddle-1)
-			}
-
-			const values = [false, false, false, false, false, false, false, false, false, false]
-			for (let i = startId; i <= endId; i++) {
-				values[i] = true
-			}
-
-			const number = new DragonNumber({channel: oldNumber.channel, values})
-			atom.parent.value = number
-			atom.parent.deleteOptions(atom.parent)
-			atom.parent.createOptions(atom.parent)
-
-			atom.dx = 0
-			atom.dy = 0
-
-			
-			if (atom.parent.parent.isSquare) {
-				const square = atom.parent.parent
-				const channel = CHANNEL_IDS[atom.parent.channelSlot]
-				square.receiveNumber(square, number, channel)
-			}
-
-			if (atom.parent.parent.isPaddle) {
-				const paddle = atom.parent.parent
-				updatePaddleSize(paddle)
-			}
-
-		},
-		dragLockX: true,
-	}
-
-
-	const COLOURTODE_PICKER_CHANNEL_OPTION = {
-		draw: Rectangle.drawFn,
-		overlaps: Rectangle.overlapsFn,
-		offscreen: Rectangle.offscreenFn,
-		height: CHANNEL_HEIGHT,
-		width: COLOURTODE_SQUARE.size,
-		grab: (atom) => atom.parent,
-		hasBorder: true,
-		
-		colourTicker: Infinity,
-		colours: [999],
-		colourId: 0,
-		dcolourId: 1,
-		update: (atom) => {
-
-			if (atom.needsColoursUpdateCountdown >= 0) {
-				atom.needsColoursUpdateCountdown--
-				if (atom.needsColoursUpdateCountdown < 0) {
-					atom.needsColoursUpdate = true
-				}
-			}
-
-			if (atom.needsColoursUpdate) {
-				atom.updateColours(atom)
-				atom.needsColoursUpdateCountdown = -1
-				atom.needsColoursUpdate = false
-			}
-		},
-
-		getId: (atom) => {			
-			const parent = atom.parent
-			const centerId = parent.getCenterId(parent)
-			const offset = atom.y / OPTION_SPACING
-			return centerId - offset
-		},
-
-		updateColours: (atom) => {
-			atom.isGradient = true
-			atom.gradient = getGradientImageFromColours({
-				colours: atom.colours,
-				width: atom.width * CT_SCALE,
-				height: atom.height * CT_SCALE,
-				gradient: atom.gradient
-			})
-		},
-
-		touch: (atom) => {
-			const id = atom.getId(atom)
-			if (atom.parent.value.values[id]) return atom.parent
-			return atom
-		},
-
-		click: (atom) => {
-
-			const values = [false, false, false, false, false, false, false, false, false, false]
-			values[atom.value] = true
-			const number = new DragonNumber({values, channel: atom.parent.value.channel})
-			const parent = atom.parent
-			parent.value = number
-			parent.deleteOptions(parent)
-			parent.createOptions(parent)
-			parent.needsColoursUpdate = true
-
-			if (parent.parent.isSquare) {
-				const square = parent.parent
-				const channel = CHANNEL_IDS[parent.channelSlot]
-				square.receiveNumber(square, number, channel)
-			}
-
-			if (parent.parent.isPaddle) {
-				const paddle = parent.parent
-				updatePaddleSize(paddle)
-			}
-		},
-
-		construct: (atom) => {
-
-			if (atom.pityTop) {
-				const topPity = createChild(atom, new OptionPadding())
-				topPity.y = -topPity.height
-			}
-
-			if (atom.pityBottom) {
-				const bottomPity = createChild(atom, new OptionPadding())
-				bottomPity.y = atom.height
-			}
-
-			//TODO: add cursor pity on the sides too
-		}
-	}
 
 	// DIAMOND
 	// Ctrl+F: dedef
@@ -4930,19 +4684,19 @@ on.load(() => {
 			
 			
 
-			atom.red = createChild(atom, DIAMOND_CHOICE)
+			atom.red = createChild(atom, new DiamondChoice())
 			atom.red.x = atom.padRight.x + OPTION_MARGIN/Math.SQRT2
 			atom.red.borderColour = Colour.Red
 			atom.red.colour = Colour.Black
 			atom.red.value = "red"
 
-			atom.green = createChild(atom, DIAMOND_CHOICE)
+			atom.green = createChild(atom, new DiamondChoice())
 			atom.green.x = atom.padRight.x + OPTION_MARGIN/Math.SQRT2 + (atom.green.width+OPTION_MARGIN)*1
 			atom.green.borderColour = Colour.Green
 			atom.green.colour = Colour.Black
 			atom.green.value = "green"
 			
-			atom.blue = createChild(atom, DIAMOND_CHOICE)
+			atom.blue = createChild(atom, new DiamondChoice())
 			atom.blue.x = atom.padRight.x + OPTION_MARGIN/Math.SQRT2 + (atom.blue.width+OPTION_MARGIN)*2
 			atom.blue.borderColour = Colour.Blue
 			atom.blue.colour = Colour.Black
@@ -4998,47 +4752,6 @@ on.load(() => {
 		}
 	}
 
-	const DIAMOND_CHOICE = {
-		draw: (atom, ctx) => {
-			COLOURTODE_TALL_RECTANGLE.draw(atom, ctx)
-		},
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		hasBorder: true,
-		size: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
-		height: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
-		width: CHANNEL_HEIGHT + OPTION_MARGIN/3*2,
-		grab: (atom) => atom.parent,
-		click: (atom) => {
-			if (atom.value === atom.parent.variable) return
-
-			atom.parent.variable = atom.value
-			atom.parent.value.variable = atom.value
-
-			atom.parent.winnerPin.x = atom.x + atom.parent.winnerPin.width/2
-			atom.parent.winnerPin.colour = atom.borderColour
-			atom.parent.winnerPin.borderColour = atom.borderColour
-
-			atom.parent.updateAppearance(atom.parent)
-
-			const diamond = atom.parent
-			let topDiamond = diamond
-			let top = diamond.parent
-			while (!top.isSquare) {
-				if (top === atomRegistry.baseParent) return
-				topDiamond = top
-				top = top.parent
-			}
-
-			let channelNumber = 0
-			if (topDiamond.channelSlot === "green") channelNumber = 1
-			if (topDiamond.channelSlot === "blue") channelNumber = 2
-
-			const topChannel = top.variableAtoms[channelNumber]
-			top.receiveNumber(top, topChannel.value, channelNumber, {expanded: topChannel.expanded, numberAtom: topChannel})
-
-		}
-	}
 	
 
 	paddles = []
@@ -5077,10 +4790,10 @@ on.load(() => {
 
 			paddle.pinhole = createChild(handle, new PinHole())
 
-			paddle.dummyLeft = createChild(paddle, SLOT)
+			paddle.dummyLeft = createChild(paddle, new Slot())
 			paddle.dummyLeft.visible = false
 
-			paddle.dummyRight = createChild(paddle, SLOT)
+			paddle.dummyRight = createChild(paddle, new Slot())
 			paddle.dummyRight.visible = false
 
 			updatePaddleSize(paddle)
@@ -5213,18 +4926,6 @@ on.load(() => {
 		ctx.fill(path)
 	}
 
-	const SLOT = {
-		visible: true,
-		isSlot: true,
-		behindChildren: true,
-		draw: Slot.drawFn,
-		offscreen: Rectangle.offscreenFn,
-		overlaps: Rectangle.overlapsFn,
-		colour: Colour.Black,
-		size: COLOURTODE_SQUARE.size,
-		grab: (atom) => atom.parent,
-		dragOnly: true,
-	}
 
 	const cellAtomWidth = COLOURTODE_SQUARE.size
 	// Ctrl+F: adwww
@@ -5309,7 +5010,7 @@ on.load(() => {
 		if (paddle.rightTriangle !== undefined) {
 			for (const cellAtom of paddle.cellAtoms) {
 
-				const slot = createChild(paddle, SLOT, {bottom: true})
+				const slot = createChild(paddle, new Slot(), {bottom: true})
 				cellAtom.slot = slot
 				paddle.slots.push(slot)
 				slot.x = cellAtom.x + paddle.rightTriangle.x + paddle.rightTriangle.width
@@ -5366,6 +5067,7 @@ on.load(() => {
 		updatePaddleRule(paddle)
 		positionPaddles()
 	}
+	UI.updatePaddleSize = updatePaddleSize
 
 	const isDragonArraySingleColour = (array) => {
 		const splashes = array.getSplashSet()
