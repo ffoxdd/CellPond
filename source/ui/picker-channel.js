@@ -10,15 +10,15 @@ class PickerChannel extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	grab(atom) { return this }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	grab() { return this }
 
-	rightDrag(atom) {
+	rightDrag() {
 		const clone = new PickerChannel()
 		UI.atomRegistry.register(clone)
 		const {x, y} = this.getPosition()
@@ -26,21 +26,21 @@ class PickerChannel extends Atom {
 		UI.hand.offset.y -= this.y - y
 		clone.value = this.value.clone()
 		if (this.expanded) {
-			clone.createOptions(clone)
+			clone.createOptions()
 			clone.expanded = true
 		}
 		return clone
 	}
 
-	drag(atom) {
+	drag() {
 		if (this.parent.isSquare) {
 			const square = this.parent
 			square[this.channelSlot] = undefined
 			const channelId = UI.CHANNEL_IDS[this.channelSlot]
-			square.receiveNumber(square, undefined, channelId)
+			square.receiveNumber(undefined, channelId)
 			UI.freeChild(square, this)
 			this.channelSlot = UI.CHANNEL_NAMES[this.value.channel]
-			this.updateColours(this)
+			this.updateColours()
 			this.attached = false
 
 			this.needsColoursUpdate = true
@@ -55,14 +55,14 @@ class PickerChannel extends Atom {
 			diamond.value[operationName] = undefined
 			this.attached = false
 			if (diamond.expanded) {
-				diamond.unexpand(diamond)
-				diamond.expand(diamond)
+				diamond.unexpand()
+				diamond.expand()
 			} else {
 				const handle = this.highlightedSlot === "padTop"? "handleTop" : "handleBottom"
 				UI.deleteChild(diamond, diamond[handle], {quiet: true})
 				UI.deleteChild(diamond, diamond[this.highlightedSlot], {quiet: true})
-				diamond.expand(diamond)
-				diamond.unexpand(diamond)
+				diamond.expand()
+				diamond.unexpand()
 			}
 		}
 
@@ -76,7 +76,7 @@ class PickerChannel extends Atom {
 		return this
 	}
 
-	construct(atom) {
+	construct() {
 		const values = [false, false, false, false, false, false, false, false, false, true]
 		const channel = Random.Uint8 % 3
 		this.value = new DragonNumber({values, channel})
@@ -97,10 +97,10 @@ class PickerChannel extends Atom {
 		this.selectionBottom.isTop = false
 		selectionBottom.dragOnly = false
 
-		this.positionSelection(this)
+		this.positionSelection()
 	}
 
-	positionSelection(atom, start, end, top, bottom) {
+	positionSelection(start, end, top, bottom) {
 		if (!this.expanded) {
 			this.selectionTop.y = -this.selectionTop.height
 			this.selectionBottom.y = this.height
@@ -118,7 +118,7 @@ class PickerChannel extends Atom {
 			this.selectionBottom.maxY = bottom - this.selectionBottom.height + optionSpacing
 		}
 
-		this.positionSelectionBack(this)
+		this.positionSelectionBack()
 
 		const selectionTopId = this.children.indexOf(this.selectionTop)
 		this.children.splice(selectionTopId, 1)
@@ -134,14 +134,14 @@ class PickerChannel extends Atom {
 		}
 	}
 
-	positionSelectionBack(atom) {
+	positionSelectionBack() {
 		this.selectionBack.x = -ChannelSelectionEnd.HEIGHT
 		this.selectionBack.y = this.selectionTop.y
 		this.selectionBack.height = this.selectionBottom.y - this.selectionTop.y + this.selectionTop.height
 		this.selectionBack.width = this.width + ChannelSelectionEnd.HEIGHT*2
 	}
 
-	update(atom) {
+	update() {
 		if (this.expanded) {
 			if (this.needsColoursUpdate) {
 				this.needsColoursUpdate = false
@@ -152,7 +152,7 @@ class PickerChannel extends Atom {
 					height: this.height * UI.CT_SCALE,
 					gradient: this.gradient
 				})
-				this.updateColours(this)
+				this.updateColours()
 			}
 		}
 
@@ -322,7 +322,7 @@ class PickerChannel extends Atom {
 		}
 	}
 
-	drop(atom) {
+	drop() {
 		if (this.highlight !== undefined) {
 
 			if (this.highlightedAtom.isSquare) {
@@ -330,7 +330,7 @@ class PickerChannel extends Atom {
 				const slotId = UI.CHANNEL_IDS[this.highlightedSlot]
 				this.value.channel = slotId
 
-				square.receiveNumber(square, this.value, slotId, {expanded: this.expanded})
+				square.receiveNumber(this.value, slotId, {expanded: this.expanded})
 				UI.atomRegistry.delete(this)
 			} else {
 				const diamond = this.highlightedAtom.parent
@@ -362,22 +362,22 @@ class PickerChannel extends Atom {
 		UI.emit("menuToolUnlock","triangle")
 	}
 
-	click(atom) {
+	click() {
 		if (!this.expanded) {
 			this.expanded = true
 			this.colourId = 0
 			this.colourTicker = Infinity
 			this.needsColoursUpdate = true
-			this.createOptions(this)
+			this.createOptions()
 		}
 		else {
 			this.expanded = false
-			this.deleteOptions(this)
+			this.deleteOptions()
 			this.needsColoursUpdate = true
 		}
 	}
 
-	deleteOptions(atom) {
+	deleteOptions() {
 		if (this.options !== undefined) {
 			this.deletedOptions = this.options
 		}
@@ -387,10 +387,10 @@ class PickerChannel extends Atom {
 		}
 		this.needsColoursUpdate = true
 		this.colourTicker = Infinity
-		this.positionSelection(this)
+		this.positionSelection()
 	}
 
-	updateColours(atom) {
+	updateColours() {
 		let parentR = undefined
 		let parentG = undefined
 		let parentB = undefined
@@ -448,7 +448,7 @@ class PickerChannel extends Atom {
 		}
 	}
 
-	getCenterId(atom) {
+	getCenterId() {
 		let startId = undefined
 		let endId = undefined
 
@@ -462,7 +462,7 @@ class PickerChannel extends Atom {
 		return Math.round((endId + startId) / 2)
 	}
 
-	getStartAndEndId(atom) {
+	getStartAndEndId() {
 		let startId = undefined
 		let endId = undefined
 
@@ -476,7 +476,7 @@ class PickerChannel extends Atom {
 		return [startId, endId]
 	}
 
-	createOptions(atom) {
+	createOptions() {
 		const oldOptions = this.parent.isSquare ? this.deletedOptions : undefined
 		this.options = []
 
@@ -492,7 +492,7 @@ class PickerChannel extends Atom {
 		}
 
 		if (startId === undefined) throw new Error("[ColourTode] Number cannot be NOTHING. Please let @TodePond know if you see this error!")
-		const centerOptionId = this.getCenterId(this)
+		const centerOptionId = this.getCenterId()
 
 		const optionSpacing = UI.OPTION_SPACING
 		let top = (centerOptionId - 9) * optionSpacing
@@ -525,8 +525,8 @@ class PickerChannel extends Atom {
 			this.options.push(option)
 		}
 
-		this.positionSelection(this, start, end, top, bottom)
+		this.positionSelection(start, end, top, bottom)
 
-		this.updateColours(this)
+		this.updateColours()
 	}
 }

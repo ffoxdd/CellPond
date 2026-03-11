@@ -11,7 +11,7 @@ class Highlight extends Atom {
 	hasAbsolutePosition = true
 	hasInner = false
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
 }

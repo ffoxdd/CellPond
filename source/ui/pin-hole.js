@@ -12,7 +12,7 @@ class PinHole extends Atom {
 	y = UI.OPTION_MARGIN/2/2
 	x = UI.OPTION_MARGIN/2/2
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		return
 		if (this.locked) {
 			this.hasBorder = true
@@ -25,11 +25,11 @@ class PinHole extends Atom {
 		Circle.drawFn(this, ctx)
 	}
 
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	grab(atom) { return this.parent.parent }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	grab() { return this.parent.parent }
 
-	click(atom) {
+	click() {
 		return
 		const handle = this.parent
 		const paddle = handle.parent
@@ -49,16 +49,16 @@ class PinHole extends Atom {
 
 			for (const cellAtom of paddle.cellAtoms) {
 				if (cellAtom.expanded) {
-					cellAtom.unexpand(cellAtom)
+					cellAtom.unexpand()
 				}
 				if (cellAtom.slotted !== undefined) {
 					const slotted = cellAtom.slotted
 					if (slotted.expanded) {
-						slotted.unexpand(slotted)
+						slotted.unexpand()
 					}
 				}
 				if (cellAtom.joins.length > 0 && cellAtom.joinExpanded) {
-					cellAtom.joinUnepxand(cellAtom)
+					cellAtom.joinUnepxand()
 				}
 			}
 

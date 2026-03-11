@@ -14,14 +14,14 @@ class TallRectangle extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	draw(ctx) { TallRectangle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
 
-	rightDrag(atom) {
+	rightDrag() {
 		const clone = new TallRectangle()
 		UI.atomRegistry.register(clone)
 		const {x, y} = this.getPosition()
@@ -29,20 +29,20 @@ class TallRectangle extends Atom {
 		UI.hand.offset.y -= this.y - y
 		clone.variable = this.variable
 		if (this.expanded) {
-			clone.expand(clone)
+			clone.expand()
 		}
-		clone.updateAppearance(clone)
+		clone.updateAppearance()
 		return clone
 	}
 
-	drag(atom) {
+	drag() {
 		if (this.parent.isSquare) {
 			const square = this.parent
 			square[this.channelSlot] = undefined
 			const channelId = UI.CHANNEL_IDS[this.channelSlot]
-			square.receiveNumber(square, undefined, channelId)
+			square.receiveNumber(undefined, channelId)
 			UI.freeChild(square, this)
-			this.updateAppearance(this)
+			this.updateAppearance()
 			this.attached = false
 		} else if (this.parent.isTallRectangle) {
 			const diamond = this.parent
@@ -51,25 +51,25 @@ class TallRectangle extends Atom {
 			const operationName = this.highlightedSlot === "padTop"? "add" : "subtract"
 			diamond.value[operationName] = undefined
 			if (this.expanded) {
-				this.unexpand(this)
-				this.expand(this)
+				this.unexpand()
+				this.expand()
 			}
 			this.attached = false
 			if (diamond.expanded) {
-				diamond.unexpand(diamond)
-				diamond.expand(diamond)
+				diamond.unexpand()
+				diamond.expand()
 			} else {
 				const handle = this.highlightedSlot === "padTop"? "handleTop" : "handleBottom"
 				UI.deleteChild(diamond, diamond[handle], {quiet: true})
 				UI.deleteChild(diamond, diamond[this.highlightedSlot], {quiet: true})
-				diamond.expand(diamond)
-				diamond.unexpand(diamond)
+				diamond.expand()
+				diamond.unexpand()
 			}
 		}
 		return this
 	}
 
-	hover(atom) {
+	hover() {
 
 		const {x, y} = this.getPosition()
 		const left = x
@@ -166,7 +166,7 @@ class TallRectangle extends Atom {
 		}
 	}
 
-	place(atom, highlightedAtom) {
+	place(highlightedAtom) {
 
 		this.attached = true
 		this.dx = 0
@@ -183,8 +183,8 @@ class TallRectangle extends Atom {
 			UI.giveChild(diamond, this)
 
 			if (this.expanded) {
-				this.unexpand(this)
-				this.expand(this)
+				this.unexpand()
+				this.expand()
 			}
 
 			return
@@ -192,22 +192,22 @@ class TallRectangle extends Atom {
 
 		const square = this.highlightedAtom
 		const slotId = UI.CHANNEL_IDS[this.highlightedSlot]
-		square.receiveNumber(square, this.value, slotId, {expanded: this.expanded, numberAtom: this})
+		square.receiveNumber(this.value, slotId, {expanded: this.expanded, numberAtom: this})
 		UI.atomRegistry.delete(this)
 	}
 
-	click(atom) {
+	click() {
 		if (!this.expanded) {
-			this.expand(this)
+			this.expand()
 		} else {
-			this.unexpand(this)
+			this.unexpand()
 		}
 	}
 
-	construct(atom) {
+	construct() {
 		this.variable = CHANNEL_VARIABLES[Random.Uint8 % 3]
 		this.value = new DragonNumber({variable: this.variable})
-		this.updateAppearance(this)
+		this.updateAppearance()
 		if (!this.isTool) {
 			this.width += UI.BORDER_THICKNESS/2
 			this.height += UI.BORDER_THICKNESS/2
@@ -216,7 +216,7 @@ class TallRectangle extends Atom {
 		this.operationAtoms = {padTop: undefined, padBottom: undefined}
 	}
 
-	makeOperationAtoms(atom) {
+	makeOperationAtoms() {
 		if (this.value.add !== undefined) {
 
 			if (this.operationAtoms.padtop === undefined) {
@@ -231,11 +231,11 @@ class TallRectangle extends Atom {
 					const operationAtom = UI.createChild(this, new TallRectangle())
 					operationAtom.value = this.value.add
 					operationAtom.variable = this.value.add.variable
-					operationAtom.makeOperationAtoms(operationAtom)
+					operationAtom.makeOperationAtoms()
 					operationAtom.highlightedSlot = "padTop"
 					operationAtom.x = 0
 					operationAtom.y = this.padTop.y + this.padTop.height/2 - operationAtom.height/2
-					operationAtom.updateAppearance(operationAtom)
+					operationAtom.updateAppearance()
 					this.operationAtoms.padTop = operationAtom
 				}
 			}
@@ -258,7 +258,7 @@ class TallRectangle extends Atom {
 		}
 	}
 
-	updateAppearance(atom) {
+	updateAppearance() {
 		if (this.variable === "red") {
 			this.colour = Colour.Red
 		} else if (this.variable === "green") {
@@ -270,7 +270,7 @@ class TallRectangle extends Atom {
 		this.borderColour = UI.borderColours[this.colour.splash]
 	}
 
-	expand(atom) {
+	expand() {
 		this.expanded = true
 
 		if (this.value.add === undefined) {
@@ -355,13 +355,13 @@ class TallRectangle extends Atom {
 		for (const child of this.children) {
 			if (!child.isTallRectangle) continue
 			if (child.expanded) {
-				child.unexpand(child)
-				child.expand(child)
+				child.unexpand()
+				child.expand()
 			}
 		}
 	}
 
-	unexpand(atom) {
+	unexpand() {
 		this.expanded = false
 
 		UI.deleteChild(this, this.red)

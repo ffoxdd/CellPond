@@ -7,9 +7,9 @@ class DiamondPin extends Atom {
 	height = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
 	width = (UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2) / 2
 
-	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	grab(atom) { return this.parent }
-	touch(atom) { return this.parent }
+	draw(ctx) { TallRectangle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab() { return this.parent }
+	touch() { return this.parent }
 }

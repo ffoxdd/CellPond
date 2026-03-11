@@ -10,7 +10,7 @@ class SymmetryCircle extends Atom {
 	size = UI.SQUARE_SIZE
 	rightDraggable = true
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		Circle.drawFn(this, ctx)
 		if (this.value === undefined) return
 		const [x, y, r] = getRGB(this.value)
@@ -19,18 +19,18 @@ class SymmetryCircle extends Atom {
 		if (r > 0) SymmetryToggleR.drawR(this, ctx)
 	}
 
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
 
-	click(atom) {
+	click() {
 		if (this.expanded) {
-			this.unexpand(this)
+			this.unexpand()
 		} else {
-			this.expand(this)
+			this.expand()
 		}
 	}
 
-	expand(atom) {
+	expand() {
 		this.pad = UI.createChild(this, new SymmetryPad())
 		this.handle = UI.createChild(this, new SymmetryHandle())
 		this.handle.width += UI.OPTION_MARGIN
@@ -46,7 +46,7 @@ class SymmetryCircle extends Atom {
 		if (r > 0) this.rToggle.value = true
 	}
 
-	unexpand(atom) {
+	unexpand() {
 		UI.deleteChild(this, this.pad)
 		UI.deleteChild(this, this.handle)
 		UI.deleteChild(this, this.xToggle)
@@ -55,7 +55,7 @@ class SymmetryCircle extends Atom {
 		this.expanded = false
 	}
 
-	update(atom) {
+	update() {
 		const {x, y} = this.getPosition()
 
 		const id = UI.atomRegistry.atoms.indexOf(this)
@@ -93,7 +93,7 @@ class SymmetryCircle extends Atom {
 		}
 	}
 
-	drop(atom) {
+	drop() {
 		if (!this.attached) {
 			if (this.highlightedPaddle !== undefined) {
 				const paddle = this.highlightedPaddle
@@ -110,7 +110,7 @@ class SymmetryCircle extends Atom {
 		}
 	}
 
-	drag(atom) {
+	drag() {
 		if (this.attached) {
 			const paddle = this.parent
 
@@ -124,7 +124,7 @@ class SymmetryCircle extends Atom {
 		return this
 	}
 
-	rightDrag(atom) {
+	rightDrag() {
 		const clone = new SymmetryCircle()
 		clone.value = this.value
 		const {x, y} = this.getPosition()

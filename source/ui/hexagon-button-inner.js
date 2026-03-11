@@ -7,9 +7,9 @@ class HexagonButtonInner extends Atom {
 	borderColour = Colour.Black
 	colour = Colour.Grey
 
-	draw(atom, ctx) { Circle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	grab(atom) { return this.parent }
-	touch(atom) { return this.parent }
+	draw(ctx) { Circle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab() { return this.parent }
+	touch() { return this.parent }
 }

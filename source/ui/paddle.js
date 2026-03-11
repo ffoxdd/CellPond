@@ -21,20 +21,20 @@ class Paddle extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
 
-	construct(atom) {
+	construct() {
 		this.cellAtoms = []
 		this.slots = []
 
 		const handle = UI.createChild(this, new PaddleHandle())
 		this.handle = handle
-		this.setLimits(this)
+		this.setLimits()
 		this.x = this.minX
 		this.expanded = false
 
@@ -49,12 +49,12 @@ class Paddle extends Atom {
 		UI.emit("paddleSizeChanged",this)
 	}
 
-	setLimits(atom) {
+	setLimits() {
 		this.maxX = this.handle.width
 		this.minX = this.handle.width - this.width
 	}
 
-	drop(atom) {
+	drop() {
 		const distanceFromMax = this.maxX - this.x
 		const distanceFromMin = this.x - this.minX
 
@@ -79,13 +79,13 @@ class Paddle extends Atom {
 		this.dx = 0
 	}
 
-	click(atom) {
+	click() {
 		const cells = UI.makeDiagramCellsFromCellAtoms(this.cellAtoms)
 		const diagram = new Diagram({left: cells})
 		UI.emit("brushColourChanged",diagram)
 	}
 
-	drag(atom, x, y) {
+	drag(x, y) {
 		if (false && this.pinhole.locked) {
 			const square = new ColourtodeSquare()
 			UI.hand.offset.x = -square.width/2
@@ -97,13 +97,13 @@ class Paddle extends Atom {
 			square.value = diagram
 			UI.atomRegistry.register(square)
 			state.brush.colour = new Diagram({left: [new DiagramCell({content: diagram})]})
-			square.update(square)
+			square.update()
 			return square
 		}
 		return this
 	}
 
-	getColour(atom) {
+	getColour() {
 		let cellAtoms = this.cellAtoms
 		if (cellAtoms.length === 0) {
 			const leftClone = new DragonArray({channels: [undefined, undefined, undefined]})
@@ -118,7 +118,7 @@ class Paddle extends Atom {
 		return diagram
 	}
 
-	rightDrag(atom) {
+	rightDrag() {
 		let cellAtoms = this.cellAtoms
 		if (cellAtoms.length === 0) {
 			const square = new ColourtodeSquare()
@@ -128,17 +128,17 @@ class Paddle extends Atom {
 			UI.emit("brushColourChanged",leftClone)
 			UI.atomRegistry.register(square)
 			square.value = leftClone
-			square.update(square)
+			square.update()
 			return square
 		} else if (cellAtoms.length === 1) {
 			const leftClone = DragonArray.cloneContent(cellAtoms[0].value)
-			const square = cellAtoms[0].clone(cellAtoms[0])
+			const square = cellAtoms[0].clone()
 			UI.hand.offset.x = -square.width/2
 			UI.hand.offset.y = -square.height/2
 			UI.emit("brushColourChanged",leftClone)
 			UI.atomRegistry.register(square)
 			square.value = leftClone
-			square.update(square)
+			square.update()
 			return square
 		}
 		const square = new ColourtodeSquare()
@@ -151,7 +151,7 @@ class Paddle extends Atom {
 		square.value = diagram
 		UI.atomRegistry.register(square)
 		UI.emit("brushColourChanged",diagram)
-		square.update(square)
+		square.update()
 		return square
 	}
 

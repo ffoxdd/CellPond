@@ -7,12 +7,12 @@ class DiamondChoice extends Atom {
 	height = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 	width = UI.CHANNEL_HEIGHT + UI.OPTION_MARGIN/3*2
 
-	draw(atom, ctx) { TallRectangle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	grab(atom) { return this.parent }
+	draw(ctx) { TallRectangle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab() { return this.parent }
 
-	click(atom) {
+	click() {
 		if (this.value === this.parent.variable) return
 
 		this.parent.variable = this.value
@@ -22,7 +22,7 @@ class DiamondChoice extends Atom {
 		this.parent.winnerPin.colour = this.borderColour
 		this.parent.winnerPin.borderColour = this.borderColour
 
-		this.parent.updateAppearance(this.parent)
+		this.parent.updateAppearance()
 
 		const diamond = this.parent
 		let topDiamond = diamond
@@ -38,6 +38,6 @@ class DiamondChoice extends Atom {
 		if (topDiamond.channelSlot === "blue") channelNumber = 2
 
 		const topChannel = top.variableAtoms[channelNumber]
-		top.receiveNumber(top, topChannel.value, channelNumber, {expanded: topChannel.expanded, numberAtom: topChannel})
+		top.receiveNumber(topChannel.value, channelNumber, {expanded: topChannel.expanded, numberAtom: topChannel})
 	}
 }

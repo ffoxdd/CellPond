@@ -13,15 +13,15 @@ class PickerChannelOption extends Atom {
 	constructor(element = {}) {
 		super()
 		Object.assign(this, element)
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	grab(atom) { return this.parent }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	grab() { return this.parent }
 
-	update(atom) {
+	update() {
 		if (this.needsColoursUpdateCountdown >= 0) {
 			this.needsColoursUpdateCountdown--
 			if (this.needsColoursUpdateCountdown < 0) {
@@ -30,20 +30,20 @@ class PickerChannelOption extends Atom {
 		}
 
 		if (this.needsColoursUpdate) {
-			this.updateColours(this)
+			this.updateColours()
 			this.needsColoursUpdateCountdown = -1
 			this.needsColoursUpdate = false
 		}
 	}
 
-	getId(atom) {
+	getId() {
 		const parent = this.parent
-		const centerId = parent.getCenterId(parent)
+		const centerId = parent.getCenterId()
 		const offset = this.y / UI.OPTION_SPACING
 		return centerId - offset
 	}
 
-	updateColours(atom) {
+	updateColours() {
 		this.isGradient = true
 		this.gradient = UI.getGradientImageFromColours({
 			colours: this.colours,
@@ -53,26 +53,26 @@ class PickerChannelOption extends Atom {
 		})
 	}
 
-	touch(atom) {
-		const id = this.getId(this)
+	touch() {
+		const id = this.getId()
 		if (this.parent.value.values[id]) return this.parent
 		return this
 	}
 
-	click(atom) {
+	click() {
 		const values = [false, false, false, false, false, false, false, false, false, false]
 		values[this.value] = true
 		const number = new DragonNumber({values, channel: this.parent.value.channel})
 		const parent = this.parent
 		parent.value = number
-		parent.deleteOptions(parent)
-		parent.createOptions(parent)
+		parent.deleteOptions()
+		parent.createOptions()
 		parent.needsColoursUpdate = true
 
 		if (parent.parent.isSquare) {
 			const square = parent.parent
 			const channel = UI.CHANNEL_IDS[parent.channelSlot]
-			square.receiveNumber(square, number, channel)
+			square.receiveNumber(number, channel)
 		}
 
 		if (parent.parent.isPaddle) {
@@ -81,7 +81,7 @@ class PickerChannelOption extends Atom {
 		}
 	}
 
-	construct(atom) {
+	construct() {
 		if (this.pityTop) {
 			const topPity = UI.createChild(this, new OptionPadding())
 			topPity.y = -topPity.height

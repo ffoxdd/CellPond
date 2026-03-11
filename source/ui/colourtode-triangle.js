@@ -11,7 +11,7 @@ class ColourtodeTriangle extends Atom {
 	highlighter = true
 	rightDraggable = true
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		if (this.direction === "right") TriangleRight.drawFn(this, ctx)
 		else if (this.direction === "down") TriangleDown.drawFn(this, ctx)
 		else if (this.direction === "up") TriangleUp.drawFn(this, ctx)
@@ -19,10 +19,10 @@ class ColourtodeTriangle extends Atom {
 		else TriangleRight.drawFn(this, ctx)
 	}
 
-	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
-	offscreen(atom) { return triangleOffscreen(this) }
+	overlaps(x, y) { return triangleOverlaps(this, x, y) }
+	offscreen() { return triangleOffscreen(this) }
 
-	click(atom) {
+	click() {
 		if (this.parent.isPaddle) {
 			this.parent.pinhole.locked = !this.parent.pinhole.locked
 			UI.emit("paddleRuleChanged",this.parent)
@@ -30,14 +30,14 @@ class ColourtodeTriangle extends Atom {
 		}
 
 		if (this.expanded) {
-			this.unexpand(this)
+			this.unexpand()
 		}
 		else {
-			this.expand(this)
+			this.expand()
 		}
 	}
 
-	expand(atom) {
+	expand() {
 		this.pad = UI.createChild(this, new TrianglePad())
 		this.handle = UI.createChild(this, new TriangleHandle())
 		this.expanded = true
@@ -49,7 +49,7 @@ class ColourtodeTriangle extends Atom {
 		if (this.direction === "down") this.downPick.value = true
 	}
 
-	unexpand(atom) {
+	unexpand() {
 		UI.deleteChild(this, this.pad)
 		UI.deleteChild(this, this.handle)
 		UI.deleteChild(this, this.upPick)
@@ -57,7 +57,7 @@ class ColourtodeTriangle extends Atom {
 		this.expanded = false
 	}
 
-	hover(atom) {
+	hover() {
 		this.highlightedSlot = undefined
 
 		if (this.direction === "right") {
@@ -174,7 +174,7 @@ class ColourtodeTriangle extends Atom {
 		return undefined
 	}
 
-	updateValue(atom) {
+	updateValue() {
 		if (this.direction === "up" || this.direction === "down") {
 			this.variable = this.highlightedSlot
 		} else if (this.direction === "left") {
@@ -192,13 +192,13 @@ class ColourtodeTriangle extends Atom {
 		this.value = value
 	}
 
-	place(atom, receiver) {
+	place(receiver) {
 		if (receiver.isSquare && this.highlightedSlot !== undefined) {
 			this.channelId = UI.CHANNEL_IDS[this.highlightedSlot]
-			this.updateValue(this)
+			this.updateValue()
 
 			const square = receiver
-			square.receiveNumber(square, this.value, this.channelId, {expanded: this.expanded, numberAtom: this})
+			square.receiveNumber(this.value, this.channelId, {expanded: this.expanded, numberAtom: this})
 			UI.atomRegistry.delete(this)
 			this.dx = 0
 			this.dy = 0
@@ -251,7 +251,7 @@ class ColourtodeTriangle extends Atom {
 			UI.emit("paddleSizeChanged",paddle)
 
 			if (this.expanded) {
-				this.unexpand(this)
+				this.unexpand()
 			}
 
 			this.attached = true
@@ -260,7 +260,7 @@ class ColourtodeTriangle extends Atom {
 		}
 	}
 
-	rightDrag(atom) {
+	rightDrag() {
 		const clone = new ColourtodeTriangle()
 		clone.direction = this.direction
 		const {x, y} = this.getPosition()
@@ -272,13 +272,13 @@ class ColourtodeTriangle extends Atom {
 		return clone
 	}
 
-	drag(atom) {
+	drag() {
 		if (this.parent.isSquare) {
 			const square = this.parent
 			this.attached = false
 			square[this.highlightedSlot] = undefined
 			UI.freeChild(square, this)
-			square.receiveNumber(square, undefined, this.channelId)
+			square.receiveNumber(undefined, this.channelId)
 			return this
 		}
 

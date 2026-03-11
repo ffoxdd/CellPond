@@ -11,13 +11,13 @@ class Hexagon extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		const {x, y} = this.getPosition()
 		const {width, height} = this
 		let points = [
@@ -92,7 +92,7 @@ class Hexagon extends Atom {
 		}
 	}
 
-	getValue(atom) {
+	getValue() {
 		let score = 0
 		for (const on of this.ons) {
 			if (on) score++
@@ -100,15 +100,15 @@ class Hexagon extends Atom {
 		return score
 	}
 
-	click(atom) {
+	click() {
 		if (this.expanded) {
-			this.unexpand(this)
+			this.unexpand()
 		} else {
-			this.expand(this)
+			this.expand()
 		}
 	}
 
-	unexpand(atom) {
+	unexpand() {
 		this.expanded = false
 		for (const thing of this.handles) {
 			UI.deleteChild(this, thing)
@@ -120,7 +120,7 @@ class Hexagon extends Atom {
 		this.buttons = []
 	}
 
-	expand(atom) {
+	expand() {
 		this.expanded = true
 		this.handles = []
 		this.buttons = []
@@ -177,11 +177,11 @@ class Hexagon extends Atom {
 		}
 	}
 
-	construct(atom) {
+	construct() {
 		this.ons = [false, false, false, false, false, false]
 	}
 
-	updateValue(atom) {
+	updateValue() {
 		const channel = UI.CHANNEL_IDS[this.variable]
 		const addZero = !this.ons[1] && !this.ons[0] && !this.ons[5]
 		const subtractZero = !this.ons[2] && !this.ons[3] && !this.ons[4]
@@ -195,7 +195,7 @@ class Hexagon extends Atom {
 		this.value = value
 	}
 
-	hover(atom) {
+	hover() {
 		const {x, y} = this.getPosition()
 		let left = x
 		let top = y
@@ -223,7 +223,7 @@ class Hexagon extends Atom {
 		}
 	}
 
-	place(atom, paddle) {
+	place(paddle) {
 		if (paddle.isPaddle) {
 			this.attached = true
 			UI.giveChild(paddle, this)
@@ -236,7 +236,7 @@ class Hexagon extends Atom {
 		}
 	}
 
-	drag(atom) {
+	drag() {
 		if (this.parent.isPaddle) {
 			const paddle = this.parent
 			UI.freeChild(paddle, this)
@@ -246,7 +246,7 @@ class Hexagon extends Atom {
 			const square = this.parent
 			square[this.variable] = undefined
 			const channelId = UI.CHANNEL_IDS[this.variable]
-			square.receiveNumber(square, undefined, channelId)
+			square.receiveNumber(undefined, channelId)
 			UI.freeChild(square, this)
 			this.attached = false
 		}
@@ -254,21 +254,21 @@ class Hexagon extends Atom {
 		return this
 	}
 
-	rightDrag(atom) {
-		const clone = this.clone(this)
+	rightDrag() {
+		const clone = this.clone()
 		UI.atomRegistry.register(clone)
 		UI.hand.offset.x -= this.x - clone.x
 		UI.hand.offset.y -= this.y - clone.y
 		return clone
 	}
 
-	clone(atom) {
+	clone() {
 		const clone = new Hexagon()
 		for (let i = 0; i < 6; i++) {
 			clone.ons[i] = this.ons[i]
 		}
 		if (this.expanded) {
-			clone.expand(clone)
+			clone.expand()
 		}
 		const {x, y} = this.getPosition()
 		clone.x = x

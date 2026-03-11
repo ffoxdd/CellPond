@@ -4,20 +4,20 @@
 class ColourtodeTool extends Atom {
 	element = new ColourtodeSquare()
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		if ((this.previousBrushColour !== state.brush.colour) || this.toolbarNeedsColourUpdate) {
-			this.update(this)
+			this.update()
 		}
 		if (this.unlocked) {
-			this.element.draw(this, ctx)
+			this.element.draw(ctx)
 		}
 	}
 
-	overlaps(atom, x, y) { return this.element.overlaps(this, x, y) }
-	grab(atom) { return this }
+	overlaps(x, y) { return this.element.overlaps(x, y) }
+	grab() { return this }
 	cursor() { return "move" }
 
-	drag(atom) {
+	drag() {
 		if (this === UI.squareTool) {
 			const newAtom = UI.makeSquareFromValue(this.value)
 			UI.atomRegistry.register(newAtom)

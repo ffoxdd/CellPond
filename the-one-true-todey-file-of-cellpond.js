@@ -511,9 +511,9 @@ on.load(() => {
 				} else if (atom.isTallRectangle) {
 					// TODO: what colour should rectangles set the brush?
 				} else if (atom.isPaddle) {
-					state.brush.hoverColour = atom.getColour(atom)
+					state.brush.hoverColour = atom.getColour()
 				} else if (atom.isSlot) {
-					state.brush.hoverColour = atom.parent.getColour(atom.parent)
+					state.brush.hoverColour = atom.parent.getColour()
 				} else {
 					state.brush.hoverColour = atom.colour.splash
 				}
@@ -912,7 +912,7 @@ on.load(() => {
 			updateAtomHighlight(atom)
 		}
 
-		atom.update(atom)
+		atom.update()
 
 		// MOVEMENT
 		if (hand.content === atom) return
@@ -949,7 +949,7 @@ on.load(() => {
 			atom.highlight = undefined
 		}
 
-		const highlightedAtom = atom.hover(atom)
+		const highlightedAtom = atom.hover()
 
 		// Create the highlight
 		if (highlightedAtom === undefined) return
@@ -1041,7 +1041,7 @@ on.load(() => {
 			if (Mouse.Left) {
 				grabAtom(atom, mx, my)
 				changeHandState(HAND.DRAGGING)
-				hand.content = hand.content.drag(hand.content, mx, my)
+				hand.content = hand.content.drag(mx, my)
 				return
 			}
 			if (atom.cursor !== undefined) changeHandState(HAND.HOVER, atom.cursor(atom, HAND.HOVER))
@@ -1318,7 +1318,7 @@ on.load(() => {
 
 				const attached = hand.content.attached && !hand.content.dragOnly && !hand.content.noDampen
 
-				hand.content = hand.content.drag(hand.content, x, y)
+				hand.content = hand.content.drag(x, y)
 				
 				if (!hand.content.dragLockX) hand.content.x = (hand.pityStartX + dampen(dx, attached)) / CT_SCALE + hand.offset.x
 				if (!hand.content.dragLockY) hand.content.y = (hand.pityStartY + dampen(dy, attached)) / CT_SCALE + hand.offset.y
@@ -1333,7 +1333,7 @@ on.load(() => {
 
 				const attached = hand.content.attached && !hand.content.dragOnly && !hand.content.noDampen
 
-				hand.content = hand.content.rightDrag(hand.content, x, y)
+				hand.content = hand.content.rightDrag(x, y)
 				
 				if (!hand.content.dragLockX) hand.content.x = (hand.pityStartX + dampen(dx, attached)) / CT_SCALE + hand.offset.x
 				if (!hand.content.dragLockY) hand.content.y = (hand.pityStartY + dampen(dy, attached)) / CT_SCALE + hand.offset.y
@@ -1365,7 +1365,7 @@ on.load(() => {
 		},
 		mouseup: (e) => {
 			if (hand.touchButton !== 0) return
-			hand.clickContent.click(hand.clickContent)
+			hand.clickContent.click()
 			hand.clickContent.dx = 0
 			hand.clickContent.dy = 0
 			hand.clickContent = undefined
@@ -1391,7 +1391,7 @@ on.load(() => {
 		},
 		rightmouseup: (e) => {
 			if (hand.touchButton !== 2) return
-			hand.clickContent.rightClick(hand.clickContent)
+			hand.clickContent.rightClick()
 			hand.clickContent.dx = 0
 			hand.clickContent.dy = 0
 			hand.clickContent = undefined
@@ -1422,7 +1422,7 @@ on.load(() => {
 		mousemove: (e) => {
 			if (!hand.hasStartedDragging) {
 				hand.hasStartedDragging = true
-				hand.content = hand.content.drag(hand.content, e.clientX / CT_SCALE * DPR, e.clientY / CT_SCALE * DPR)
+				hand.content = hand.content.drag(e.clientX / CT_SCALE * DPR, e.clientY / CT_SCALE * DPR)
 			}
 
 			const oldX = hand.content.x
@@ -1436,16 +1436,16 @@ on.load(() => {
 
 			const dx = hand.content.x - oldX
 			const dy = hand.content.y - oldY
-			hand.content.move(hand.content, dx, dy)
+			hand.content.move(dx, dy)
 		},
 		mouseup: (e) => {
 			if (hand.touchButton !== 0) return
 			hand.hasStartedDragging = true
 			if (!hand.content.dragLockX) hand.content.dx = hand.velocity.x * HAND_RELEASE
 			if (!hand.content.dragLockY) hand.content.dy = hand.velocity.y * HAND_RELEASE
-			hand.content.drop(hand.content)
+			hand.content.drop()
 			if (hand.content.highlightedAtom !== undefined) {
-				hand.content.place(hand.content, hand.content.highlightedAtom)
+				hand.content.place(hand.content.highlightedAtom)
 				if (hand.content.highlight !== undefined) {
 					deleteChild(hand.content, hand.content.highlight)
 					hand.content.highlight = undefined
@@ -1472,9 +1472,9 @@ on.load(() => {
 			hand.hasStartedDragging = true
 			if (!hand.content.dragLockX) hand.content.dx = hand.velocity.x * HAND_RELEASE
 			if (!hand.content.dragLockY) hand.content.dy = hand.velocity.y * HAND_RELEASE
-			hand.content.drop(hand.content)
+			hand.content.drop()
 			if (hand.content.highlightedAtom !== undefined) {
-				hand.content.place(hand.content, hand.content.highlightedAtom)
+				hand.content.place(hand.content.highlightedAtom)
 				if (hand.content.highlight !== undefined) {
 					deleteChild(hand.content, hand.content.highlight)
 					hand.content.highlight = undefined
@@ -1537,9 +1537,9 @@ on.load(() => {
 	const grabAtom = (atom, x, y) => {
 
 		let previousTouched = atom
-		let touched = atom.touch(atom)
+		let touched = atom.touch()
 		if (touched !== previousTouched) {
-			const newTouched = touched.touch(touched, x, y, previousTouched)
+			const newTouched = touched.touch(x, y, previousTouched)
 			previousTouched = touched
 			touched = newTouched
 		}
@@ -1547,11 +1547,11 @@ on.load(() => {
 
 
 		let previousGrabbed = atom
-		let grabbed = atom.grab(atom, x, y)
+		let grabbed = atom.grab(x, y)
 
 		if (grabbed === undefined) return
 		if (grabbed !== previousGrabbed) {
-			const newGrabbed = grabbed.grab(grabbed, x, y, previousGrabbed)
+			const newGrabbed = grabbed.grab(x, y, previousGrabbed)
 			previousGrabbed = grabbed
 			grabbed = newGrabbed
 		}
@@ -1793,7 +1793,7 @@ on.load(() => {
 
 		paddle.width = width
 		paddle.height = height
-		paddle.setLimits(paddle)
+		paddle.setLimits()
 
 		//=============================//
 		// ARRANGING PADDLE's CHILDREN //
@@ -1957,7 +1957,7 @@ on.load(() => {
 		const diagram = Diagram.maximised(new Diagram({left, right}))
 
 		const locked = paddle.pinhole.locked
-		const chance = paddle.chance === undefined? undefined : paddle.chance.getValue(paddle.chance)
+		const chance = paddle.chance === undefined? undefined : paddle.chance.getValue()
 		const rule = new Rule({steps: [diagram], transformations, locked, chance})
 		paddle.rule = rule
 		if (paddle.registry !== undefined) {
@@ -2113,7 +2113,7 @@ on.load(() => {
 				else if (channel.variable === leftVariable) triangle.direction = "left"
 				else if (channel.variable === rightVariable) triangle.direction = "right"
 	
-				triangle.updateValue(triangle)
+				triangle.updateValue()
 
 				// newAtom.variableAtoms[i] = hexagon
 				// hexagon.variable = channel.variable
@@ -2124,7 +2124,7 @@ on.load(() => {
 		}
 
 		if (newAtom.value !== undefined && newAtom.value.isDiagram) {
-			newAtom.update(newAtom)
+			newAtom.update()
 		}
 
 		return newAtom
@@ -2209,65 +2209,65 @@ on.load(() => {
 
 	circleTool.borderScale = 1
 	
-	squareTool.update = (atom) => {
+	squareTool.update = function() {
 
-		if (atom.joinDrawId === undefined) {
-			atom.joinDrawId = -1
-			atom.joinDrawTimer = 0
+		if (this.joinDrawId === undefined) {
+			this.joinDrawId = -1
+			this.joinDrawTimer = 0
 		}
 
-		
 
-		if (atom.value !== undefined && atom === squareTool) {
 
-			if (atom.previousBrushColour !== state.brush.colour || atom.toolbarNeedsColourUpdate) {
-				atom.previousBrushColour = state.brush.colour
-				if (atom.multiAtoms === undefined) {
-					atom.multiAtoms = []
+		if (this.value !== undefined && this === squareTool) {
+
+			if (this.previousBrushColour !== state.brush.colour || this.toolbarNeedsColourUpdate) {
+				this.previousBrushColour = state.brush.colour
+				if (this.multiAtoms === undefined) {
+					this.multiAtoms = []
 				}
-				for (const multiAtom of atom.multiAtoms) {
-					deleteChild(atom, multiAtom)
+				for (const multiAtom of this.multiAtoms) {
+					deleteChild(this, multiAtom)
 				}
 
-				atom.multiAtoms = []
+				this.multiAtoms = []
 
-				if (atom.value.isDiagram) {
-					const diagram = atom.value
+				if (this.value.isDiagram) {
+					const diagram = this.value
 					const [diagramWidth, diagramHeight] = diagram.getDimensions()
-					const cellAtomWidth = atom.width / diagramWidth
-					const cellAtomHeight = atom.height / diagramHeight
+					const cellAtomWidth = this.width / diagramWidth
+					const cellAtomHeight = this.height / diagramHeight
 					for (const diagramCell of diagram.left) {
-						const multiAtom = createChild(atom, new ColourtodeSquare())
+						const multiAtom = createChild(this, new ColourtodeSquare())
 						multiAtom.x = diagramCell.x * cellAtomWidth
 						multiAtom.y = diagramCell.y * cellAtomHeight
 						multiAtom.width = diagramCell.width * cellAtomWidth
 						multiAtom.height = diagramCell.height * cellAtomHeight
 						multiAtom.value = diagramCell.content
-						multiAtom.update(multiAtom)
-						atom.multiAtoms.push(multiAtom)
+						multiAtom.update()
+						this.multiAtoms.push(multiAtom)
 					}
 				}
 			}
 		}
 
-		const valueClone = DragonArray.cloneContent(atom.value)
-		atom.colours = valueClone.getSplashes()
+		const valueClone = DragonArray.cloneContent(this.value)
+		this.colours = valueClone.getSplashes()
 
-		if (atom.colourId >= atom.colours.length) {
-			atom.colourId = 0
+		if (this.colourId >= this.colours.length) {
+			this.colourId = 0
 		}
-		if (atom.toolbarNeedsColourUpdate && atom === squareTool) {
-			atom.toolbarNeedsColourUpdate = false
-			atom.isGradient = true
-			atom.joins = []
-			for (const joinValue of atom.value.joins) {
+		if (this.toolbarNeedsColourUpdate && this === squareTool) {
+			this.toolbarNeedsColourUpdate = false
+			this.isGradient = true
+			this.joins = []
+			for (const joinValue of this.value.joins) {
 				const joinSquare = makeSquareFromValue(joinValue)
-				atom.joins.push(joinSquare)
+				this.joins.push(joinSquare)
 			}
-			ColourtodeSquare.updateGradientFn(atom)
+			ColourtodeSquare.updateGradientFn(this)
 		} else {
-			atom.colour = Colour.splash(999)
-			atom.borderColour = Colour.splash(999)
+			this.colour = Colour.splash(999)
+			this.borderColour = Colour.splash(999)
 		}
 	}
 

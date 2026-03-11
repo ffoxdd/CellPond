@@ -9,10 +9,10 @@ class PickerPad extends Atom {
 	dragOnly = true
 	isPicker = true
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	grab(atom) { return this.parent }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	grab() { return this.parent }
 
 	static get HEIGHT() {
 		return UI.SQUARE_SIZE

@@ -7,9 +7,9 @@ class ChannelSelectionSide extends Atom {
 	colour = Colour.Grey
 	dragLockX = true
 
-	draw(atom, ctx) { Rectangle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	grab(atom) { return this.parent }
-	touch(atom) { return this.parent }
+	draw(ctx) { Rectangle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	grab() { return this.parent }
+	touch() { return this.parent }
 }

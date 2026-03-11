@@ -39,9 +39,9 @@ class TriangleRight extends Atom {
 	size = UI.SQUARE_SIZE
 	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
 
-	draw(atom, ctx) { TriangleRight.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
-	offscreen(atom) { return triangleOffscreen(this) }
+	draw(ctx) { TriangleRight.drawFn(this, ctx) }
+	overlaps(x, y) { return triangleOverlaps(this, x, y) }
+	offscreen() { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -84,9 +84,9 @@ class TriangleRight extends Atom {
 class TriangleUp extends Atom {
 	size = UI.SQUARE_SIZE
 
-	draw(atom, ctx) { TriangleUp.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
-	offscreen(atom) { return triangleOffscreen(this) }
+	draw(ctx) { TriangleUp.drawFn(this, ctx) }
+	overlaps(x, y) { return triangleOverlaps(this, x, y) }
+	offscreen() { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -121,9 +121,9 @@ class TriangleUp extends Atom {
 class TriangleDown extends Atom {
 	size = UI.SQUARE_SIZE
 
-	draw(atom, ctx) { TriangleDown.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
-	offscreen(atom) { return triangleOffscreen(this) }
+	draw(ctx) { TriangleDown.drawFn(this, ctx) }
+	overlaps(x, y) { return triangleOverlaps(this, x, y) }
+	offscreen() { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()
@@ -159,9 +159,9 @@ class TriangleLeft extends Atom {
 	size = UI.SQUARE_SIZE
 	width = UI.SQUARE_SIZE * Math.sqrt(3)/2
 
-	draw(atom, ctx) { TriangleLeft.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return triangleOverlaps(this, x, y) }
-	offscreen(atom) { return triangleOffscreen(this) }
+	draw(ctx) { TriangleLeft.drawFn(this, ctx) }
+	overlaps(x, y) { return triangleOverlaps(this, x, y) }
+	offscreen() { return triangleOffscreen(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()

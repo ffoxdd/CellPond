@@ -32,16 +32,16 @@ class Atom {
 	// === Interface methods (override in concrete types) ===
 	click() {}
 	rightClick() {}
-	drag(a) { return a }
-	rightDrag(a) { return a }
+	drag() { return this }
+	rightDrag() { return this }
 	move() {}
 	drop() {}
 	draw() {}
 	update() {}
 	offscreen() { return false }
 	overlaps() { return false }
-	grab(a) { return a }
-	touch(a) { return a }
+	grab() { return this }
+	touch() { return this }
 	hover() {}
 	place() {}
 	construct() {}
@@ -51,22 +51,22 @@ class Atom {
 		for (const child of this.children) {
 			if (child.behindParent) child.drawTree(ctx)
 		}
-		if (this.behindChildren) this.draw(this, ctx)
+		if (this.behindChildren) this.draw(ctx)
 		for (const child of this.children) {
 			if (!child.behindParent) child.drawTree(ctx)
 		}
-		if (!this.behindChildren) this.draw(this, ctx)
+		if (!this.behindChildren) this.draw(ctx)
 	}
 
 	isOffscreen() {
 		for (const child of this.children) {
 			if (!child.isOffscreen()) return false
 		}
-		return this.offscreen(this)
+		return this.offscreen()
 	}
 
 	hitTest(x, y) {
-		if (!this.behindChildren && this.overlaps(this, x, y)) return this
+		if (!this.behindChildren && this.overlaps(x, y)) return this
 
 		for (let i = this.children.length-1; i >= 0; i--) {
 			const child = this.children[i]
@@ -75,7 +75,7 @@ class Atom {
 			if (result) return result
 		}
 
-		if (this.behindChildren && this.overlaps(this, x, y)) return this
+		if (this.behindChildren && this.overlaps(x, y)) return this
 
 		for (let i = this.children.length-1; i >= 0; i--) {
 			const child = this.children[i]

@@ -8,7 +8,7 @@ class ChannelSelectionEnd extends Atom {
 	dragOnly = true
 	dragLockX = true
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		const {x, y} = this.getPosition()
 		const X = Math.round(x)
 		const Y = Math.round(y)
@@ -18,24 +18,24 @@ class ChannelSelectionEnd extends Atom {
 		ctx.fillRect(X, Y, W, H)
 	}
 
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
 
-	grab(atom) { return this.parent.expanded ? this : this.parent }
-	touch(atom) { return this.parent.expanded ? this : this.parent }
-	cursor(atom) { return this.parent.expanded ? "ns-resize" : "pointer" }
+	grab() { return this.parent.expanded ? this : this.parent }
+	touch() { return this.parent.expanded ? this : this.parent }
+	cursor() { return this.parent.expanded ? "ns-resize" : "pointer" }
 
-	move(atom) {
-		this.parent.positionSelectionBack(this.parent)
+	move() {
+		this.parent.positionSelectionBack()
 	}
 
-	drop(atom) {
+	drop() {
 		let distanceFromMiddle = Math.round((this.y+UI.CHANNEL_HEIGHT/2) / UI.OPTION_SPACING)
 
 		const oldNumber = this.parent.value
 
-		let [startId, endId] = this.parent.getStartAndEndId(this.parent)
-		let centerId = this.parent.getCenterId(this.parent)
+		let [startId, endId] = this.parent.getStartAndEndId()
+		let centerId = this.parent.getCenterId()
 
 		if (this.isTop) {
 			endId = centerId - distanceFromMiddle
@@ -51,8 +51,8 @@ class ChannelSelectionEnd extends Atom {
 
 		const number = new DragonNumber({channel: oldNumber.channel, values})
 		this.parent.value = number
-		this.parent.deleteOptions(this.parent)
-		this.parent.createOptions(this.parent)
+		this.parent.deleteOptions()
+		this.parent.createOptions()
 
 		this.dx = 0
 		this.dy = 0
@@ -60,7 +60,7 @@ class ChannelSelectionEnd extends Atom {
 		if (this.parent.parent.isSquare) {
 			const square = this.parent.parent
 			const channel = UI.CHANNEL_IDS[this.parent.channelSlot]
-			square.receiveNumber(square, number, channel)
+			square.receiveNumber(number, channel)
 		}
 
 		if (this.parent.parent.isPaddle) {

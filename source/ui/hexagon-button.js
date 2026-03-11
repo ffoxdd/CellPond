@@ -8,21 +8,21 @@ class HexagonButton extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) { Circle.drawFn(this, ctx) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	grab(atom) { return this.parent }
+	draw(ctx) { Circle.drawFn(this, ctx) }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab() { return this.parent }
 
-	construct(atom) {
+	construct() {
 		this.inner = UI.createChild(this, new HexagonButtonInner(), {bottom: false})
 		this.inner.x = this.width/2 - this.inner.width/2
 		this.inner.y = this.height/2 - this.inner.height/2
 	}
 
-	click(atom) {
+	click() {
 		if (this.inner.selected) {
 			this.inner.selected = false
 			this.inner.colour = Colour.Grey
@@ -39,9 +39,9 @@ class HexagonButton extends Atom {
 			UI.emit("paddleSizeChanged",paddle)
 		} else if (hexagon.parent.isSquare) {
 			const square = hexagon.parent
-			hexagon.updateValue(hexagon)
+			hexagon.updateValue()
 			const slotId = UI.CHANNEL_IDS[hexagon.variable]
-			square.receiveNumber(square, hexagon.value, slotId, {expanded: hexagon.expanded, numberAtom: hexagon})
+			square.receiveNumber(hexagon.value, slotId, {expanded: hexagon.expanded, numberAtom: hexagon})
 		}
 
 		UI.atomRegistry.bringToFront(this.parent)

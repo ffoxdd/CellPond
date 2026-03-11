@@ -2,9 +2,9 @@
 // CIRCLE   //
 //==========//
 class Circle extends Atom {
-	draw(atom, ctx) { Circle.drawFn(this, ctx) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	draw(ctx) { Circle.drawFn(this, ctx) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
 
 	static drawFn(atom, ctx) {
 		const {x, y} = atom.getPosition()

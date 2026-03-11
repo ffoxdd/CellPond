@@ -11,17 +11,17 @@ class SymmetryToggleX extends Atom {
 	x = SymmetryPad.X + SymmetryPad.WIDTH/2 - (UI.SQUARE_SIZE - UI.OPTION_MARGIN)/2
 	y = SymmetryPad.Y + UI.OPTION_MARGIN/2
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		this.colour = this.value ? Colour.Silver : Colour.Grey
 		Circle.drawFn(this, ctx)
 		SymmetryToggleX.drawX(this, ctx)
 	}
 
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	grab(atom) { return this.parent }
+	offscreen() { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	grab() { return this.parent }
 
-	click(atom) {
+	click() {
 		this.value = !this.value
 		let [x, y, r] = getRGB(this.parent.value)
 		x = this.value ? 100 : 0

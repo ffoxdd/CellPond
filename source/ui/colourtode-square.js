@@ -56,29 +56,29 @@ class ColourtodeSquare extends Atom {
 
 	constructor() {
 		super()
-		this.construct(this)
+		this.construct()
 	}
 
-	draw(atom, ctx) {
+	draw(ctx) {
 		if (this.value.isDiagram) return
 		else Rectangle.drawFn(this, ctx)
 	}
 
-	overlaps(atom, x, y) { return Rectangle.overlapsFn(this, x, y) }
-	offscreen(atom) { return Rectangle.offscreenFn(this) }
+	overlaps(x, y) { return Rectangle.overlapsFn(this, x, y) }
+	offscreen() { return Rectangle.offscreenFn(this) }
 
-	touch(atom) {
+	touch() {
 		UI.emit("brushColourChanged",this.value)
 		return this
 	}
 
-	click(atom) {
+	click() {
 		if (this.joins.length > 0) {
 			if (this.parent === UI.atomRegistry.baseParent || !this.parent.isPaddle) {
 				if (this.joinExpanded) {
-					this.joinUnepxand(this)
+					this.joinUnepxand()
 				} else {
-					this.joinExpand(this)
+					this.joinExpand()
 				}
 			}
 		}
@@ -89,19 +89,19 @@ class ColourtodeSquare extends Atom {
 
 		else if (!this.expanded) {
 			if (this.parent === UI.atomRegistry.baseParent || !this.parent.isPaddle) {
-				this.expand(this)
+				this.expand()
 			}
 		}
 		else {
-			this.unexpand(this)
+			this.unexpand()
 		}
 
 		UI.emit("brushColourChanged",this.value)
 	}
 
-	expand(atom) {
+	expand() {
 		this.expanded = true
-		this.createPicker(this)
+		this.createPicker()
 		if (this.value.channels.some(v => v === undefined)) {
 			// UI.emit("menuToolUnlock","hexagon")
 			// UI.emit("menuToolUnlock","wide_rectangle")
@@ -109,15 +109,15 @@ class ColourtodeSquare extends Atom {
 		}
 	}
 
-	unexpand(atom) {
+	unexpand() {
 		this.expanded = false
 		this.redExpanded = this.red && this.red.expanded
 		this.greenExpanded = this.green && this.green.expanded
 		this.blueExpanded = this.blue && this.blue.expanded
-		this.deletePicker(this)
+		this.deletePicker()
 	}
 
-	createPicker(atom) {
+	createPicker() {
 		const pickerHandle = UI.createChild(this, new SymmetryHandle())
 		pickerHandle.width += UI.OPTION_MARGIN
 		this.pickerHandle = pickerHandle
@@ -218,7 +218,7 @@ class ColourtodeSquare extends Atom {
 		}
 	}
 
-	receiveNumber(atom, number, channel = number.channel, {expanded, numberAtom} = {}) {
+	receiveNumber(number, channel = number.channel, {expanded, numberAtom} = {}) {
 		this.redExpanded = this.red && this.red.expanded
 		this.greenExpanded = this.green && this.green.expanded
 		this.blueExpanded = this.blue && this.blue.expanded
@@ -240,8 +240,8 @@ class ColourtodeSquare extends Atom {
 
 		this.value.channels[channel] = number
 
-		this.deletePicker(this)
-		this.createPicker(this)
+		this.deletePicker()
+		this.createPicker()
 		this.needsColoursUpdate = true
 		this.colourTicker = Infinity
 
@@ -256,7 +256,7 @@ class ColourtodeSquare extends Atom {
 		UI.emit("toolbarColourChanged")
 	}
 
-	construct(atom) {
+	construct() {
 		this.needsColoursUpdate = true
 		if (typeof state.brush.colour === "number") {
 			this.value = DragonArray.fromSplash(state.brush.colour)
@@ -275,7 +275,7 @@ class ColourtodeSquare extends Atom {
 		this.headGradient = new ImageData(this.width * UI.CT_SCALE, this.height * UI.CT_SCALE)
 	}
 
-	updateGradient(atom) {
+	updateGradient() {
 		const valueClone = DragonArray.cloneContent(this.value)
 		valueClone.joins = []
 		this.colours = valueClone.getSplashes()
@@ -286,7 +286,7 @@ class ColourtodeSquare extends Atom {
 		if (this.joins.length > 0 && !this.joinExpanded) {
 			const joinGradients = []
 			for (const join of this.joins) {
-				join.updateGradient(join)
+				join.updateGradient()
 				joinGradients.push(join.gradient)
 			}
 			this.headGradient = UI.getGradientImageFromColours({
@@ -318,7 +318,7 @@ class ColourtodeSquare extends Atom {
 	}
 
 	// Ctrl+F: sqwww
-	update(atom) {
+	update() {
 		if (this.value.isDiagram) {
 			if (this.multiAtoms === undefined || this.multiAtoms.length === 0) {
 				this.multiAtoms = []
@@ -339,7 +339,7 @@ class ColourtodeSquare extends Atom {
 
 		} else {
 			if (this.needsColoursUpdate) {
-				this.updateGradient(this)
+				this.updateGradient()
 				this.needsColoursUpdate = false
 			}
 		}
@@ -670,7 +670,7 @@ class ColourtodeSquare extends Atom {
 
 	}
 
-	drop(atom) {
+	drop() {
 		if (this.highlight !== undefined) {
 
 			if (this.highlightedAtom.isPaddle) {
@@ -759,7 +759,7 @@ class ColourtodeSquare extends Atom {
 				this.slotted = undefined
 
 				if (this.expanded) {
-					this.unexpand(this)
+					this.unexpand()
 				}
 
 				if (this.highlightedSide === "left") {
@@ -792,7 +792,7 @@ class ColourtodeSquare extends Atom {
 				UI.giveChild(paddle, this)
 				paddle.cellAtoms.push(this)
 				if (this.expanded) {
-					this.unexpand(this)
+					this.unexpand()
 				}
 
 				if (this.highlightedSide === "left") {
@@ -824,21 +824,21 @@ class ColourtodeSquare extends Atom {
 				const joiner = this
 
 				if (joinee.expanded) {
-					joinee.unexpand(joinee)
+					joinee.unexpand()
 				}
 
 				if (joiner.expanded) {
-					joiner.unexpand(joiner)
+					joiner.unexpand()
 				}
 
 				if (joinee.joinExpanded) {
-					joinee.joinUnepxand(joinee)
+					joinee.joinUnepxand()
 				}
 
 				joinee.joins.push(joiner)
 				UI.atomRegistry.delete(joiner)
 
-				joinee.joinExpand(joinee)
+				joinee.joinExpand()
 
 
 				joinee.value.joins.push(joiner.value)
@@ -850,17 +850,17 @@ class ColourtodeSquare extends Atom {
 			}
 
 			if (this.expanded) {
-				this.unexpand(this)
+				this.unexpand()
 			}
 
 			if (this.joinExpanded) {
-				this.joinUnepxand(this)
+				this.joinUnepxand()
 			}
 
 		}
 	}
 
-	joinExpand(atom) {
+	joinExpand() {
 		this.joinExpanded = true
 
 		const pickerPad = UI.createChild(this, new PickerPad())
@@ -869,8 +869,8 @@ class ColourtodeSquare extends Atom {
 		pickerPad.x = -UI.OPTION_MARGIN
 		pickerPad.height = (this.joins.length) * (this.height + UI.OPTION_MARGIN) + UI.OPTION_MARGIN
 		pickerPad.y = this.height + UI.OPTION_MARGIN
-		pickerPad.touch = (atom) => atom
-		pickerPad.grab = (atom) => atom.parent
+		pickerPad.touch = function() { return this }
+		pickerPad.grab = function() { return this.parent }
 		pickerPad.dragOnly = true
 
 		const pickerHandle = UI.createChild(this, new PickerPad())
@@ -879,8 +879,8 @@ class ColourtodeSquare extends Atom {
 		pickerHandle.x = this.width/2 - pickerHandle.width/2
 		pickerHandle.height = SymmetryHandle.WIDTH
 		pickerHandle.y = this.height
-		pickerHandle.touch = (atom) => atom
-		pickerHandle.grab = (atom) => atom.parent
+		pickerHandle.touch = function() { return this }
+		pickerHandle.grab = function() { return this.parent }
 		pickerHandle.dragOnly = true
 
 		for (let i = 0; i < this.joins.length; i++) {
@@ -892,7 +892,7 @@ class ColourtodeSquare extends Atom {
 			joiner.dx = 0
 			joiner.dy = 0
 			joiner.isJoiner = true
-			joiner.touch = (atom) => atom.parent
+			joiner.touch = function() { return this.parent }
 		}
 
 		this.needsColoursUpdate = true
@@ -907,7 +907,7 @@ class ColourtodeSquare extends Atom {
 		this.attached = false
 	}
 
-	joinUnepxand(atom) {
+	joinUnepxand() {
 		this.joinExpanded = false
 		UI.deleteChild(this, this.pickerPad)
 		UI.deleteChild(this, this.pickerHandle)
@@ -922,7 +922,7 @@ class ColourtodeSquare extends Atom {
 	}
 
 	// ONLY USE .value NOT ANYTHING ELSE
-	clone(atom) {
+	clone() {
 		const newAtom = UI.makeSquareFromValue(this.value)
 
 		const {x, y} = this.getPosition()
@@ -932,8 +932,8 @@ class ColourtodeSquare extends Atom {
 		return newAtom
 	}
 
-	rightDrag(atom) {
-		const newAtom = this.clone(this)
+	rightDrag() {
+		const newAtom = this.clone()
 
 		UI.hand.offset.x -= this.x - newAtom.x
 		UI.hand.offset.y -= this.y - newAtom.y
@@ -945,7 +945,7 @@ class ColourtodeSquare extends Atom {
 	}
 
 	// Ctrl+f: sqdra
-	drag(atom) {
+	drag() {
 		if (this.joins.length > 0 && this.joinExpanded) {
 			return this
 		}
@@ -954,9 +954,9 @@ class ColourtodeSquare extends Atom {
 			const id = this.parent.joins.indexOf(this)
 			this.parent.joins.splice(id, 1)
 			this.parent.value.joins.splice(id, 1)
-			this.parent.joinUnepxand(this.parent)
+			this.parent.joinUnepxand()
 			if (this.parent.joins.length > 0) {
-				this.parent.joinExpand(this.parent)
+				this.parent.joinExpand()
 			}
 			UI.freeChild(this.parent, this)
 			this.isJoiner = false
